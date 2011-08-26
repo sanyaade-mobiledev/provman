@@ -9,11 +9,12 @@ manager = dbus.Interface(bus.get_object('com.intel.provman.server', '/com/intel/
 					'com.intel.provman.Settings')
 manager.Start("")
 manager.Set("/applications/sync/target-config@exchange/name","SyncEvolution")
-manager.Set("/applications/sync/target-config@exchange/username","mark.d.ryan@intel.com")
+manager.Set("/applications/sync/target-config@exchange/username","my-email-address@me.com")
 manager.Set("/applications/sync/target-config@exchange/eas-contacts/sync","two-way");
 manager.Set("/applications/sync/target-config@exchange/eas-calendar/sync","two-way");
 manager.Set("/applications/sync/target-config@exchange/eas-memo/sync","two-way");
 manager.Set("/applications/sync/target-config@exchange/eas-todo/sync","two-way");
+manager.Set("/applications/sync/target-config@exchange/client", "0");
 manager.Set("/applications/sync/exchange/url","local://@exchange");
 manager.Set("/applications/sync/exchange/contacts/sync","two-way");
 manager.Set("/applications/sync/exchange/contacts/uri","addressbook");
