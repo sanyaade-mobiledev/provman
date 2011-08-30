@@ -50,6 +50,7 @@ typedef struct provman_sync_out_context_ provman_sync_out_context;
 struct provman_sync_out_context_ {
 	provman_task_sync_out_cb finished;
 	void *finished_data;
+	GDBusMethodInvocation *invocation;
 };
 
 static void prv_sync_in_task_finished(int result, void *user_data)
@@ -70,6 +71,16 @@ static void prv_sync_out_task_finished(int result, void *user_data)
 	PROVMAN_LOGF("%s called with error %u", __FUNCTION__, result);
 
 	task_context->finished(result, task_context->finished_data);
+
+	if (task_context->invocation) {
+		if (result == PROVMAN_ERR_NONE)
+			g_dbus_method_invocation_return_value(
+				task_context->invocation, NULL);
+		else
+			g_dbus_method_invocation_return_dbus_error(
+				task_context->invocation,
+				provman_err_to_dbus(result), "");
+	}
 
 	g_free(task_context);
 }
@@ -118,16 +129,25 @@ bool provman_task_sync_out(plugin_manager_t *plugin_manager,
 
 	task_context->finished = finished;
 	task_context->finished_data = finished_data;
+	task_context->invocation = task->invocation;
 
 	err = plugin_manager_sync_out(plugin_manager,
 				      prv_sync_out_task_finished,
 				      task_context);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
+
+	task->invocation = NULL;
 	
 	return true;
 
 on_error:
+	
+	if (task->invocation) {
+		g_dbus_method_invocation_return_dbus_error(
+			task->invocation, provman_err_to_dbus(err), "");
+		task->invocation = NULL;
+	}
 
 	g_free(task_context);
 

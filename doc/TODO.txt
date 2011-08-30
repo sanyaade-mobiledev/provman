@@ -4,11 +4,6 @@ TODOs:
 Provman:
 -------
 
-* Verify that End is asynchronous
-
-  The End command should not return until all the plugins have returned
-  from their sync out functions.  Is this happening?
-
 * Introspection
 
   Need to add an introspection interface so that clients can discover which

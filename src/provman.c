@@ -194,6 +194,7 @@ static void prv_sync_out_task_finished(int result, void *user_data)
 
 	PROVMAN_LOGF("%s called", __FUNCTION__);
 
+	prv_session_finished(context);
 	context->idle_id = g_idle_add(prv_process_task, context);
 }
 
@@ -376,14 +377,15 @@ static void prv_add_sync_in_task(provman_context *context,
 	prv_add_task(context, task);
 }
 			 
-static void prv_add_sync_out_task(provman_context *context)
+static void prv_add_sync_out_task(provman_context *context,
+				  GDBusMethodInvocation *invocation)
 {
 	provman_task *task = g_new0(provman_task, 1);
 
 	PROVMAN_LOG("Add Task Sync Out");
 
 	task->type = PROVMAN_TASK_SYNC_OUT;
-	task->invocation = NULL;
+	task->invocation = invocation;
 
 	prv_add_task(context, task);
 }
@@ -493,8 +495,10 @@ static void prv_session_finished(provman_context *context)
 	g_free(context->holder);
 	context->holder = NULL;
 
-	g_bus_unwatch_name(context->holder_watcher);
-	context->holder_watcher = 0;
+	if (context->holder_watcher) {
+		g_bus_unwatch_name(context->holder_watcher);
+		context->holder_watcher = 0;
+	}
 
 	if (context->queued_clients) {
 		invocation = context->queued_clients->data;			
@@ -523,12 +527,6 @@ static void prv_session_finished(provman_context *context)
 	}
 }
 
-static void prv_session_ended(provman_context *context)
-{
-	prv_add_sync_out_task(context);
-	prv_session_finished(context);
-}
-
 static void prv_lost_client(GDBusConnection *connection, const gchar *name,
 			    gpointer user_data)
 {
@@ -546,7 +544,9 @@ static void prv_lost_client(GDBusConnection *connection, const gchar *name,
 	}
 
 	if (i == context->tasks->len)
-		prv_session_ended(context);
+		prv_add_sync_out_task(context, NULL);
+
+	context->holder_watcher = 0;
 }
 
 static bool prv_find_connection(provman_context *context,
@@ -629,8 +629,7 @@ static void prv_provman_method_call(GDBusConnection *connection,
 				      method_name);
 		}
 		else if (!g_strcmp0(method_name, PROVMAN_INTERFACE_END)) {
-			g_dbus_method_invocation_return_value(invocation, NULL);
-			prv_session_ended(context);
+			prv_add_sync_out_task(context, invocation);
 		} else if (!g_strcmp0(method_name, PROVMAN_INTERFACE_ABORT)) {
 			prv_add_abort_task(context, invocation);
 		} else if (!g_strcmp0(method_name, 
