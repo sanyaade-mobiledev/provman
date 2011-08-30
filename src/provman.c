@@ -587,13 +587,13 @@ static void prv_provman_method_call(GDBusConnection *connection,
 
 	PROVMAN_LOGF("%s called", method_name);
 
-	if (context->timeout_id) {
-		(void) g_source_remove(context->timeout_id);
-		context->timeout_id = 0;
-	}
-
 	if (!g_strcmp0(method_name, PROVMAN_INTERFACE_START)) {
 		if (!context->holder) {
+			if (context->timeout_id) {
+				(void) g_source_remove(context->timeout_id);
+				context->timeout_id = 0;
+			}
+
 			context->holder = g_strdup(
 				g_dbus_method_invocation_get_sender(
 					invocation));
