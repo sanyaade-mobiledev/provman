@@ -15,10 +15,10 @@
  * 
  * If a sesison
  * is already in progress with another management client this method will not
- * return until that management client has completed its session by calling end
- * or has died unexepectedly.  This method must be called before any other
- * com.intel.provman.Settings methods can be invoked on a given provman
- * instance
+ * return until that management client has completed its session by calling
+ * either #End or #Abort or has died unexepectedly.  This method must be called
+ * before any other com.intel.provman.Settings methods can be invoked on a
+ * given provman instance
  *	
  * @param imsi The IMSI number with which the settings should be associated.  If
  * the caller does not care or is not intending to provision any SIM specific
@@ -167,3 +167,21 @@ void Delete(string key);
 */
 
 void End();
+
+/*!
+ * \brief Ends the device management session begun by #Start, abandoning
+ *        all changes made during that session.
+ *
+ * All changes made during the session will be discarded.
+ * If one or more other device management client are blocked by a call to
+ * #Start, the #Start method will complete for one of these clients and
+ * its device management session will begin.
+ *
+ * \exception com.intel.provman.Error.Unexpected #Abort is invoked
+ * before #Start.
+ * \exception com.intel.provman.Error.Cancelled The call to #Abort
+ *   has failed because provman has been killed.
+*/
+
+void Abort();
+

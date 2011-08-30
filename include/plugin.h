@@ -115,7 +115,9 @@ typedef void (*provman_plugin_delete)(provman_plugin_instance instance);
  * the #Start D-Bus method.  This method is asynchronous as it may
  * take the plugin a substantial amount of time to retrieve the
  * data it needs from the middleware and we do not want it to block
- * provman while it does so.
+ * provman while it does so.  At some time in the future provman will
+ * inform the plugin that the session has finished by calling
+ * either #provman_plugin_sync_out or #provman_plugin_abort.
  *
  * @param instance A pointer to the plugin instance.
  * @param imsi The imsi number specified by the client in its call to #Start.
@@ -222,6 +224,23 @@ typedef void (*provman_plugin_sync_out_cancel)(
 
 /*! 
  * @brief Typedef for a function pointer that is called when provman
+ *        is aborting a management session.
+ *
+ * The plugin should free any data that it has allocated for the
+ * current session.
+ *        
+ * Implementation of this method is optional.  If the plugin does
+ * not maintain any session specific state or resources it does
+ * not need to implement this function.
+ *
+ * @param instance A pointer to the plugin instance.
+ */
+
+typedef void (*provman_plugin_abort)(
+	provman_plugin_instance instance);
+
+/*! 
+ * @brief Typedef for a function pointer that is called when provman
  *        receives a request from a device management client to
  *        create a new setting or to modify the value of an existing setting.
  *
@@ -314,6 +333,8 @@ struct provman_plugin_
 	provman_plugin_validate_set validate_set_fn;
         /*! \brief Pointer to the plugin's validate del function. */
 	provman_plugin_validate_del validate_del_fn;
+        /*! \brief Pointer to the plugin's abort function. */
+	provman_plugin_abort abort_fn;
 };
 
 /*! \cond */

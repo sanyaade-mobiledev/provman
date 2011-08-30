@@ -60,6 +60,7 @@
 #define PROVMAN_INTERFACE_DELETE "Delete"
 #define PROVMAN_INTERFACE_IMSI "imsi"
 #define PROVMAN_INTERFACE_END "End"
+#define PROVMAN_INTERFACE_ABORT "Abort"
 
 #define PROVMAN_TIMEOUT 30*1000
 
@@ -91,6 +92,8 @@ static const gchar g_provman_introspection[] =
 	"           direction='in'/>"
 	"    </method>"
 	"    <method name='"PROVMAN_INTERFACE_END"'>"
+	"    </method>"
+	"    <method name='"PROVMAN_INTERFACE_ABORT"'>"
 	"    </method>"
 	"    <method name='"PROVMAN_INTERFACE_SET"'>"
 	"      <arg type='s' name='"PROVMAN_INTERFACE_KEY"'"
@@ -124,6 +127,7 @@ static const gchar g_provman_introspection[] =
 	"</node>";
 
 static gboolean prv_process_task(gpointer user_data);
+static void prv_session_finished(provman_context *context);
 
 static bool prv_async_in_progress(provman_context *context)
 {
@@ -167,6 +171,7 @@ static void prv_free_provman_task(gpointer data)
 		break;			
 	case PROVMAN_TASK_SYNC_IN:
 	case PROVMAN_TASK_SYNC_OUT:
+	case PROVMAN_TASK_ABORT:
 		break;
 	}
 
@@ -229,6 +234,10 @@ static gboolean prv_process_task(gpointer user_data)
 			break;
 		case PROVMAN_TASK_DELETE:
 			provman_task_delete(context->plugin_manager,task);
+			break;
+		case PROVMAN_TASK_ABORT:
+			provman_task_abort(context->plugin_manager,task);
+			prv_session_finished(context);
 			break;
 		default:
 			break;
@@ -459,11 +468,23 @@ static void prv_add_delete_task(provman_context *context,
 	prv_add_task(context, task);
 }
 
+static void prv_add_abort_task(provman_context *context,
+			       GDBusMethodInvocation *invocation)
+{
+	provman_task *task = g_new0(provman_task, 1);
+
+	PROVMAN_LOG("Add Task Abort");
+
+	task->type = PROVMAN_TASK_ABORT;
+	task->invocation = invocation;
+
+	prv_add_task(context, task);
+}
 
 static void prv_lost_client(GDBusConnection *connection, const gchar *name,
 			    gpointer user_data);
 
-static void prv_session_ended(provman_context *context)
+static void prv_session_finished(provman_context *context)
 {
 	GDBusMethodInvocation *invocation;
 	GVariant *parameters;
@@ -474,8 +495,6 @@ static void prv_session_ended(provman_context *context)
 
 	g_bus_unwatch_name(context->holder_watcher);
 	context->holder_watcher = 0;
-
-	prv_add_sync_out_task(context);
 
 	if (context->queued_clients) {
 		invocation = context->queued_clients->data;			
@@ -502,6 +521,12 @@ static void prv_session_ended(provman_context *context)
 			g_slist_delete_link(context->queued_clients,
 					    context->queued_clients);
 	}
+}
+
+static void prv_session_ended(provman_context *context)
+{
+	prv_add_sync_out_task(context);
+	prv_session_finished(context);
 }
 
 static void prv_lost_client(GDBusConnection *connection, const gchar *name,
@@ -606,6 +631,8 @@ static void prv_provman_method_call(GDBusConnection *connection,
 		else if (!g_strcmp0(method_name, PROVMAN_INTERFACE_END)) {
 			g_dbus_method_invocation_return_value(invocation, NULL);
 			prv_session_ended(context);
+		} else if (!g_strcmp0(method_name, PROVMAN_INTERFACE_ABORT)) {
+			prv_add_abort_task(context, invocation);
 		} else if (!g_strcmp0(method_name, 
 				      PROVMAN_INTERFACE_SET)) {
 			g_variant_get(parameters, "(&s&s)", &key, &value);

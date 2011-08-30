@@ -1677,3 +1677,11 @@ on_error:
 	return err;		
 }
 
+void ofono_plugin_abort(provman_plugin_instance instance)
+{
+	ofono_plugin_t *plugin_instance = instance;
+
+	g_free(plugin_instance->imsi);
+	plugin_instance->imsi = NULL;
+}
+

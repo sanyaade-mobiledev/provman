@@ -60,7 +60,7 @@ provman_plugin g_provman_plugins[] = {
 	  eds_plugin_new, eds_plugin_delete, 
 	  eds_plugin_sync_in, eds_plugin_sync_in_cancel,
 	  eds_plugin_sync_out, eds_plugin_sync_out_cancel,
-	  eds_plugin_validate_set, eds_plugin_validate_del
+	  eds_plugin_validate_set, eds_plugin_validate_del, NULL
 	}
 #endif
 #ifdef PROVMAN_SYNC_EVOLUTION
@@ -71,7 +71,7 @@ provman_plugin g_provman_plugins[] = {
 	  synce_plugin_new, synce_plugin_delete, 
 	  synce_plugin_sync_in, synce_plugin_sync_in_cancel,
 	  synce_plugin_sync_out, synce_plugin_sync_out_cancel,
-	  synce_plugin_validate_set, synce_plugin_validate_del
+	  synce_plugin_validate_set, synce_plugin_validate_del, NULL
 	}
 #endif
 };

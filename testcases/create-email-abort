@@ -1,0 +1,23 @@
+#!/usr/bin/python
+
+import dbus
+import sys
+
+bus = dbus.SessionBus()
+
+manager = dbus.Interface(bus.get_object('com.intel.provman.server', '/com/intel/provman'),
+					'com.intel.provman.Settings')
+manager.Start("")
+errors = manager.SetAll({
+"/applications/email/test/address":"markus.tulius@pintlygoodness.com",
+"/applications/email/test/incoming/host":"pop3.pintlygoodness.com",
+"/applications/email/test/incoming/type":"pop",
+"/applications/email/test/incoming/username":"markus.tulius",
+"/applications/email/test/incoming/usessl":"always",
+"/applications/email/test/incoming/authtype":"PLAIN",
+"/applications/email/test/name":"Markus T Cicero",
+"/applications/email/test/outgoing/host":"smtp.pintlygoodness.com",
+"/applications/email/test/outgoing/type":"smtp",
+"/applications/email/test/outgoing/username":"",
+"/applications/email/test/outgoing/usessl":"never"})
+manager.Abort()

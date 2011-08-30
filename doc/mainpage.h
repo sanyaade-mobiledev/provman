@@ -155,6 +155,7 @@
  * <tr><td>#GetAll</td><td>\copybrief GetAll</td></tr>
  * <tr><td>#Delete</td><td>\copybrief Delete</td></tr>
  * <tr><td>#End</td><td>\copybrief End</td></tr>
+ * <tr><td>#Abort</td><td>\copybrief Abort</td></tr>
  * </table>
  *
  * A simple python script demonstrating how these methods can be used is shown below.
@@ -274,6 +275,15 @@ manager.End()
  * starts.  Plugins that cache their data between settings are encouraged to
  * register for the relevant notifications to ensure that there cached data
  * is always up to date.
+ *
+ * A device management client may chose to discard any changes made during
+ * a session by invoking the #Abort function.  #Abort discards any changes
+ * made during the device management session and then ends the session.  
+ * When a session is ended by calling #Abort, the plugins' 
+ * #provman_plugin_sync_out methods are not invoked and no changes are push
+ * to the applications or middleware.  Instead #provman_plugin_abort is called
+ * to give plugins a chance to delete any data they have cached for the session
+ * such as the IMSI number.
  *
  * \subsection client-ids Mapping between Client and OS IDs
  * 

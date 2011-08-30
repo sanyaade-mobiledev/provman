@@ -257,3 +257,20 @@ on_error:
 
 	task->invocation = NULL;
 }
+
+void provman_task_abort(plugin_manager_t *plugin_manager, provman_task *task)
+{
+	int err;
+
+	PROVMAN_LOG("Processing Abort task");
+
+	err = plugin_manager_abort(plugin_manager);
+
+	if (err == PROVMAN_ERR_NONE)
+		g_dbus_method_invocation_return_value(task->invocation, NULL);
+	else
+		g_dbus_method_invocation_return_dbus_error(
+			task->invocation, provman_err_to_dbus(err), "");
+
+	task->invocation = NULL;
+}

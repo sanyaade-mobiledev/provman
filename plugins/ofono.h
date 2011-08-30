@@ -52,5 +52,6 @@ int ofono_plugin_validate_set(provman_plugin_instance instance,
 			      const char* key, const char* value);
 int ofono_plugin_validate_del(provman_plugin_instance instance, 
 			      const char* key, bool *leaf);
+void ofono_plugin_abort(provman_plugin_instance instance);
 #endif
 

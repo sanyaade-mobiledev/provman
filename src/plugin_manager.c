@@ -652,4 +652,30 @@ on_error:
 	return err;
 }
 
+int plugin_manager_abort(plugin_manager_t *manager)
+{
+	int err = PROVMAN_ERR_NONE;
+	unsigned int i;
+	const provman_plugin *plugin;
+	provman_plugin_instance pi;
+	unsigned int count = provman_plugin_get_count();
 
+	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
+		err = PROVMAN_ERR_DENIED;
+		goto on_error;
+	}
+	
+	for (i = 0; i < count; ++i) {
+		plugin = provman_plugin_get(i);
+
+		if (plugin->abort_fn) {
+			pi = manager->plugin_instances[i];
+			plugin->abort_fn(pi);
+		}
+	}
+	prv_clear_cache(manager);
+
+on_error:
+
+	return err;
+}

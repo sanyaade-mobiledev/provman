@@ -44,7 +44,8 @@ enum provman_task_type_ {
 	PROVMAN_TASK_GET,
 	PROVMAN_TASK_SET_ALL,
 	PROVMAN_TASK_GET_ALL,
-	PROVMAN_TASK_DELETE	
+	PROVMAN_TASK_DELETE,
+	PROVMAN_TASK_ABORT
 };
 
 typedef enum provman_task_type_ provman_task_type;
@@ -93,6 +94,7 @@ void provman_task_get_all(plugin_manager_t *manager, provman_task *task);
 void provman_task_get(plugin_manager_t *manager, provman_task *task);
 void provman_task_delete(plugin_manager_t *manager,
 			      provman_task *task);
+void provman_task_abort(plugin_manager_t *plugin_manager, provman_task *task);
 
 bool provman_task_sync_out(plugin_manager_t *plugin_manager,
 				provman_task *task,
