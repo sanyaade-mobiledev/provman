@@ -1,3 +1,9 @@
+version 0.0.3
+	- Added the Abort command
+	- The End command now blocks until the session has finished.
+	- Fixed a bug which prevented provman from exitting if launched with
+	  and invalid command.
+
 version 0.0.2
 	- Fixed build system so that make dist works.
 
