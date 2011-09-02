@@ -48,9 +48,5 @@ int eds_plugin_sync_out(provman_plugin_instance instance,
 			void *user_data);
 void eds_plugin_sync_out_cancel(provman_plugin_instance instance);
 
-int eds_plugin_validate_set(provman_plugin_instance instance, 
-			    const char* key, const char* value);
-int eds_plugin_validate_del(provman_plugin_instance instance, 
-			    const char* key, bool *leaf);
 #endif
 

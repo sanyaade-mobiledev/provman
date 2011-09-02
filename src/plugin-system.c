@@ -32,6 +32,7 @@
 #include "config.h"
 
 #include "plugin.h"
+#include "standard_schemas.h"
 
 #ifdef PROVMAN_OFONO
 #include "plugins/ofono.h"
@@ -40,10 +41,10 @@
 provman_plugin g_provman_plugins[] = {
 #ifdef PROVMAN_OFONO
 	{ "ofono", "/telephony/",
+	  g_provman_telephony_schema,
 	  ofono_plugin_new, ofono_plugin_delete, 
 	  ofono_plugin_sync_in, ofono_plugin_sync_in_cancel,
 	  ofono_plugin_sync_out, ofono_plugin_sync_out_cancel,
-	  ofono_plugin_validate_set, ofono_plugin_validate_del,
 	  ofono_plugin_abort
 	}
 #endif

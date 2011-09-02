@@ -239,62 +239,6 @@ typedef void (*provman_plugin_sync_out_cancel)(
 typedef void (*provman_plugin_abort)(
 	provman_plugin_instance instance);
 
-/*! 
- * @brief Typedef for a function pointer that is called when provman
- *        receives a request from a device management client to
- *        create a new setting or to modify the value of an existing setting.
- *
- * The plugin should check to see whether it supports the key specified by the
- * key parameter, whether the value of the key can be changed, and whether
- * the specified value is valid.
- *        
- * All plugin instances must implement this function.
- *
- * @param instance A pointer to the plugin instance.
- * @param key The key of the setting to create or update.
- * @param value The value of the setting.
- *  
- * @return PROVMAN_ERR_NONE if the plugin deems that it is appropriate to set the
- *                      specified key to the specified value.
- * @return PROVMAN_ERR_NOT_DENIED the key cannot be created or modified
- * @return PROVMAN_ERR_BAD_KEY the key is not valid
- */
-
-typedef int (*provman_plugin_validate_set)(provman_plugin_instance instance,
-						const char* key, 
-						const char* value);
-
-/*! 
- * @brief Typedef for a function pointer that is called when provman
- *        receives a request from a device management client to
- *        delete an existing setting or directory.
- *
- * The plugin should check to see whether it supports the key specified by the
- * key parameter and whether it can be deleted.  The plugin does not need to
- * check to see if the key exists.  Provman will do this.  The key can 
- * represent an individual setting or a directory.  Most plugins will probably
- * not allow individual settings to be deleted.
- *        
- * All plugin instances must implement this function.
- *
- * @param instance A pointer to the plugin instance.
- * @param key The key of the setting or directory to delete.  Provman guarantees
- * that the key will always be owned by the plugin, that is be located under
- * the plugins root and that the key does not contain a trailing '/'.
- * @param leaf An output parameter that is set by the plugin to indicate
- *        whether the key being deleted is a setting or a directory.
- *  
- * @return PROVMAN_ERR_NONE if the plugin deems that it is appropriate to delete 
- *                      the specified key.
- * @return PROVMAN_ERR_NOT_FOUND the key does not exist
- * @return PROVMAN_ERR_NOT_DENIED the key cannot be deleted
- * @return PROVMAN_ERR_BAD_KEY the key is not valid
- * 
- */
-
-typedef int (*provman_plugin_validate_del)(provman_plugin_instance instance,
-						const char* key, bool *leaf);
-
 /*! \brief Typedef for struct provman_plugin_ */
 typedef struct provman_plugin_ provman_plugin;
 
@@ -317,6 +261,8 @@ struct provman_plugin_
 	const char *name;
         /*! \brief The root of the plugin. */     
 	const char *root; 
+        /*! \brief The XML schema of the plugin. */     
+	const char *schema; 
         /*! \brief Pointer to the plugin's creation function. */
 	provman_plugin_new new_fn; 
         /*! \brief Pointer to the plugin's destructor. */
@@ -329,10 +275,6 @@ struct provman_plugin_
 	provman_plugin_sync_out sync_out_fn;
         /*! \brief Pointer to the plugin's sync out cancel function. */
 	provman_plugin_sync_out_cancel sync_out_cancel_fn;
-        /*! \brief Pointer to the plugin's validate set function. */
-	provman_plugin_validate_set validate_set_fn;
-        /*! \brief Pointer to the plugin's validate del function. */
-	provman_plugin_validate_del validate_del_fn;
         /*! \brief Pointer to the plugin's abort function. */
 	provman_plugin_abort abort_fn;
 };

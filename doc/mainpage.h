@@ -180,17 +180,101 @@ manager.End()
  * 
  * @section plugin-overview Plugin Overview
  *
- * Each plugin must implement a number of methods.  The most important of these
+ * Each plugin must provide an XML schema describing the settings that it supports.
+ * The schema DTD is show below:
+\code
+<!ELEMENT schema (dir)* >
+<!ELEMENT dir (dir | key)*>
+<!ELEMENT key EMPTY>
+<!ATTLIST schema
+   root   CDATA             #REQUIRED
+>
+<!ATTLIST dir
+   name   CDATA             #IMPLIED ""
+   delete (yes|no)          "yes"
+>
+<!ATTLIST dir
+   name   CDATA             #REQUIRED
+   delete (yes|no)          "no"
+   write  (yes|no)          "yes"
+   type   (int|string|enum) #REQUIRED
+   values CDATA             #IMPLIED
+>
+\endcode
+ *  The first element must be called \a schema.  This element must have a single
+ * attribute called \a root whose value is the root path of the plugin, e.g.,
+ * /applications/email/.  The root path must end in a '/'.
+ *
+ * The \a schema element can contain one or more \a dir elements, which represent
+ * directories.  Each \a dir element should have a \a name attribute
+ * that indicates the name of the directory.  The name attribute
+ * should only contain the directory's name, e.g., \a incoming, and not a
+ * full path such as 
+ * \a /applications/email/incoming.  It should not end in a '/'.  The \a dir
+ * element supports an additional attribute called \a delete which determines
+ * whether or not a directory can be deleted.  The \a delete attribute is
+ * optional and if not specified defaults to \a yes.  The \a name element is
+ * actually optional as well. If it is not specified or is set to the empty
+ * string the directory is said to be unnamed.  Unnamed directories allow
+ * clients to specify the name of the directory themselves.  This is useful if
+ * the name of the directory corresponds to an account name.  Unammed directories
+ * are represented by the notation \<X\> in the \ref settings section below.
+ * An unnamed directory cannot have any siblings.
+ * 
+ * A directory can contain zero or more \a dir or \a key elements.  A \a key
+ * element corresponds to an individual setting.  \a key elements cannot have any
+ * children.  Like \a dir elements, they support a \a name attribute but unlike
+ * \a dir
+ * elements this attribute is not optional and must be provided.  \a key elements
+ * also support a \a delete attribute.  The \a delete attribute is optional but, 
+ * unlike the \a dir's delete attribute, it defaults to \a no.  The \a key element
+ * also supports an attribute called \a write which indicates whether or not
+ * the setting it represents can be modified by clients.  \a write is optional
+ * and defaults to \a yes.  Finally, the \a key element supports two additional
+ * attributes \a type and \a values.  \a type indicates the type of the setting.
+ * Three values are currently supported, \a string, \a int and \a enum.  If the
+ * value of \a enum is specified for type, the \a values attribute must also be 
+ * present.  \a values should be set to a comma separated list of values
+ * supported by the setting.
+ *
+ * An example schema is presented below:
+ *
+\code
+<schema root='/telephony/'>
+    <dir name='contexts' delete='yes'>
+        <dir delete='yes'>
+            <key name='apn' delete='no' type='string'/>
+            <key name='name' delete='no' type='string'/>
+            <key name='password' delete='no' type='string'/>
+            <key name='username' delete='no' type='string'/>
+       </dir>
+    </dir>
+    <dir name='mms' delete='yes'>
+        <key name='apn' delete='no' type='string'/>
+        <key name='name' delete='no' type='string'/>
+        <key name='password' delete='no' type='string'/>
+        <key name='username' delete='no' type='string'/>
+        <key name='mmsc' delete='no' type='string'/>
+        <key name='proxy' delete='no' type='string'/>
+    </dir>
+</schema>
+\endcode
+ *
+ * Note the first grand child of the schema.  This is an unnamed directory
+ * that allows the clients to provide their own names for telephony contexts.
+ *
+ * In addition to the schema plugins must also implement a number of methods.
+ * The most important of these
  * are called #provman_plugin_sync_in and #provman_plugin_sync_out.
  * When a client initiates a new management session by calling the #Start method
  * provman iterates through all of the plugins invoking their 
  * #provman_plugin_sync_in methods.  When a plugin's  #provman_plugin_sync_in
- * method is called it must create a set of settings (key/value pairs) that represent the
- * current state of the data managed by the plugin.  For example, if the plugin
- * was responsible for managing telephony settings it might ask the telephony
- * sub-system for information about all of the 3G and MMS access points.  Once
- * received, the plugin would transform this information into one or more
- * settings.  These settings are then returned to provman.
+ * method is called it must create a set of settings (key/value pairs) that 
+ * represent the current state of the data managed by the plugin.  For example,
+ * if the plugin were responsible for managing telephony settings it might ask
+ * the telephony sub-system for information about all of the 3G and MMS access
+ * points.  Once received, the plugin would transform this information into one
+ * or more settings.  These settings are then returned to provman.
  *
  * Provman caches all settings it receives from the plugins for 
  * the duration of the management session.  If the client attempts to modify,
@@ -235,20 +319,19 @@ manager.End()
  *     cannot be guaranteed. </li>
  * </ol>
  * 
- * Of course the problem with this design is that provman may
- * indicate to the client that a call to Set has succeeded but it is possible that
+ * Of course the problem with this design is that even though provman
+ * indicates to a client that a call to #Set has succeeded, it is possible that
  * this setting is never actually propagated to the relevant piece of middleware.
  * This could happen because the operation is invalid, or because some unexpected
- * error occurs when the call to the relevant plugin's #provman_plugin_sync_out
+ * error occurs during the call to the relevant plugin's #provman_plugin_sync_out
  * method such as an out of memory or out of disk space error. Provman
- * attempts to minimise these sorts of descrepancies by defining two
- * additional methods that the plugins must implement.  These are 
- * #provman_plugin_validate_set and #provman_plugin_validate_del.
- * These are called by provman during the device management
- * session as soon as it receives a set or a delete command from the client.
- * When these methods are called on the plugin, it should perform some basic checks
- * to ensure that it supports the specified key and whether that key can really be
- * modified or deleted.
+ * attempts to minimise these sorts of descrepancies by validating a client's attempts
+ * to write and delete settings against the plugins' schemas.  The client will
+ * be notified if they try to create an unsupported setting, delete a read only
+ * setting or directory or specify an invalid value for a setting.  Therefore,
+ * if the #Set or #Delete methods succeed only a really exceptional error such
+ * as a lack of memory or disk space or a device shutdown will prevent modifications
+ * being propagated to the middleware.
  *
  * \subsection lifecycle Plugin Lifecycle
  * Plugins are created when the provman instance that hosts them is launched
@@ -257,14 +340,18 @@ manager.End()
  * #provman_plugin_delete methods respectively.  Plugins are not destroyed
  * when a management session ends.  It is therefore possible for 
  * #provman_plugin_sync_in and #provman_plugin_sync_out to be called
- * multiple times on the same plugin instance.  This could happen if two client
+ * multiple times on the same plugin instance.  This could happen if two clients
  * try to manage the device via the same provman instance at the same
  * time.  The second client will block until the first client has finished.  When
  * the first client calls the #End function, provman will call
  * #provman_plugin_sync_out for each plugin to complete the first session,
  * followed by #provman_plugin_sync_in on each client to begin the second
- * session.  Once all the calls to #provman_plugin_sync_in have completed,
- * the Start method invoked by the second client will complete.
+ * session.  Once all the calls to #provman_plugin_sync_out have completed,
+ * the Start method invoked by the second client will complete.  Note that
+ * the Start method currently completes before all the calls to 
+ * #provman_plugin_sync_in have returned.  If a call to #provman_plugin_sync_in
+ * fails for some reason, the management session can continue but not settings
+ * for that plugin will be available.
  *
  * When provman invokes a plugin's #provman_plugin_sync_out
  * method, the plugin is not obliged to delete any cached data that it may have
@@ -273,14 +360,14 @@ manager.End()
  * follows the first, it is more efficient if the plugin does not delete this
  * data, as it would only have to retrieve the data when the next session
  * starts.  Plugins that cache their data between settings are encouraged to
- * register for the relevant notifications to ensure that there cached data
+ * register for the relevant notifications to ensure that their cached data
  * is always up to date.
  *
  * A device management client may chose to discard any changes made during
  * a session by invoking the #Abort function.  #Abort discards any changes
  * made during the device management session and then ends the session.  
  * When a session is ended by calling #Abort, the plugins' 
- * #provman_plugin_sync_out methods are not invoked and no changes are push
+ * #provman_plugin_sync_out methods are not invoked and no changes are pushed
  * to the applications or middleware.  Instead #provman_plugin_abort is called
  * to give plugins a chance to delete any data they have cached for the session
  * such as the IMSI number.
@@ -433,6 +520,8 @@ manager.End()
  * <td>A string</td></tr>
  * <tr><td>url</td><td>The URL of the entity with which you are synchronising.
  * </td><td>A string</td></tr>
+ * <tr><td>client</td><td>Indicates whether or not the account is for a remote
+ * server or a client</td><td>0 (server) or 1 (client) </td></tr>
  * <tr><td colspan="3" align="center"><i>Settings for synchronising contacts
  *   are stored under /applications/sync/\<X\>/contacts/</i></td></tr>
  * <tr><td>format</td><td>Type of the contacts data</td><td>A MIME type</td></tr>
@@ -461,7 +550,7 @@ manager.End()
  *   which you are synchronising</td>
  *<td>A string</td></tr>
  *<tr><td colspan="3" align="center"><i>Settings for synchronising 
- *   memos are stored under /applications/sync/\<X\>/memos/</i></td></tr>
+ *   memos are stored under /applications/sync/\<X\>/memo/</i></td></tr>
  * <tr><td>format</td><td>Type of the memo data</td><td>A MIME type</td></tr>
  * <tr><td>sync</td><td>Type of synchronisation to be performed</td>
  *     <td>disabled, two-way, slow, one-way-from-client, refresh-from-client,
@@ -500,7 +589,7 @@ manager.End()
  *   which you are synchronising</td>
  *<td>A string</td></tr>
  *<tr><td colspan="3" align="center"><i>Settings for synchronising 
- *   active sync memos are stored under /applications/sync/\<X\>/eas-memos/
+ *   active sync memos are stored under /applications/sync/\<X\>/eas-memo/
  *   </i></td></tr>
  * <tr><td>format</td><td>Type of the memo data</td><td>A MIME type</td></tr>
  * <tr><td>sync</td><td>Type of synchronisation to be performed</td>

@@ -23,30 +23,17 @@
  */
 
 /*!
- * @file synce.h
+ * @file standard_schemas.h
  *
- * @brief contains function declarations for the sync-evolution plugin
+ * @brief contains schemas for support interfaces
  *
  *****************************************************************************/
 
-#ifndef PROVMAN_PLUGIN_SYNCE_H
-#define PROVMAN_PLUGIN_SYNCE_H
+#ifndef PROVMAN_STANDARD_SCHEMAS_H
+#define PROVMAN_STANDARD_SCHEMAS_H
 
-#include "plugin.h"
-
-int synce_plugin_new(provman_plugin_instance *instance);
-void synce_plugin_delete(provman_plugin_instance instance);
-
-int synce_plugin_sync_in(provman_plugin_instance instance, 
-			 const char* imsi, 
-			 provman_plugin_sync_in_cb callback, 
-			 void *user_data);
-void synce_plugin_sync_in_cancel(provman_plugin_instance instance);
-int synce_plugin_sync_out(provman_plugin_instance instance, 
-			  GHashTable* settings, 
-			  provman_plugin_sync_out_cb callback, 
-			  void *user_data);
-void synce_plugin_sync_out_cancel(provman_plugin_instance instance);
+extern const gchar g_provman_email_schema[];
+extern const gchar g_provman_telephony_schema[];
+extern const gchar g_provman_sync_schema[];
 
 #endif
-

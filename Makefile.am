@@ -9,7 +9,9 @@ pm_sources = \
 		src/plugin_manager.c \
 		src/plugin_manager.h \
 		src/map_file.c \
-		src/log.c
+		src/log.c \
+		src/standard_schemas.c \
+		src/schema.c
 
 pm_headers = \
 		include/error.h \

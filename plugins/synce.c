@@ -1471,31 +1471,3 @@ void synce_plugin_sync_out_cancel(provman_plugin_instance instance)
 	    plugin_instance->cancellable)
 		g_cancellable_cancel(plugin_instance->cancellable);
 }
-
-int synce_plugin_validate_set(provman_plugin_instance instance, 
-			      const char* key, const char* value)
-{
-	/* TODO: Fill me in */
-
-	return PROVMAN_ERR_NONE;
-}
-
-int synce_plugin_validate_del(provman_plugin_instance instance, 
-			      const char* key, bool *leaf)
-{
-	int err = PROVMAN_ERR_NONE;
-	size_t key_len = strlen(key);
-	size_t sync_root_len = sizeof(LOCAL_KEY_SYNC_ROOT) - 2;
-
-	if (key_len > sync_root_len)
-		if (strchr(key + sync_root_len + 1, '/')) {
-			err = PROVMAN_ERR_BAD_KEY;
-			goto on_error;
-		}
-
-	*leaf = false;
-
-on_error:
-	
-	return err;
-}

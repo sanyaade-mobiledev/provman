@@ -32,8 +32,7 @@
 #include "config.h"
 
 #include "plugin.h"
-
-/*! \cond */
+#include "standard_schemas.h"
 
 #ifdef PROVMAN_EVOLUTION
 #include "plugins/eds.h"
@@ -42,8 +41,6 @@
 #ifdef PROVMAN_SYNC_EVOLUTION
 #include "plugins/synce.h"
 #endif
-
-/*! \endcond */
 
 /*! \var g_provman_plugins
     \brief Array of plugins structures
@@ -57,10 +54,11 @@
 provman_plugin g_provman_plugins[] = { 
 #ifdef PROVMAN_EVOLUTION
 	{ "eds", "/applications/email/",
+	  g_provman_email_schema,
 	  eds_plugin_new, eds_plugin_delete, 
 	  eds_plugin_sync_in, eds_plugin_sync_in_cancel,
 	  eds_plugin_sync_out, eds_plugin_sync_out_cancel,
-	  eds_plugin_validate_set, eds_plugin_validate_del, NULL
+	  NULL
 	}
 #endif
 #ifdef PROVMAN_SYNC_EVOLUTION
@@ -68,10 +66,11 @@ provman_plugin g_provman_plugins[] = {
 	,
 #endif
 	{ "sync-evolution", "/applications/sync/",
+	  g_provman_sync_schema,
 	  synce_plugin_new, synce_plugin_delete, 
 	  synce_plugin_sync_in, synce_plugin_sync_in_cancel,
 	  synce_plugin_sync_out, synce_plugin_sync_out_cancel,
-	  synce_plugin_validate_set, synce_plugin_validate_del, NULL
+	  NULL
 	}
 #endif
 };

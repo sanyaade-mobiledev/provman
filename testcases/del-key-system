@@ -22,5 +22,6 @@ manager.Start(imsi)
 try:
 	manager.Delete(key)
 except dbus.exceptions.DBusException:
+	print("Unable to delete key: " + key)
 	pass
 manager.End()

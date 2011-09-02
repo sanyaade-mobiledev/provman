@@ -36,6 +36,7 @@
 
 #include "error.h"
 #include "log.h"
+#include "schema.h"
 
 #include "plugin_manager.h"
 #include "plugin.h"
@@ -49,7 +50,8 @@ typedef enum plugin_manager_state_t_ plugin_manager_state_t;
 
 struct plugin_manager_t_ {
 	plugin_manager_state_t state;
-	provman_plugin_instance *plugin_instances;	
+	provman_plugin_instance *plugin_instances;
+	provman_schema_t **plugin_schemas;
 	GHashTable **kv_caches;
 	unsigned int synced;
 	plugin_manager_cb_t callback;
@@ -79,9 +81,19 @@ int plugin_manager_new(plugin_manager_t **manager)
 	
 	retval->state = PLUGIN_MANAGER_STATE_IDLE;
 	retval->plugin_instances = g_new0(provman_plugin_instance, count);
+	retval->plugin_schemas = g_new0(provman_schema_t*, count);
 	
 	for (i = 0; i < count; ++i) {
 		plugin = provman_plugin_get(i);
+		
+		err = provman_schema_new(plugin->schema, strlen(plugin->schema),
+					 &retval->plugin_schemas[i]);
+		if (err != PROVMAN_ERR_NONE) {
+			PROVMAN_LOGF("Unable to instantiate schema for plugin"
+				     " %s", plugin->name);
+			goto on_error;
+		}
+
 		err = plugin->new_fn(&retval->plugin_instances[i]);
 		if (err != PROVMAN_ERR_NONE) {
 			PROVMAN_LOGF("Unable to instantiate plugin %s",
@@ -127,11 +139,13 @@ void plugin_manager_delete(plugin_manager_t *manager)
 	if (manager) {
 		count = provman_plugin_get_count();
 		for (i = 0; i < count; ++i) {
+			provman_schema_delete(manager->plugin_schemas[i]);
 			plugin = provman_plugin_get(i);
 			plugin->delete_fn(manager->plugin_instances[i]);
-			if (manager->kv_caches[i])
+			if (manager->kv_caches && manager->kv_caches[i])
 				g_hash_table_unref(manager->kv_caches[i]);
 		}
+		g_free(manager->plugin_schemas);
 		g_free(manager->plugin_instances);
 		g_free(manager->kv_caches);
 		g_free(manager);
@@ -456,6 +470,30 @@ on_error:
 	return err;
 }
 
+static int prv_validate_set(provman_schema_t *root, const char* key,
+			    const char* value)
+{
+	int err;
+	provman_schema_t *schema;
+
+	err = provman_schema_locate(root, key, &schema);
+	if (err != PROVMAN_ERR_NONE)
+		goto on_error;
+
+	if ((schema->type == PROVMAN_SCHEMA_TYPE_DIR) ||
+	    !schema->key.can_write) {
+		err = PROVMAN_ERR_BAD_KEY;
+		goto on_error;
+	}
+
+	err = provman_schema_check_value(schema, value);
+	if (err != PROVMAN_ERR_NONE)
+		goto on_error;
+
+on_error:
+
+	return err;
+}
 
 static int prv_set_common(plugin_manager_t* manager, const gchar* key,
 			  const gchar* value)
@@ -463,6 +501,7 @@ static int prv_set_common(plugin_manager_t* manager, const gchar* key,
 	int err = PROVMAN_ERR_NONE;
 	unsigned int index;
 	const provman_plugin *plugin;
+	provman_schema_t *root;
 	provman_plugin_instance pi;
 	
 	err = provman_plugin_find_index(key, &index);
@@ -476,8 +515,9 @@ static int prv_set_common(plugin_manager_t* manager, const gchar* key,
 
 	plugin = provman_plugin_get(index);
 	pi = manager->plugin_instances[index];
+	root = manager->plugin_schemas[index];
 
-	err = plugin->validate_set_fn(pi, key, value);
+	err = prv_validate_set(root, key, value);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
 
@@ -547,12 +587,36 @@ on_error:
 	return err;
 }
 
+static int prv_validate_del(provman_schema_t *root, const char* key,
+			    bool *leaf)
+{
+	int err = PROVMAN_ERR_NONE;
+	provman_schema_t *schema;
+
+	err = provman_schema_locate(root, key, &schema);
+	if (err != PROVMAN_ERR_NONE)
+		goto on_error;
+
+	if (!schema->can_delete) {
+		err = PROVMAN_ERR_BAD_KEY;
+		goto on_error;
+	}
+
+	*leaf = (schema->type == PROVMAN_SCHEMA_TYPE_KEY);
+
+on_error:
+
+	return err;
+}
+
+
 static int prv_delete_key(plugin_manager_t* manager, const gchar* raw_key,
 			  unsigned int index)
 {
 	int err = PROVMAN_ERR_NONE;
-	const provman_plugin *plugin;
+	const provman_plugin *plugin;	
 	provman_plugin_instance pi;
+	provman_schema_t *schema;
 	bool leaf;
 	unsigned int deleted;
 	GHashTableIter iter;
@@ -575,8 +639,9 @@ static int prv_delete_key(plugin_manager_t* manager, const gchar* raw_key,
 
 	plugin = provman_plugin_get(index);
 	pi = manager->plugin_instances[index];
+	schema = manager->plugin_schemas[index];
 
-	err = plugin->validate_del_fn(pi, key, &leaf);
+	err = prv_validate_del(schema, key, &leaf);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
 
