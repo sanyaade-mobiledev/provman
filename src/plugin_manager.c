@@ -500,9 +500,7 @@ static int prv_set_common(plugin_manager_t* manager, const gchar* key,
 {
 	int err = PROVMAN_ERR_NONE;
 	unsigned int index;
-	const provman_plugin *plugin;
 	provman_schema_t *root;
-	provman_plugin_instance pi;
 	
 	err = provman_plugin_find_index(key, &index);
 	if (err != PROVMAN_ERR_NONE)
@@ -513,8 +511,6 @@ static int prv_set_common(plugin_manager_t* manager, const gchar* key,
 		goto on_error;
 	}
 
-	plugin = provman_plugin_get(index);
-	pi = manager->plugin_instances[index];
 	root = manager->plugin_schemas[index];
 
 	err = prv_validate_set(root, key, value);
@@ -614,8 +610,6 @@ static int prv_delete_key(plugin_manager_t* manager, const gchar* raw_key,
 			  unsigned int index)
 {
 	int err = PROVMAN_ERR_NONE;
-	const provman_plugin *plugin;	
-	provman_plugin_instance pi;
 	provman_schema_t *schema;
 	bool leaf;
 	unsigned int deleted;
@@ -637,8 +631,6 @@ static int prv_delete_key(plugin_manager_t* manager, const gchar* raw_key,
 		goto on_error;
 	}
 
-	plugin = provman_plugin_get(index);
-	pi = manager->plugin_instances[index];
 	schema = manager->plugin_schemas[index];
 
 	err = prv_validate_del(schema, key, &leaf);
