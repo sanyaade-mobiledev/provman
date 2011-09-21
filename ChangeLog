@@ -1,3 +1,7 @@
+version 0.0.4
+	- Added d-Bus Introspection methods.
+	- Added plugin schemas
+
 version 0.0.3
 	- Added the Abort command
 	- The End command now blocks until the session has finished.
