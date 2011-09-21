@@ -142,6 +142,11 @@
  * any SIM specific settings with the SIM card of the first modem detetected
  * in the device.
  *
+ * Provman has support for introspection.  The methods #GetTypeInfo and
+ * #GetChildrenTypeInfo allow clients to identify the settings that are
+ * supported by the device and the types and possible values that these 
+ * settings can hold.
+ *
  * A brief description of each D-Bus method is given below.  Click on the links
  * for more detailed information:
  * 
@@ -156,6 +161,8 @@
  * <tr><td>#Delete</td><td>\copybrief Delete</td></tr>
  * <tr><td>#End</td><td>\copybrief End</td></tr>
  * <tr><td>#Abort</td><td>\copybrief Abort</td></tr>
+ * <tr><td>#GetTypeInfo</td><td>\copybrief GetTypeInfo</td></tr>
+ * <tr><td>#GetChildrenTypeInfo</td><td>\copybrief GetChildrenTypeInfo</td></tr>
  * </table>
  *
  * A simple python script demonstrating how these methods can be used is shown below.
@@ -260,7 +267,7 @@ manager.End()
 </schema>
 \endcode
  *
- * Note the first grand child of the schema.  This is an unnamed directory
+ * Note the first grandchild of the schema.  This is an unnamed directory
  * that allows the clients to provide their own names for telephony contexts.
  *
  * In addition to the schema plugins must also implement a number of methods.

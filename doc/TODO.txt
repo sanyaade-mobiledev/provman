@@ -4,25 +4,31 @@ TODOs:
 Provman:
 -------
 
-* Introspection
-
-  Need to add an introspection interface so that clients can discover which
-  settings are available and which values they can assume.
-
 * Meta data
  
   Need to allow meta data to be associated with settings.  Needed for OMA DM
   and OMA CP.
 
-EDS Plugin:
+* Lazy invocation of sync_in
 
-* Implement validate_set
+  Investigate whether it would be possible to use lazy evaluations for plugins,
+  i.e., do not call sync in, until a client actually reads or modifies settings
+  maintained by the plugin.  This will be advantageous when we have many plugins
+  and the client only wishes to modify settings owned by a small number of these
+  plugins.
+
+* Binary plugins
+
+  Replace hardcoded plugins with executables.  Doing so would mean that we have
+  no license conflict issues for the plugins and it should increase security
+  as each binary plugin can be given the rights it needs, and only the rights it
+  needs, to perform its various tasks.
+
+EDS Plugin:
 
 * Listen to notifications and update internal data model
 
 SyncE Plugin:
-
-* Implement validate_set
 
 * Add RemoteDeviceId parameter
 

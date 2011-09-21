@@ -55,12 +55,15 @@
 #define PROVMAN_INTERFACE_GET "Get"
 #define PROVMAN_INTERFACE_GET_ALL "GetAll"
 #define PROVMAN_INTERFACE_DICT "dict"
+#define PROVMAN_INTERFACE_TYPE "type"
 #define PROVMAN_INTERFACE_ERRORS "errors"
 #define PROVMAN_INTERFACE_PROP "prop"
 #define PROVMAN_INTERFACE_DELETE "Delete"
 #define PROVMAN_INTERFACE_IMSI "imsi"
 #define PROVMAN_INTERFACE_END "End"
 #define PROVMAN_INTERFACE_ABORT "Abort"
+#define PROVMAN_INTERFACE_GET_CHILDREN_TYPE_INFO "GetChildrenTypeInfo"
+#define PROVMAN_INTERFACE_GET_TYPE_INFO "GetTypeInfo"
 
 #define PROVMAN_TIMEOUT 30*1000
 
@@ -123,6 +126,18 @@ static const gchar g_provman_introspection[] =
 	"      <arg type='s' name='"PROVMAN_INTERFACE_KEY"'"
 	"           direction='in'/>"
 	"    </method>"
+	"    <method name='"PROVMAN_INTERFACE_GET_TYPE_INFO"'>"
+	"      <arg type='s' name='"PROVMAN_INTERFACE_KEY"'"
+	"           direction='in'/>"
+	"      <arg type='s' name='"PROVMAN_INTERFACE_TYPE"'"
+	"           direction='out'/>"
+	"    </method>"
+	"    <method name='"PROVMAN_INTERFACE_GET_CHILDREN_TYPE_INFO"'>"
+	"      <arg type='s' name='"PROVMAN_INTERFACE_KEY"'"
+	"           direction='in'/>"
+	"      <arg type='a{ss}' name='"PROVMAN_INTERFACE_DICT"'"
+	"           direction='out'/>"
+	"    </method>"
 	"  </interface>"
 	"</node>";
 
@@ -164,6 +179,8 @@ static void prv_free_provman_task(gpointer data)
 	case PROVMAN_TASK_GET:
 	case PROVMAN_TASK_DELETE:
 	case PROVMAN_TASK_GET_ALL:
+	case PROVMAN_TASK_GET_CHILDREN_TYPE_INFO:
+	case PROVMAN_TASK_GET_TYPE_INFO:
 		prv_provman_key_free(&task->key);
 		break;
 	case PROVMAN_TASK_SET_ALL:
@@ -196,6 +213,18 @@ static void prv_sync_out_task_finished(int result, void *user_data)
 
 	prv_session_finished(context);
 	context->idle_id = g_idle_add(prv_process_task, context);
+}
+
+static gboolean prv_timeout(gpointer user_data)
+{
+	provman_context *context = user_data;
+
+	g_main_loop_quit(context->main_loop);
+	context->timeout_id = 0;
+
+	PROVMAN_LOG("No requests received.  Exitting.");	
+
+	return FALSE;
 }
 
 static gboolean prv_process_task(gpointer user_data)
@@ -240,6 +269,14 @@ static gboolean prv_process_task(gpointer user_data)
 			provman_task_abort(context->plugin_manager,task);
 			prv_session_finished(context);
 			break;
+		case PROVMAN_TASK_GET_CHILDREN_TYPE_INFO:
+			provman_task_get_children_type_info(
+				context->plugin_manager, task);
+			break;
+		case PROVMAN_TASK_GET_TYPE_INFO:
+			provman_task_get_type_info(
+				context->plugin_manager, task);
+			break;
 		default:
 			break;
 		}
@@ -250,8 +287,11 @@ static gboolean prv_process_task(gpointer user_data)
 	if (!async_task) {
 		if (context->quitting || 
 		    ((context->tasks->len == 0) && !context->holder)) {
-			PROVMAN_LOG("No tasks left to execute. Exiting");
-			g_main_loop_quit(context->main_loop);
+			PROVMAN_LOGF("No tasks left to execute. Quitting in"
+				     " %u milli-seconds", PROVMAN_TIMEOUT);
+			context->timeout_id = g_timeout_add(PROVMAN_TIMEOUT,
+							    prv_timeout,
+							    context);			
 			context->idle_id = 0;
 			return FALSE;
 		} else if (context->holder) {
@@ -265,18 +305,6 @@ static gboolean prv_process_task(gpointer user_data)
 		context->idle_id = 0;
 		return FALSE;
 	}
-}
-
-static gboolean prv_timeout(gpointer user_data)
-{
-	provman_context *context = user_data;
-
-	g_main_loop_quit(context->main_loop);
-	context->timeout_id = 0;
-
-	PROVMAN_LOG("No requests received.  Exitting.");	
-
-	return FALSE;
 }
 
 static void prv_provman_method_call(GDBusConnection *connection, 
@@ -415,6 +443,39 @@ static void prv_add_get_all_task(provman_context *context,
 	PROVMAN_LOG("Add Task Get All");
 
 	task->type = PROVMAN_TASK_GET_ALL;
+	task->invocation = invocation;
+	task->key.key = g_strdup(key);
+	g_strstrip(task->key.key);
+
+	prv_add_task(context, task);
+}
+
+static void prv_add_get_children_type_info_task(
+	provman_context *context,
+	GDBusMethodInvocation *invocation,
+	const gchar *key)
+{
+	provman_task *task = g_new0(provman_task, 1);
+
+	PROVMAN_LOG("Add Task Get Children Type Info");
+
+	task->type = PROVMAN_TASK_GET_CHILDREN_TYPE_INFO;
+	task->invocation = invocation;
+	task->key.key = g_strdup(key);
+	g_strstrip(task->key.key);
+
+	prv_add_task(context, task);
+}
+
+static void prv_add_get_type_info_task(provman_context *context,
+				       GDBusMethodInvocation *invocation,
+				       const gchar *key)
+{
+	provman_task *task = g_new0(provman_task, 1);
+
+	PROVMAN_LOG("Add Task Get Type Info");
+
+	task->type = PROVMAN_TASK_GET_TYPE_INFO;
 	task->invocation = invocation;
 	task->key.key = g_strdup(key);
 	g_strstrip(task->key.key);
@@ -571,6 +632,14 @@ static bool prv_find_connection(provman_context *context,
 	return found;
 }
 
+static void prv_reset_startup_timer(provman_context *context)
+{
+	if (context->timeout_id) {
+		(void) g_source_remove(context->timeout_id);
+		context->timeout_id = 0;
+	}
+}
+
 static void prv_provman_method_call(GDBusConnection *connection, 
 					 const gchar *sender,
 					 const gchar *object_path,
@@ -589,11 +658,7 @@ static void prv_provman_method_call(GDBusConnection *connection,
 
 	if (!g_strcmp0(method_name, PROVMAN_INTERFACE_START)) {
 		if (!context->holder) {
-			if (context->timeout_id) {
-				(void) g_source_remove(context->timeout_id);
-				context->timeout_id = 0;
-			}
-
+			prv_reset_startup_timer(context);
 			context->holder = g_strdup(
 				g_dbus_method_invocation_get_sender(
 					invocation));
@@ -618,6 +683,16 @@ static void prv_provman_method_call(GDBusConnection *connection,
 				invocation, PROVMAN_DBUS_ERR_UNEXPECTED,
 				"");
 		}
+	} else if (!g_strcmp0(method_name,
+			      PROVMAN_INTERFACE_GET_CHILDREN_TYPE_INFO)) {
+		prv_reset_startup_timer(context);
+		g_variant_get(parameters, "(&s)", &key);
+		prv_add_get_children_type_info_task(context, invocation, key);
+	} else if (!g_strcmp0(method_name,
+			      PROVMAN_INTERFACE_GET_TYPE_INFO)) {
+		prv_reset_startup_timer(context);
+		g_variant_get(parameters, "(&s)", &key);
+		prv_add_get_type_info_task(context, invocation, key);
 	} else {
 		if (g_strcmp0(context->holder, 
 			      g_dbus_method_invocation_get_sender(

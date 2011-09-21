@@ -286,7 +286,8 @@ unsigned int provman_plugin_get_count();
 const provman_plugin *provman_plugin_get(unsigned int i);
 int provman_plugin_find_index(const char *uri, unsigned int *index);
 GPtrArray *provman_plugin_find_children(const char *uri);
-
+GPtrArray *provman_plugin_find_direct_children(const char *uri);
+bool provman_plugin_uri_exists(const char *uri);
 /*! \endcond */
 
 #endif

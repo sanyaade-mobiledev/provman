@@ -1,0 +1,40 @@
+#!/usr/bin/python
+
+import dbus
+import sys
+
+bus = dbus.SessionBus()
+
+if len(sys.argv) < 2:
+	print "Usage: get-all-ti-session key\n"
+	sys.exit(1)
+
+root = sys.argv[1]
+
+manager = dbus.Interface(bus.get_object('com.intel.provman.server', '/com/intel/provman'),
+					'com.intel.provman.Settings')
+
+def get_keys(root, keys):
+	children = manager.GetChildrenTypeInfo(root)
+	for name in children:
+		type = children[name]
+		new_key = root + name
+		keys[new_key] = type
+		if type == "dir":
+			get_keys(new_key + "/", keys)		
+
+keys = {}
+
+try:
+	root = root.strip()
+	keys[root] = manager.GetTypeInfo(root)
+	if keys[root] == "dir":
+		if root[-1] != '/':
+			root = root + '/'
+		get_keys(root, keys)	
+	for key in sorted(keys):
+		print key + " ( " + keys[key] + " )"
+	
+except dbus.exceptions.DBusException:
+    print("Unable to retrieve type information for : " + root)
+    pass

@@ -1,0 +1,21 @@
+#!/usr/bin/python
+
+import dbus
+import sys
+
+bus = dbus.SessionBus()
+
+if len(sys.argv) < 2:
+	print "Usage: get-ti-session key\n"
+	sys.exit(1)
+
+key = sys.argv[1]
+
+manager = dbus.Interface(bus.get_object('com.intel.provman.server', '/com/intel/provman'),
+					'com.intel.provman.Settings')
+try:
+    print manager.GetTypeInfo(key)
+
+except dbus.exceptions.DBusException:
+    print("Unable to retrieve type information for : " + key)
+    pass

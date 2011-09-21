@@ -294,3 +294,48 @@ void provman_task_abort(plugin_manager_t *plugin_manager, provman_task *task)
 
 	task->invocation = NULL;
 }
+
+void provman_task_get_children_type_info(plugin_manager_t *manager,
+					 provman_task *task)
+{
+	int err;
+	GVariant *array;
+
+	PROVMAN_LOG("Processing Get Children Type Info task");
+
+	err = plugin_manager_get_children_type_info(manager, task->key.key,
+						    &array);
+
+	if (err == PROVMAN_ERR_NONE)
+		g_dbus_method_invocation_return_value(
+			task->invocation,
+			g_variant_new("(@a{ss})",array));
+	else
+		g_dbus_method_invocation_return_dbus_error(
+			task->invocation, provman_err_to_dbus(err), "");
+
+	task->invocation = NULL;
+}
+
+void provman_task_get_type_info(plugin_manager_t *manager,
+				provman_task *task)
+{
+	int err;
+	gchar *type_info;
+
+	PROVMAN_LOG("Processing Get Type Info task");
+
+	err = plugin_manager_get_type_info(manager, task->key.key, &type_info);
+
+	if (err == PROVMAN_ERR_NONE) {
+		g_dbus_method_invocation_return_value(
+			task->invocation,
+			g_variant_new("(s)",type_info));
+		g_free(type_info);
+	}
+	else
+		g_dbus_method_invocation_return_dbus_error(
+			task->invocation, provman_err_to_dbus(err), "");
+
+	task->invocation = NULL;
+}

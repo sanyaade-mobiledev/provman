@@ -48,6 +48,13 @@ enum plugin_manager_state_t_ {
 };
 typedef enum plugin_manager_state_t_ plugin_manager_state_t;
 
+#define PLUGIN_MANAGER_TYPE_STRING "string"
+#define PLUGIN_MANAGER_TYPE_INT "int"
+#define PLUGIN_MANAGER_TYPE_DIR "dir"
+#define PLUGIN_MANAGER_TYPE_ENUM "enum"
+
+#define PLUGIN_MANAGER_UNNAMED_DIR "<X>"
+
 struct plugin_manager_t_ {
 	plugin_manager_state_t state;
 	provman_plugin_instance *plugin_instances;
@@ -734,5 +741,190 @@ int plugin_manager_abort(plugin_manager_t *manager)
 
 on_error:
 
+	return err;
+}
+
+static gchar *prv_getSchemaType(provman_schema_t *schema)
+{
+	gchar *retval = NULL;
+	const gchar *type = NULL;
+	GString *str;
+	GHashTableIter iter;
+	unsigned int enum_count;
+	unsigned int i = 0;
+	gpointer key;
+
+	if (schema->key.type == PROVMAN_SCHEMA_VALUE_TYPE_ENUM) {
+		str = g_string_new(PLUGIN_MANAGER_TYPE_ENUM);
+		g_string_append(str, ": ");
+		g_hash_table_iter_init(&iter, schema->key.allowed_values);
+		enum_count = g_hash_table_size(schema->key.allowed_values);
+		while ((i < enum_count - 1) && 
+		       g_hash_table_iter_next(&iter, &key, NULL)) {
+			g_string_append(str, (gchar*) key);
+			g_string_append(str, ", ");
+			++i;
+		}
+
+		if (g_hash_table_iter_next(&iter, &key, NULL))
+			g_string_append(str, (gchar*) key);
+
+		retval = g_string_free(str, FALSE);
+	} else {		
+		if (schema->type == PROVMAN_SCHEMA_TYPE_DIR)
+			type = PLUGIN_MANAGER_TYPE_DIR;
+		else if (schema->key.type == PROVMAN_SCHEMA_VALUE_TYPE_STRING)
+			type = PLUGIN_MANAGER_TYPE_STRING;
+		else if (schema->key.type == PROVMAN_SCHEMA_VALUE_TYPE_INT)
+			type = PLUGIN_MANAGER_TYPE_INT;
+		if (type)
+			retval = g_strdup(type);
+	}
+
+	return retval;
+}
+
+static int prv_get_schema_dir_type_info(plugin_manager_t *manager,
+					const gchar* search_key,
+					unsigned int index,
+					GVariantBuilder *vb)
+{
+	int err = PROVMAN_ERR_NONE;
+	provman_schema_t *root;
+	provman_schema_t *parent;
+	provman_schema_t *child;
+	GHashTableIter iter;
+	gpointer key;
+	gpointer value;
+	gchar *type;
+	gchar *key_name;
+
+	root = manager->plugin_schemas[index];
+		
+	err = provman_schema_locate(root, search_key, &parent);
+	if (err != PROVMAN_ERR_NONE)
+		goto on_error;
+	
+	if (parent->type != PROVMAN_SCHEMA_TYPE_DIR) {
+		err = PROVMAN_ERR_BAD_ARGS;
+		goto on_error;
+	}
+	
+	g_hash_table_iter_init(&iter, parent->dir.children);
+	while (g_hash_table_iter_next(&iter, &key, &value)) {
+		child = value;
+		type = prv_getSchemaType(child);
+		if (type) {
+			key_name = key;							
+			if (!key_name[0])
+				key_name = PLUGIN_MANAGER_UNNAMED_DIR;
+			
+			g_variant_builder_add(vb, "{ss}", key_name, type);
+			PROVMAN_LOGF("Get Supported %s=%u", key_name, type);			
+			g_free(type);
+		}
+	}
+	
+on_error:
+	
+	return err;
+}
+
+int plugin_manager_get_children_type_info(plugin_manager_t* manager,
+					  const gchar* search_key,
+					  GVariant** values)
+{
+	int err = PROVMAN_ERR_NONE;
+	unsigned int index;
+	GVariantBuilder *vb = NULL;
+	GPtrArray *children = NULL;
+	unsigned int i;
+	const gchar *root;
+
+	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
+		err = PROVMAN_ERR_DENIED;
+		goto on_error;
+	}
+
+	vb = g_variant_builder_new(G_VARIANT_TYPE("a{ss}"));
+	
+	err = provman_plugin_find_index(search_key, &index);
+	if (err == PROVMAN_ERR_NONE) {
+		err = prv_get_schema_dir_type_info(manager, search_key, index,
+						   vb);
+		if (err != PROVMAN_ERR_NONE)
+			goto on_error;		
+	} else {
+		children = provman_plugin_find_direct_children(search_key);
+		if (children->len == 0) {
+			err = PROVMAN_ERR_NOT_FOUND;
+			goto on_error;
+		}
+
+		err = PROVMAN_ERR_NONE;		
+		for (i = 0; i < children->len; ++i) {
+			root = g_ptr_array_index(children, i);
+			g_variant_builder_add(vb, "{ss}", root,
+				PLUGIN_MANAGER_TYPE_DIR);
+		}			
+	}
+
+	*values = g_variant_builder_end(vb);
+
+on_error:
+
+	if (children)
+		g_ptr_array_unref(children);
+	
+	if (vb)
+		g_variant_builder_unref(vb);
+
+	PROVMAN_LOGF("Get Children Type Info of %s returned with %d",
+		     search_key, err);
+	
+	return err;
+}
+
+int plugin_manager_get_type_info(plugin_manager_t* manager,
+				 const gchar* search_key, gchar **type_info)
+{
+	int err = PROVMAN_ERR_NONE;
+	unsigned int index;
+	provman_schema_t *schema_root;
+	provman_schema_t *schema;
+	gchar *type;
+
+	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
+		err = PROVMAN_ERR_DENIED;
+		goto on_error;
+	}
+
+	err = provman_plugin_find_index(search_key, &index);
+	if (err == PROVMAN_ERR_NONE) {
+		schema_root = manager->plugin_schemas[index];
+		
+		err = provman_schema_locate(schema_root, search_key, &schema);
+		if (err != PROVMAN_ERR_NONE)
+			goto on_error;
+		
+		type = prv_getSchemaType(schema);
+		if (!type) {
+			err = PROVMAN_ERR_CORRUPT;
+			goto on_error;
+		}
+		*type_info = type;
+	} else {
+		err = PROVMAN_ERR_NONE;
+		if (!provman_plugin_uri_exists(search_key)) {
+			err = PROVMAN_ERR_NOT_FOUND;
+			goto on_error;
+		}
+		*type_info = g_strdup(PLUGIN_MANAGER_TYPE_DIR);
+	}
+
+on_error:
+	
+	PROVMAN_LOGF("Get Type Info of %s returned with %d", search_key, err);
+	
 	return err;
 }

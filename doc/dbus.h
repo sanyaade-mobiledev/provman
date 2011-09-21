@@ -185,3 +185,75 @@ void End();
 
 void Abort();
 
+/*!
+ * \brief Retrieves type information about a given key.
+ *
+ * The key does not actually have to exist for this function to succeed.
+ * It just needs to be supported by one of the plugins or be a parent
+ * directory of one or more plugins.  So for example, we can use this
+ * function to query the type of the port number setting for incoming
+ * email accounts, even if no email accounts are currently defined 
+ * in the system.  As long as the provman instance contains an email
+ * plugin this method should return the correct value.
+ *
+ * #GetTypeInfo is able to return information for non-existent keys as it
+ * reads the type information from the schema.  As plugin schemas are available
+ * as soon as the plugins are created, #GetTypeInfo can be called outside
+ * of a device management session, that is before #Start or after #End.
+ *
+ * One use of this function would be a client that receives its provisioning
+ * data from a user via a UI.  The UI might need to know which authentication
+ * mechanisms are supported by the email application so it can display a list
+ * of options to the user before it creates the setting.  It can find this
+ * information by calling #GetTypeInfo with the key 
+ * "/applications/email/<X>/incoming/authtype"
+ *
+ * @param key Should be a uri of the key in which you are interested. Any
+ * non empty string can be used as a place holder for unnamed directories.
+ * In the example above "<X>" is used, but "<X>" could be replaced with
+ * "account" or "x", etc.
+ *
+ * \return "dir" the key represents a directory
+ * \return "int" the key is used to store an integer value
+ * \return "string" the key is used to store a string value
+ * \return "enum: val1 [,val2]*" the key is used to store an enumerated type.
+ *   A comma separated list of permissable values is provided after the string,
+ *   e.g., "enum: never, when-possible, always"
+ *   
+ * \exception com.intel.provman.Error.NotFound The key is not supported by provman
+ *    or its plugins.
+*/
+
+string GetTypeInfo(string key);
+
+/*!
+ * \brief Retrieves type information about all the children of a given key.
+ *
+ * This function is similar to #GetTypeInfo.  The key does not need to exist
+ * for this function to succeed and it can be called outside a management
+ * session.  It returns the names of all the possible children of the specified
+ * key, whether they currently exist or not, together with their type
+ * information.  All this information is returned in a dictionary.  The
+ * function is not recursive.
+ *
+ * It is an error to call this function on a key that represents a possible
+ * setting rather than a possible directory.
+ *
+ * This function reports unamed directories as "<X>".
+ *
+ * @param key Should be a uri of the key in which you are interested. Any
+ * non empty string can be used as a place holder for unnamed directories.
+ * In the example about "<X>" is used, but "<X>" could be replaced with
+ * "account" or "x", etc.
+ *
+ * \return a dictionary that maps child names to their types.  The child names
+ * are simply names and not complete uris.
+ *   
+ * \exception com.intel.provman.Error.NotFound The key is not supported by
+ *    provman or its plugins.
+ * \exception com.intel.provman.Error.BadArgs The key represents a setting and
+ *    not a directory.
+*/
+
+dictionary GetChildrenTypeInfo(string key);
+

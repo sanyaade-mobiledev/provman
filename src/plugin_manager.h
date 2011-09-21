@@ -57,6 +57,11 @@ int plugin_manager_set_all(plugin_manager_t* manager, GVariant* settings,
 int plugin_manager_remove(plugin_manager_t* manager, const gchar* key);
 void plugin_manager_delete(plugin_manager_t *manager);
 int plugin_manager_abort(plugin_manager_t *manager);
+int plugin_manager_get_children_type_info(plugin_manager_t* manager, 
+					  const gchar* search_key,
+					  GVariant** values);
+int plugin_manager_get_type_info(plugin_manager_t* manager,
+				 const gchar* search_key, gchar **type_info);
 bool plugin_manager_busy(plugin_manager_t *manager);
 
 #endif
