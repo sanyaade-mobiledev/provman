@@ -155,6 +155,28 @@ GHashTable *provman_utils_get_contexts(GHashTable *settings, const char *root,
 	return contexts;
 }
 
+static gboolean prv_can_remove_settings(gpointer key, gpointer value,
+					gpointer user_data)
+{
+	GString *account_key = user_data;
+
+	return ((strlen((const char*) key) > account_key->len) &&
+		!strncmp(account_key->str, (const char*) key, 
+			 account_key->len));		
+}
+
+void provman_utils_remove_account(GHashTable *settings, const gchar *root,
+				  const gchar *account)
+{
+	GString *account_key;
+
+	account_key = g_string_new(root);
+	g_string_append(account_key, account);
+	g_string_append(account_key, "/");
+	g_hash_table_foreach_remove(settings, prv_can_remove_settings,
+				    account_key);
+	(void) g_string_free(account_key, TRUE);
+}				  
 
 #ifdef PROVMAN_LOGGING
 void provman_utils_dump_hash_table(GHashTable* hash_table)

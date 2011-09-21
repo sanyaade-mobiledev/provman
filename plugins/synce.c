@@ -135,6 +135,8 @@ struct synce_plugin_t_ {
 	GDBusProxy *server_proxy;
 	int cb_err;
 	GHashTable *accounts;
+	GPtrArray *new_accounts;
+	unsigned int updated;
 	GHashTableIter iter;
 	const gchar *current_account;
 	GPtrArray *to_remove;
@@ -240,6 +242,9 @@ static gboolean prv_complete_sync_in(gpointer user_data)
 #endif	
 		copy = provman_utils_dup_settings(plugin_instance->settings);
 	}
+
+	g_ptr_array_unref(plugin_instance->new_accounts);
+	plugin_instance->new_accounts = NULL;
 
 	plugin_instance->sync_in_cb(plugin_instance->cb_err, copy,
 				    plugin_instance->sync_in_user_data);
@@ -478,11 +483,19 @@ static void prv_get_config_cb(GObject *source_object, GAsyncResult *result,
 	int err;
 	GVariant *retvals;
 	GVariant *dictionary;
+	gpointer *current_account;
 
 	err = prv_complete_results_call(plugin_instance, 
 					plugin_instance->server_proxy,
 					result, prv_complete_sync_in, &retvals);
 	if (err == PROVMAN_ERR_NONE) {
+		current_account = &
+			plugin_instance->new_accounts->pdata[
+				plugin_instance->updated];
+		g_hash_table_insert(plugin_instance->accounts,
+				    *((gchar **) current_account), NULL);
+		*current_account = NULL;
+		++plugin_instance->updated;
 		dictionary = g_variant_get_child_value(retvals, 0);
 		prv_get_account(plugin_instance, dictionary);
 		g_variant_unref(dictionary);		
@@ -495,14 +508,17 @@ static void prv_get_config_cb(GObject *source_object, GAsyncResult *result,
 
 static void prv_get_config(synce_plugin_t *plugin_instance)
 {
-	gpointer key;
-
-	if (g_hash_table_iter_next(&plugin_instance->iter, &key, NULL)) {
-		plugin_instance->current_account = key;
+	if (plugin_instance->updated < plugin_instance->new_accounts->len) {
+		plugin_instance->current_account =
+			g_ptr_array_index(plugin_instance->new_accounts, 
+					  plugin_instance->updated);
 		g_cancellable_reset(plugin_instance->cancellable);
 		g_dbus_proxy_call(plugin_instance->server_proxy,
 				  SYNCE_SERVER_GET_CONFIG,
-				  g_variant_new("(sb)", key, FALSE),
+				  g_variant_new(
+					  "(sb)", 
+					  plugin_instance->current_account,
+					  FALSE),
 				  G_DBUS_CALL_FLAGS_NONE,
 				  -1, plugin_instance->cancellable,
 				  prv_get_config_cb, plugin_instance);		
@@ -538,15 +554,23 @@ static void prv_get_configs_cb(GObject *source_object, GAsyncResult *result,
 
 	PROVMAN_LOG("GetConfigs Succeeded");
 
+	plugin_instance->new_accounts =
+		g_ptr_array_new_with_free_func(g_free);
+
 	array = g_variant_get_child_value(res, 0);
 	iter = g_variant_iter_new(array);
 	while (g_variant_iter_next(iter, "s", &config))
-		g_hash_table_insert(plugin_instance->accounts, config, NULL);
+		if (!g_hash_table_lookup_extended(plugin_instance->accounts,
+						  config, NULL, NULL)) {
+			g_ptr_array_add(plugin_instance->new_accounts, config);
+			PROVMAN_LOGF("Need to update account %s", config);
+		} else {
+			PROVMAN_LOGF("Account %s already up to date", config);
+		}
 	g_variant_iter_free(iter);
 	g_variant_unref(array);
 
-	g_hash_table_iter_init(&plugin_instance->iter,
-			       plugin_instance->accounts);
+	plugin_instance->updated = 0;
 
 	prv_get_config(plugin_instance);
 
@@ -623,28 +647,22 @@ int synce_plugin_sync_in(provman_plugin_instance instance,
 	plugin_instance->sync_in_cb = callback;
 	plugin_instance->sync_in_user_data = user_data;
 
-	if (!plugin_instance->accounts) {
+	if (!plugin_instance->accounts)
 		plugin_instance->accounts = 
 			g_hash_table_new_full(g_str_hash, g_str_equal, g_free,
-					      prv_g_object_unref);	
+					      prv_g_object_unref);
+	
+	plugin_instance->cancellable = g_cancellable_new();
 		
-		plugin_instance->cancellable = g_cancellable_new();
-		
-		g_dbus_proxy_new_for_bus(
-			G_BUS_TYPE_SESSION, 
-			G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
-			NULL, 
-			SYNCE_SERVER_NAME, 
-			SYNCE_SERVER_OBJECT,
-			SYNCE_SERVER_INTERFACE,
-			plugin_instance->cancellable,
-			prv_server_proxy_created,
-			plugin_instance);
-	} else {
-		plugin_instance->cb_err = PROVMAN_ERR_NONE;
-		plugin_instance->completion_source = 
-			g_idle_add(prv_complete_sync_in, plugin_instance);		
-	}
+	g_dbus_proxy_new_for_bus(G_BUS_TYPE_SESSION, 
+				 G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
+				 NULL, 
+				 SYNCE_SERVER_NAME, 
+				 SYNCE_SERVER_OBJECT,
+				 SYNCE_SERVER_INTERFACE,
+				 plugin_instance->cancellable,
+				 prv_server_proxy_created,
+				 plugin_instance);
 		
 	return PROVMAN_ERR_NONE;
 }
@@ -1054,8 +1072,17 @@ static void prv_context_set_cb(GObject *source_object, GAsyncResult *result,
 	       plugin_instance->current_context, err);
 
 	if (err != PROVMAN_ERR_CANCELLED) {
-		if (err == PROVMAN_ERR_NONE)
+		if (err == PROVMAN_ERR_NONE) {
+			PROVMAN_LOGF("Deleting proxy and settings for %s",
+				     plugin_instance->current_context);
+			provman_utils_remove_account(
+				plugin_instance->settings,
+				LOCAL_KEY_SYNC_ROOT,
+				plugin_instance->current_context);
+			g_hash_table_remove(plugin_instance->accounts,
+					    plugin_instance->current_context);
 			g_variant_unref(res);
+		}
 		prv_session_detach(plugin_instance);
 	}
 	else {
@@ -1262,6 +1289,9 @@ static void prv_context_removed_cb(GObject *source_object, GAsyncResult *result,
 		g_hash_table_remove(plugin_instance->accounts,
 				    plugin_instance->current_context);
 		g_variant_unref(res);
+		provman_utils_remove_account(plugin_instance->settings,
+					     LOCAL_KEY_SYNC_ROOT,
+					     plugin_instance->current_context);
 	}
 	
 	if (err != PROVMAN_ERR_CANCELLED)

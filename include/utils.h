@@ -133,6 +133,23 @@ gchar *provman_utils_get_context_from_key(const gchar *key, const char *root,
 
 GHashTable *provman_utils_get_contexts(GHashTable *settings, const char *root,
 					 unsigned int root_len);
+
+/*! @brief Removes all keys from a hashtable belonging to a given account
+ *         under a given root.
+ *
+ * This is a help function designed to be used by plugins when they want
+ * to delete all the settings assocated with an account from their cache.
+ *
+ * @param settings a hash table of settings
+ * @param root A string containing the part of the key that procees the context
+ *             name, e.g., '/telephony/contexts/'.  Must end in '/'
+ * @param account The name of the account being removed.
+ * 
+ */
+
+void provman_utils_remove_account(GHashTable *settings, const gchar *root,
+				  const gchar *account);
+
 #ifdef PROVMAN_LOGGING
 
 /*! @brief Dumps a set of settings to the log file
