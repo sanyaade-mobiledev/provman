@@ -149,51 +149,9 @@ static bool prv_async_in_progress(provman_context *context)
 	return plugin_manager_busy(context->plugin_manager);
 }
 
-static void prv_provman_key_free(provman_key *key)
-{
-	g_free(key->key);
-}
-
-static void prv_provman_key_value_free(provman_key_value *key_value)
-{
-	g_free(key_value->key);
-	g_free(key_value->value);
-}
-
-static void prv_provman_variant_free(provman_variant *variant)
-{
-	g_variant_unref(variant->variant);
-}
-
 static void prv_free_provman_task(gpointer data)
 {
-	provman_task* task = data;
-
-	if (task == NULL)
-		return;
-
-	switch (task->type) {
-	case PROVMAN_TASK_SET:
-		prv_provman_key_value_free(&task->key_value);
-		break;
-	case PROVMAN_TASK_GET:
-	case PROVMAN_TASK_DELETE:
-	case PROVMAN_TASK_GET_ALL:
-	case PROVMAN_TASK_GET_CHILDREN_TYPE_INFO:
-	case PROVMAN_TASK_GET_TYPE_INFO:
-		prv_provman_key_free(&task->key);
-		break;
-	case PROVMAN_TASK_SET_ALL:
-		prv_provman_variant_free(&task->variant);
-		break;			
-	case PROVMAN_TASK_SYNC_IN:
-	case PROVMAN_TASK_SYNC_OUT:
-	case PROVMAN_TASK_ABORT:
-		break;
-	}
-
-	g_free(task->imsi);
-	g_free(task);
+	provman_task_delete(data);
 }
 
 static void prv_sync_in_task_finished(int result, void *user_data)
@@ -263,7 +221,7 @@ static gboolean prv_process_task(gpointer user_data)
 			provman_task_get_all(context->plugin_manager, task);
 			break;
 		case PROVMAN_TASK_DELETE:
-			provman_task_delete(context->plugin_manager,task);
+			provman_task_remove(context->plugin_manager,task);
 			break;
 		case PROVMAN_TASK_ABORT:
 			provman_task_abort(context->plugin_manager,task);
@@ -394,13 +352,12 @@ static void prv_add_task(provman_context *context, provman_task *task)
 static void prv_add_sync_in_task(provman_context *context,
 				 const gchar *imsi)
 {
-	provman_task *task = g_new0(provman_task, 1);
+	provman_task *task;
 
 	PROVMAN_LOG("Add Task Sync IN");
 
-	task->type = PROVMAN_TASK_SYNC_IN;
+	provman_task_new(PROVMAN_TASK_SYNC_IN, NULL, &task);
 	task->imsi = g_strdup(imsi);
-	task->invocation = NULL;
 
 	prv_add_task(context, task);
 }
@@ -408,12 +365,11 @@ static void prv_add_sync_in_task(provman_context *context,
 static void prv_add_sync_out_task(provman_context *context,
 				  GDBusMethodInvocation *invocation)
 {
-	provman_task *task = g_new0(provman_task, 1);
+	provman_task *task;
 
 	PROVMAN_LOG("Add Task Sync Out");
 
-	task->type = PROVMAN_TASK_SYNC_OUT;
-	task->invocation = invocation;
+	provman_task_new(PROVMAN_TASK_SYNC_OUT, invocation, &task);
 
 	prv_add_task(context, task);
 }
@@ -422,14 +378,13 @@ static void prv_add_get_task(provman_context *context,
 			     GDBusMethodInvocation *invocation,
 			     const gchar* key)
 {
-	provman_task *task = g_new0(provman_task, 1);
+	provman_task *task;
 
 	PROVMAN_LOG("Add Task Get");
 
-	task->type = PROVMAN_TASK_GET;
-	task->invocation = invocation;
-	task->key.key = g_strdup(key);
-	g_strstrip(task->key.key);
+	provman_task_new(PROVMAN_TASK_GET, invocation, &task);
+	task->key = g_strdup(key);
+	g_strstrip(task->key);
 
 	prv_add_task(context, task);
 }
@@ -438,14 +393,13 @@ static void prv_add_get_all_task(provman_context *context,
 				 GDBusMethodInvocation *invocation,
 				 const gchar *key)
 {
-	provman_task *task = g_new0(provman_task, 1);
+	provman_task *task;
 
 	PROVMAN_LOG("Add Task Get All");
 
-	task->type = PROVMAN_TASK_GET_ALL;
-	task->invocation = invocation;
-	task->key.key = g_strdup(key);
-	g_strstrip(task->key.key);
+	provman_task_new(PROVMAN_TASK_GET_ALL, invocation, &task);
+	task->key = g_strdup(key);
+	g_strstrip(task->key);
 
 	prv_add_task(context, task);
 }
@@ -455,14 +409,14 @@ static void prv_add_get_children_type_info_task(
 	GDBusMethodInvocation *invocation,
 	const gchar *key)
 {
-	provman_task *task = g_new0(provman_task, 1);
+	provman_task *task;
 
 	PROVMAN_LOG("Add Task Get Children Type Info");
 
-	task->type = PROVMAN_TASK_GET_CHILDREN_TYPE_INFO;
-	task->invocation = invocation;
-	task->key.key = g_strdup(key);
-	g_strstrip(task->key.key);
+	provman_task_new(PROVMAN_TASK_GET_CHILDREN_TYPE_INFO, invocation,
+			 &task);
+	task->key = g_strdup(key);
+	g_strstrip(task->key);
 
 	prv_add_task(context, task);
 }
@@ -471,14 +425,13 @@ static void prv_add_get_type_info_task(provman_context *context,
 				       GDBusMethodInvocation *invocation,
 				       const gchar *key)
 {
-	provman_task *task = g_new0(provman_task, 1);
+	provman_task *task;
 
 	PROVMAN_LOG("Add Task Get Type Info");
 
-	task->type = PROVMAN_TASK_GET_TYPE_INFO;
-	task->invocation = invocation;
-	task->key.key = g_strdup(key);
-	g_strstrip(task->key.key);
+	provman_task_new(PROVMAN_TASK_GET_TYPE_INFO, invocation, &task);
+	task->key = g_strdup(key);
+	g_strstrip(task->key);
 
 	prv_add_task(context, task);
 }
@@ -487,15 +440,14 @@ static void prv_add_set_task(provman_context *context,
 			     GDBusMethodInvocation *invocation,
 			     const gchar *key, const gchar *value)
 {
-	provman_task *task = g_new0(provman_task, 1);
+	provman_task *task;
 
 	PROVMAN_LOG("Add Task Set");
 
-	task->type = PROVMAN_TASK_SET;
-	task->invocation = invocation;
-	task->key_value.key = g_strdup(key);
-	task->key_value.value = g_strdup(value);
-	g_strstrip(task->key_value.key);
+	provman_task_new(PROVMAN_TASK_SET, invocation, &task);
+	task->key = g_strdup(key);
+	task->value = g_strdup(value);
+	g_strstrip(task->key);
 
 	prv_add_task(context, task);
 }
@@ -504,13 +456,12 @@ static void prv_add_set_all_task(provman_context *context,
 				 GDBusMethodInvocation *invocation,
 				 GVariant *variant)
 {
-	provman_task *task = g_new0(provman_task, 1);
+	provman_task *task;
 
 	PROVMAN_LOG("Add Set All");
 
-	task->type = PROVMAN_TASK_SET_ALL;
-	task->invocation = invocation;
-	task->variant.variant = g_variant_ref_sink(variant);
+	provman_task_new(PROVMAN_TASK_SET_ALL, invocation, &task);
+	task->variant = g_variant_ref_sink(variant);
 
 	prv_add_task(context, task);
 }
@@ -519,14 +470,13 @@ static void prv_add_delete_task(provman_context *context,
 				GDBusMethodInvocation *invocation,
 				const gchar *key)
 {
-	provman_task *task = g_new0(provman_task, 1);
+	provman_task *task;
 
 	PROVMAN_LOG("Add Task Delete");
 
-	task->type = PROVMAN_TASK_DELETE;
-	task->invocation = invocation;
-	task->key.key = g_strdup(key);
-	g_strstrip(task->key.key);
+	provman_task_new(PROVMAN_TASK_DELETE, invocation, &task);
+	task->key = g_strdup(key);
+	g_strstrip(task->key);
 
 	prv_add_task(context, task);
 }
@@ -534,12 +484,11 @@ static void prv_add_delete_task(provman_context *context,
 static void prv_add_abort_task(provman_context *context,
 			       GDBusMethodInvocation *invocation)
 {
-	provman_task *task = g_new0(provman_task, 1);
+	provman_task *task;
 
 	PROVMAN_LOG("Add Task Abort");
 
-	task->type = PROVMAN_TASK_ABORT;
-	task->invocation = invocation;
+	provman_task_new(PROVMAN_TASK_ABORT, invocation, &task);
 
 	prv_add_task(context, task);
 }

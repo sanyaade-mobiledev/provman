@@ -53,6 +53,30 @@ struct provman_sync_out_context_ {
 	GDBusMethodInvocation *invocation;
 };
 
+void provman_task_new(provman_task_type type, GDBusMethodInvocation *invocation,
+		      provman_task **task)
+{
+	provman_task *new_task = g_new0(provman_task, 1);
+	
+	new_task->type = type;
+	new_task->invocation = invocation;
+	
+	*task = new_task;
+}
+
+void provman_task_delete(provman_task *task)
+{
+	if (task) {
+		g_free(task->key);
+		g_free(task->value);
+		if (task->variant)
+			g_variant_unref(task->variant);
+		
+		g_free(task->imsi);
+		g_free(task);
+	}
+}
+
 static void prv_sync_in_task_finished(int result, void *user_data)
 {
 	provman_sync_in_context *task_context = user_data;
@@ -158,11 +182,9 @@ void provman_task_set(plugin_manager_t *manager, provman_task *task)
 {
 	int err = PROVMAN_ERR_NONE;
 
-	PROVMAN_LOGF("Processing Set task: %s=%s", task->key_value.key,
-		      task->key_value.value);
+	PROVMAN_LOGF("Processing Set task: %s=%s", task->key, task->value);
 	
-	err = plugin_manager_set(manager, task->key_value.key,
-				 task->key_value.value);
+	err = plugin_manager_set(manager, task->key, task->value);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
 		 
@@ -186,8 +208,7 @@ void provman_task_set_all(plugin_manager_t *manager, provman_task *task)
 
 	PROVMAN_LOG("Processing Set All task");
 
-	err = plugin_manager_set_all(manager, task->variant.variant,
-		&array);
+	err = plugin_manager_set_all(manager, task->variant, &array);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
 
@@ -210,9 +231,9 @@ void provman_task_get(plugin_manager_t *manager, provman_task *task)
 	int err = PROVMAN_ERR_NONE;
 	gchar *value = NULL;
 
-	PROVMAN_LOGF("Processing Get task: %s", task->key.key);
+	PROVMAN_LOGF("Processing Get task: %s", task->key);
 
-	err = plugin_manager_get(manager, task->key.key, &value);
+	err = plugin_manager_get(manager, task->key, &value);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
 
@@ -236,10 +257,9 @@ void provman_task_get_all(plugin_manager_t *manager, provman_task *task)
 	int err = PROVMAN_ERR_NONE;
 	GVariant *array;
 
-	PROVMAN_LOGF("Processing Get All task on key %s",
-		task->key.key);
+	PROVMAN_LOGF("Processing Get All task on key %s", task->key);
 
-	if (plugin_manager_get_all(manager, task->key.key, &array) !=
+	if (plugin_manager_get_all(manager, task->key, &array) !=
 	    PROVMAN_ERR_NONE)
 		goto on_error;
 
@@ -257,13 +277,13 @@ on_error:
 	task->invocation = NULL;
 }
 
-void provman_task_delete(plugin_manager_t *manager, provman_task *task)
+void provman_task_remove(plugin_manager_t *manager, provman_task *task)
 {
 	int err = PROVMAN_ERR_NONE;
 
-	PROVMAN_LOGF("Processing Delete task: %s", task->key.key);
+	PROVMAN_LOGF("Processing Delete task: %s", task->key);
 
-	err = plugin_manager_remove(manager, task->key.key);
+	err = plugin_manager_remove(manager, task->key);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;	
 
@@ -303,7 +323,7 @@ void provman_task_get_children_type_info(plugin_manager_t *manager,
 
 	PROVMAN_LOG("Processing Get Children Type Info task");
 
-	err = plugin_manager_get_children_type_info(manager, task->key.key,
+	err = plugin_manager_get_children_type_info(manager, task->key,
 						    &array);
 
 	if (err == PROVMAN_ERR_NONE)
@@ -325,7 +345,7 @@ void provman_task_get_type_info(plugin_manager_t *manager,
 
 	PROVMAN_LOG("Processing Get Type Info task");
 
-	err = plugin_manager_get_type_info(manager, task->key.key, &type_info);
+	err = plugin_manager_get_type_info(manager, task->key, &type_info);
 
 	if (err == PROVMAN_ERR_NONE) {
 		g_dbus_method_invocation_return_value(
