@@ -531,7 +531,7 @@ static void prv_add_account(eds_plugin_t *plugin_instance, const gchar *key,
 	acc_cache = g_new0(eds_account_t, 1);
 	acc_cache->account = acc;
 	acc->enabled = TRUE;
-	g_hash_table_insert(accounts, g_strdup(key), acc_cache);
+	g_hash_table_insert(accounts, g_strdup(acc->uid), acc_cache);
 }
 
 static void prv_update_uri_settings(CamelURL *uri, const char* prop,
