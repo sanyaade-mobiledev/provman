@@ -148,6 +148,7 @@ typedef struct eds_plugin_t_ eds_plugin_t;
 struct eds_plugin_t_ {
 	GConfClient *gconf;
 	GHashTable *settings;
+	GHashTable *cached_accounts;
 	EAccountList *account_list;
 	provman_map_file_t *map_file;
 	provman_plugin_sync_in_cb sync_in_cb;
@@ -215,6 +216,9 @@ int eds_plugin_new(provman_plugin_instance *instance)
 	provman_map_file_new(map_file_path, &plugin_instance->map_file);
 	g_free(map_file_path);
 
+	plugin_instance->cached_accounts = 
+		g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
+
 	*instance = plugin_instance;
 
 	return PROVMAN_ERR_NONE;
@@ -235,6 +239,8 @@ void eds_plugin_delete(provman_plugin_instance instance)
 
 	if (instance) {
 		plugin_instance = instance;
+		if (plugin_instance->cached_accounts)
+			g_hash_table_unref(plugin_instance->cached_accounts);
 		if (plugin_instance->gconf)
 			g_object_unref(plugin_instance->gconf);
 		if (plugin_instance->settings)
@@ -280,8 +286,6 @@ static void prv_add_use_ssl_type(eds_plugin_t *plugin_instance,
 				      LOCAL_PROP_EMAIL_USESSL, value);
 	}
 }
-
-
 
 static void prv_add_url_gen_params(eds_plugin_t *plugin_instance, 
 				   const gchar *id, const gchar *type,
@@ -408,20 +412,19 @@ on_error:
 	return;
 }			      
 
-static int prv_get_account(eds_plugin_t *plugin_instance, EAccount *account,
-			   GHashTable *used_accounts)
+static int prv_get_account(eds_plugin_t *plugin_instance, EAccount *account)
 {
 	int err = PROVMAN_ERR_NONE;
 	const char *account_uid;
 	gchar *mapped_name = NULL;
 	gchar *address_with_name;
-
-	PROVMAN_LOGF("Found Account %s", account->name);
 	
 	if (!account->uid) {
 		err = PROVMAN_ERR_CORRUPT;
 		goto on_error;
 	}
+
+	PROVMAN_LOGF("Found Account %s", account->uid);
 
 	mapped_name = provman_map_file_find_client_id(plugin_instance->map_file,
 						      EDS_MAP_FILE_CAT, 
@@ -435,27 +438,42 @@ static int prv_get_account(eds_plugin_t *plugin_instance, EAccount *account,
 					   account_uid);
 	}
 
-	g_hash_table_insert(used_accounts, account->uid, NULL);
-	
-	if (account->name)
-		prv_add_param(plugin_instance, account_uid, NULL,
-			      LOCAL_PROP_EMAIL_NAME, account->name);
+	/* Is the account already cached? */
 
-	if (account->id && account->id->address) {
-		address_with_name = camel_internet_address_format_address(
-			account->id->name, account->id->address);
-		prv_add_param(plugin_instance, account_uid, NULL,
-			      LOCAL_PROP_EMAIL_ADDRESS, address_with_name);
-		g_free(address_with_name);
+	if (!g_hash_table_lookup_extended(plugin_instance->cached_accounts,
+					  account->uid, NULL, NULL)) {
+		PROVMAN_LOGF("Reading Account %s", account->uid);
+
+		g_hash_table_insert(plugin_instance->cached_accounts,
+				    g_strdup(account->uid), NULL);
+		
+		if (account->name)
+			prv_add_param(plugin_instance, account_uid, NULL,
+				      LOCAL_PROP_EMAIL_NAME, account->name);
+		
+		if (account->id && account->id->address) {
+			address_with_name = 
+				camel_internet_address_format_address(
+					account->id->name,
+					account->id->address);
+			prv_add_param(plugin_instance, account_uid, NULL,
+				      LOCAL_PROP_EMAIL_ADDRESS,
+				      address_with_name);
+			g_free(address_with_name);
+		}
+		
+		if (account->source && account->source->url)
+			prv_add_url_incoming_params(plugin_instance,
+						    account_uid,
+						    account->source->url);
+		
+		if (account->transport && account->transport->url)
+			prv_add_url_outgoing_params(plugin_instance,
+						    account_uid,
+						    account->transport->url);
+	} else {
+		PROVMAN_LOGF("Account %s already cached", account->uid);
 	}
-
-	if (account->source && account->source->url)
-		prv_add_url_incoming_params(plugin_instance, account_uid,
-					    account->source->url);
-
-	if (account->transport && account->transport->url)
-		prv_add_url_outgoing_params(plugin_instance, account_uid,				       
-					    account->transport->url);
 
 on_error:
 
@@ -485,6 +503,9 @@ static gboolean prv_complete_sync_in(gpointer user_data)
 static gboolean prv_complete_sync_out(gpointer user_data)
 {
 	eds_plugin_t *plugin_instance = user_data;
+		
+	g_object_unref(plugin_instance->account_list);
+	plugin_instance->account_list = NULL;
 
 	plugin_instance->sync_out_cb(plugin_instance->err,
 				     plugin_instance->sync_out_user_data);
@@ -510,6 +531,14 @@ static void prv_remove_account(eds_plugin_t *plugin_instance, const gchar *uid)
 		}
 		(void) provman_map_file_delete_map(plugin_instance->map_file,
 						   EDS_MAP_FILE_CAT, uid);
+
+		PROVMAN_LOGF("Removing Account %s from cache", uid);
+
+		provman_utils_remove_account(plugin_instance->settings,
+					     LOCAL_KEY_EMAIL_ROOT,
+					     uid);
+		(void) g_hash_table_remove(plugin_instance->cached_accounts,
+					   mapped_uid);
 		g_free(mapped_uid);
 	}
 }
@@ -682,6 +711,7 @@ static void prv_eds_plugin_analyse(eds_plugin_t *plugin_instance,
 	const gchar *old_value;
 	eds_account_t *acc_cache;
 	gchar *url;
+	gchar *local_key;
 
 	accounts = g_hash_table_new_full(g_str_hash, g_str_equal, g_free,
 					 prv_eds_account_free);	
@@ -735,6 +765,25 @@ static void prv_eds_plugin_analyse(eds_plugin_t *plugin_instance,
 				url);
 			g_free(url);
 		}
+		
+		/* Remove accounts that have been updated or added.  This forces
+		   plugin to re-read them on the next sync in.  This way we
+		   guarantee that the settings are up to date. */
+
+		(void) g_hash_table_remove(plugin_instance->cached_accounts,
+					   (const gchar*) key);
+
+		local_key = provman_map_file_find_client_id(
+			plugin_instance->map_file, EDS_MAP_FILE_CAT,
+			(const gchar*) key);
+		if (local_key) {
+			PROVMAN_LOGF("Removing Account %s from cache",
+				     local_key);
+			provman_utils_remove_account(plugin_instance->settings,
+						     LOCAL_KEY_EMAIL_ROOT,
+						     (const gchar *) local_key);
+			g_free(local_key);
+		}
 	}
 
 	provman_map_file_save(plugin_instance->map_file);
@@ -754,42 +803,37 @@ int eds_plugin_sync_in(provman_plugin_instance instance,
 	EAccountList *list = NULL;
 	EIterator *iter = NULL;
 	EAccount *account;
-	GHashTable *used_accounts = NULL;
 	
 	PROVMAN_LOG("EDS Sync In");
 
 	plugin_instance->err = PROVMAN_ERR_NONE;
 
-	if (!plugin_instance->account_list) {
-		used_accounts = g_hash_table_new_full(g_str_hash, g_str_equal,
-						      NULL, NULL);
-		list = e_account_list_new(plugin_instance->gconf);
-		if (!list) {
-			err = PROVMAN_ERR_SUBSYSTEM;
-			goto on_error;
-		}
-
-		iter = e_list_get_iterator((EList*) list);
-		if (!iter) {
-			err = PROVMAN_ERR_SUBSYSTEM;
-			goto on_error;
-		}
-
-		while (e_iterator_is_valid(iter)) {
-			account = (EAccount*) e_iterator_get(iter);
-			if (account) 
-				(void) prv_get_account(plugin_instance,
-						       account, used_accounts);
-			(void) e_iterator_next(iter);
-		}
-		g_object_unref(iter);
-		plugin_instance->account_list = list;
-		list = NULL;
-		provman_map_file_remove_unused(plugin_instance->map_file,
-					       EDS_MAP_FILE_CAT, used_accounts);
-		provman_map_file_save(plugin_instance->map_file);
+	list = e_account_list_new(plugin_instance->gconf);
+	if (!list) {
+		err = PROVMAN_ERR_SUBSYSTEM;
+		goto on_error;
 	}
-
+	
+	iter = e_list_get_iterator((EList*) list);
+	if (!iter) {
+		err = PROVMAN_ERR_SUBSYSTEM;
+		goto on_error;
+	}
+	
+	while (e_iterator_is_valid(iter)) {
+		account = (EAccount*) e_iterator_get(iter);
+		if (account)
+			(void) prv_get_account(plugin_instance, account);
+		(void) e_iterator_next(iter);
+	}
+	g_object_unref(iter);
+	
+	plugin_instance->account_list = list;
+	list = NULL;
+	provman_map_file_remove_unused(plugin_instance->map_file,
+				       EDS_MAP_FILE_CAT,
+				       plugin_instance->cached_accounts);
+	provman_map_file_save(plugin_instance->map_file);
 	plugin_instance->sync_in_cb = callback;
 	plugin_instance->sync_in_user_data = user_data;
 	(void) g_idle_add(prv_complete_sync_in, plugin_instance);
@@ -798,9 +842,6 @@ on_error:
 		
 	if (list)
 		g_object_unref(list);
-
-	if (used_accounts)
-		g_hash_table_unref(used_accounts);
 
 	return err;
 }
