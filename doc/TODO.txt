@@ -26,13 +26,19 @@ Provman:
 
 EDS Plugin:
 
-* Listen to notifications and update internal data model
+* Make sure internal cache is synchronised with evolution. We could do this by
+  deleting the internal cache at the end of each session as the oFono plugin
+  does.  We could also listen for notifications to changes in email accounts
+  during a session.
 
 SyncE Plugin:
 
 * Add RemoteDeviceId parameter
 
-* Listen to notifications and update internal data model
+* Make sure internal cache is synchronised with evolution. We could do this by
+  deleting the internal cache at the end of each session as the oFono plugin
+  does.  We could also listen for notifications to changes in syncronisation
+  accounts during a session.
 
 oFono Plugin
 
@@ -41,7 +47,23 @@ oFono Plugin
   Do we really need to destroy the cancellable object and create a new one
   each time we invoke an asynchronous command.
 
-* Listen to notifications and update internal data model
+* Listen to notifications and update internal data model.  This is only
+  necessary during a session as the oFono plugin now deletes the cache
+  at the end of each session.
+
+* The oFono plugin caches all MMS accounts during a session even though only
+  one account is ever used.  This cache is not currently used. However, it could
+  be used to update the settings cache during a session.  Currently, if you
+  delete an MMS account during a session, and then perform a GetAll during the
+  same session the oFono plugin will report that no MMS account is provisioned,
+  which will not be correct if multiple MMS accounts are provisioned in the
+  system. If you end the current session and start a new session, MMS settings
+  will be made available once more.  This is a little inconsistent and we could
+  fix this by copying the cached mms account into main settings cache.  There
+  are some implications of doing this.  If we simply copy the mms backup cache
+  into the settings cache, no mms context will be deleted when the session ends.
+  Instead the settings from the backup cache will be duplicated in the initial
+  mms context.
 
 MeeGo Login Plugin
 
