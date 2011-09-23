@@ -509,17 +509,18 @@ static void prv_ofono_plugin_update_contexts(ofono_plugin_t *plugin_instance,
 	ofono_plugin_spare_context_t *spare_ctxt;
 
 	full_contexts = g_hash_table_new_full(g_str_hash, g_str_equal,
-					      NULL, NULL);
+					      g_free, NULL);
 	
 	for (i = 0; i < g_variant_n_children(array); ++i) {
 		tuple = g_variant_get_child_value(array, i);
 		
 		g_variant_get_child(tuple, 0, "o", &full_context_name);
-		
-		/* full_context_name is owned by ctxt_proxies */
 
-		g_hash_table_insert(modem->ctxt_proxies, full_context_name,
-				    NULL);
+		if (!g_hash_table_lookup_extended(modem->ctxt_proxies,
+						  full_context_name, NULL,
+						  NULL))
+		    g_hash_table_insert(modem->ctxt_proxies,
+					g_strdup(full_context_name), NULL);
 		g_hash_table_insert(full_contexts, full_context_name, NULL);
 
 		properties = g_variant_get_child_value(tuple,1);
@@ -800,19 +801,15 @@ static int prv_sync_in_step(ofono_plugin_t *plugin_instance, bool *again)
 		plugin_instance->state = OFONO_PLUGIN_GET_CONTEXTS;
 		modem = g_hash_table_lookup(plugin_instance->modems, 
 					    plugin_instance->imsi);
-		if (g_hash_table_size(modem->settings) > 0) {
-			recall = true;
-		} else {
 
-			PROVMAN_LOG("Retrieving Context Settings");
-
-			plugin_instance->cancellable = g_cancellable_new();
-			g_dbus_proxy_call(modem->cm_proxy,
-					  OFONO_CONNMAN_GET_CONTEXTS,
-					  NULL, G_DBUS_CALL_FLAGS_NONE,
-					  -1, plugin_instance->cancellable,
-					  prv_get_contexts_cb, plugin_instance);
-		}
+		PROVMAN_LOG("Retrieving Context Settings");
+		
+		plugin_instance->cancellable = g_cancellable_new();
+		g_dbus_proxy_call(modem->cm_proxy,
+				  OFONO_CONNMAN_GET_CONTEXTS,
+				  NULL, G_DBUS_CALL_FLAGS_NONE,
+				  -1, plugin_instance->cancellable,
+				  prv_get_contexts_cb, plugin_instance);
 	} else if (plugin_instance->state == OFONO_PLUGIN_GET_CONTEXTS) {
 		modem = g_hash_table_lookup(plugin_instance->modems, 
 					    plugin_instance->imsi);
@@ -963,9 +960,19 @@ void ofono_plugin_sync_in_cancel(provman_plugin_instance instance)
 static gboolean prv_complete_sync_out(gpointer user_data)
 {
 	ofono_plugin_t *plugin_instance = user_data;
+	ofono_plugin_modem_t *modem;
 
 	plugin_instance->state = OFONO_PLUGIN_IDLE;
 	provman_map_file_save(plugin_instance->map_file);
+
+	modem = g_hash_table_lookup(plugin_instance->modems, 
+				    plugin_instance->imsi);
+	g_hash_table_remove_all(modem->settings);
+	g_free(modem->mms_context);
+	modem->mms_context = NULL;
+	if (modem->extra_mms_contexts->len > 0)
+		g_ptr_array_remove_range(modem->extra_mms_contexts, 0,
+					 modem->extra_mms_contexts->len);
 
 	if (plugin_instance->cancellable) {
 		g_object_unref(plugin_instance->cancellable);
@@ -1124,39 +1131,6 @@ static void prv_context_deleted_cb(GObject *source_object,
 
 	(void) prv_context_deleted(plugin_instance, modem, source_object,
 				   result, user_data);
-}
-
-static void prv_mms_context_deleted_cb(GObject *source_object,
-				       GAsyncResult *result,
-				       gpointer user_data)
-{
-	ofono_plugin_t *plugin_instance = user_data;
-	ofono_plugin_modem_t *modem;
-	GHashTableIter iter;
-	ofono_plugin_spare_context_t *spare;
-	gpointer key;
-	gpointer value;
-
-	modem = g_hash_table_lookup(plugin_instance->modems, 
-				    plugin_instance->imsi);
-
-	if (prv_context_deleted(plugin_instance, modem, source_object, result,
-				user_data) == PROVMAN_ERR_NONE) {
-		g_free(modem->mms_context);
-		modem->mms_context = NULL;
-		if (modem->extra_mms_contexts->len > 0) {
-			spare = modem->extra_mms_contexts->pdata[0];
-			modem->mms_context = spare->ofono_ctxt_name;
-			spare->ofono_ctxt_name = NULL;
-			g_hash_table_iter_init(&iter, spare->settings);
-			while (g_hash_table_iter_next(&iter, &key, &value)) {
-				g_hash_table_iter_steal(&iter);
-				g_hash_table_insert(modem->settings, key,
-						    value);
-			}
-			g_ptr_array_remove_index(modem->extra_mms_contexts, 0);
-		}
-	}
 }
 
 static void prv_context_added_complete_cb(GObject *source_object, 
@@ -1321,10 +1295,6 @@ static void prv_prop_set_cb(GObject *source_object,
 			
 			cmd = plugin_instance->cmds->pdata[
 				plugin_instance->current_cmd];
-			
-			g_hash_table_insert(modem->settings,
-					    g_strdup(cmd->path), 
-					    g_strdup(cmd->value));
 			
 			g_variant_unref(retvals);							
 		}
@@ -1499,7 +1469,7 @@ static void prv_sync_out_step(ofono_plugin_t *plugin_instance, bool *again)
 					  g_variant_new("(o)", modem->mms_context),
 					  G_DBUS_CALL_FLAGS_NONE,
 					  -1, plugin_instance->cancellable,
-					  prv_mms_context_deleted_cb, plugin_instance);
+					  prv_context_deleted_cb, plugin_instance);
 		}
 		else if (cmd->type == OFONO_PLUGIN_ADD) {
 			syslog(LOG_INFO,
