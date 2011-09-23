@@ -23,10 +23,12 @@
  */
 
 /*!
- * @file provisioning.c
+ * @file map_file.c
  *
- * @brief Main file for the provisioning process.  Contains code for mainloop
- *        and exposes D-Bus services
+ * @brief Main file the map_file.  Contains methods to manipulate map files.
+ *        Map files are a way to persistently store mappings between user account
+ *        ids, e.g., test, and middleware assigned account ids or plugin ids,
+ *        e.g., 122121@comdev.
  *
  ******************************************************************************/
 
