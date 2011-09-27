@@ -43,6 +43,8 @@
 int provman_utils_validate_key(const char *key)
 {
 	int err = PROVMAN_ERR_NONE;
+	const char *start;
+	const char *end;
 
 	if (!key) {
 		err = PROVMAN_ERR_BAD_ARGS;
@@ -53,15 +55,25 @@ int provman_utils_validate_key(const char *key)
 		err = PROVMAN_ERR_BAD_ARGS;
 		goto on_error;
 	}
-
-	++key;
-
-	while ((key = strchr(key,'/'))) {
-		if (key[1] == '/') {
-			err = PROVMAN_ERR_BAD_ARGS;
-			goto on_error;
+	
+	start = end = key + 1;
+	while (*start) {	
+		while (*end && *end != '/') {
+			if (!g_ascii_isprint(*end) || g_ascii_isspace(*end)) {
+				err = PROVMAN_ERR_BAD_ARGS;
+				goto on_error;
+			}
+			++end;
 		}
-		++key;
+		
+		if (start == end) {
+			err = PROVMAN_ERR_BAD_ARGS;
+			goto on_error;		
+		}
+		
+		if (*end)
+			++end;
+		start = end;
 	}
 
 on_error:
@@ -99,24 +111,6 @@ int provman_utils_make_file_path(const char* fname, gchar **path)
 on_error:
 
 	return err;
-}
-
-GHashTable* provman_utils_dup_settings(GHashTable *settings)
-{
-	GHashTable *copy;
-	GHashTableIter iter;
-	gpointer key;
-	gpointer value;
-
-	copy = g_hash_table_new_full(g_str_hash, g_str_equal,
-				     g_free, g_free);
-
-	g_hash_table_iter_init(&iter, settings);
-	while (g_hash_table_iter_next(&iter, &key, &value))
-		g_hash_table_insert(copy, g_strdup((gchar*) key), 
-				    g_strdup((gchar*) value));
-
-	return copy;
 }
 
 gchar *provman_utils_get_context_from_key(const gchar *key, const char *root,

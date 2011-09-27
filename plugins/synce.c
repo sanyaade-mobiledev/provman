@@ -229,7 +229,7 @@ void synce_plugin_delete(provman_plugin_instance instance)
 static gboolean prv_complete_sync_in(gpointer user_data)
 {
 	synce_plugin_t *plugin_instance = user_data;
-	GHashTable *copy = NULL;
+	GHashTable *settings = NULL;
 
 	if (plugin_instance->cancellable) {
 		g_object_unref(plugin_instance->cancellable);
@@ -240,13 +240,13 @@ static gboolean prv_complete_sync_in(gpointer user_data)
 #ifdef PROVMAN_LOGGING
 		provman_utils_dump_hash_table(plugin_instance->settings);
 #endif	
-		copy = provman_utils_dup_settings(plugin_instance->settings);
+		settings = plugin_instance->settings;
 	}
 
 	g_ptr_array_unref(plugin_instance->new_accounts);
 	plugin_instance->new_accounts = NULL;
 
-	plugin_instance->sync_in_cb(plugin_instance->cb_err, copy,
+	plugin_instance->sync_in_cb(plugin_instance->cb_err, settings,
 				    plugin_instance->sync_in_user_data);
 	plugin_instance->completion_source = 0;
 

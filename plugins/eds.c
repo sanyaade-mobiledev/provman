@@ -486,15 +486,15 @@ on_error:
 static gboolean prv_complete_sync_in(gpointer user_data)
 {
 	eds_plugin_t *plugin_instance = user_data;
-	GHashTable *copy = NULL;
+	GHashTable *settings = NULL;
 
 #ifdef PROVMAN_LOGGING
 	provman_utils_dump_hash_table(plugin_instance->settings);
 #endif
 
 	if (plugin_instance->err == PROVMAN_ERR_NONE)
-		copy = provman_utils_dup_settings(plugin_instance->settings);
-	plugin_instance->sync_in_cb(plugin_instance->err, copy,
+		settings = plugin_instance->settings;
+	plugin_instance->sync_in_cb(plugin_instance->err, settings,
 				    plugin_instance->sync_in_user_data);
 
 	return FALSE;

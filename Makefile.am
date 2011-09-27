@@ -11,7 +11,9 @@ pm_sources = \
 		src/map_file.c \
 		src/log.c \
 		src/standard_schemas.c \
-		src/schema.c
+		src/schema.c \
+		src/cache.c \
+		src/cache.h
 
 pm_headers = \
 		include/error.h \

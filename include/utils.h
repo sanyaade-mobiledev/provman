@@ -37,7 +37,8 @@
 /*! @brief Checks a given key to ensure that it is syntatically valid.
  *
  * Valid keys need to begin with a '/'.  Two '/'s must be separated by
- * one or more characters and '/' itself is not a valid key.
+ * one or more characters.  White space characters are not permitted.
+ * Keys are allowed to end with a '/'.
  *
  * @param key the key to validate
  * 
@@ -63,24 +64,6 @@ int provman_utils_validate_key(const char *key);
  */
 
 int provman_utils_make_file_path(const char* fname, gchar **path);
-
-/*! @brief Duplicates a hash table used to store settings
- *
- * During a call to a plugin's #provman_plugin_sync_in_cb function
- * it will generate a hash table of settings.  The is obliged to pass
- * ownership of this hash table to provman.  Plugins can
- * call this function to duplicate the hash table of settings, so that they
- * can retain their own copy.  Some plugins may want to do this to faciliate
- * their implementation of #provman_plugin_sync_out_cb, which becomes
- * a simple comparison of two different hash tables.  
- *
- * @param settings the hash table of settings to duplicate
- * @return a pointer to a newly allocated hash table.  Callers assume ownership
- *   of this hash table and should delete it with a call to g_hash_table_unref
- *   when they no longer need it.
- */
-
-GHashTable* provman_utils_dup_settings(GHashTable *settings);
 
 /*! @brief Extracts a client context identifier from a given key
  *

@@ -96,6 +96,12 @@ array SetAll(dictionary dict);
 /*!
  * \brief Retrieves the value associated with a key.
  *
+ * If the key represents a setting the value of that setting
+ * is returned.  If, on the other hand, the key represents a
+ * directory, a '/' separated list of the names of the key's 
+ * children is returned.  Calling Get on /applications might
+ * return "email/sync/browser", for example.
+ * 
  * @param key the key whose value you wish to retrieve
  * @return the value associated with the specified key.
  *

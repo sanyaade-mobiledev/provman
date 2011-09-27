@@ -354,7 +354,7 @@ static gboolean prv_complete_sync_in(gpointer user_data)
 	if (plugin_instance->cb_err == PROVMAN_ERR_NONE) {
 		modem = g_hash_table_lookup(plugin_instance->modems, 
 					    plugin_instance->imsi);	
-		settings = provman_utils_dup_settings(modem->settings);
+		settings = modem->settings;
 	}		
 
 	plugin_instance->sync_in_cb(plugin_instance->cb_err, settings,

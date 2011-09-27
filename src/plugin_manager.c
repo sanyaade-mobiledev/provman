@@ -40,6 +40,8 @@
 
 #include "plugin_manager.h"
 #include "plugin.h"
+#include "cache.h"
+#include "utils.h"
 
 enum plugin_manager_state_t_ {
 	PLUGIN_MANAGER_STATE_IDLE,
@@ -59,7 +61,8 @@ struct plugin_manager_t_ {
 	plugin_manager_state_t state;
 	provman_plugin_instance *plugin_instances;
 	provman_schema_t **plugin_schemas;
-	GHashTable **kv_caches;
+	provman_cache_t *cache;
+	bool *plugin_synced;
 	unsigned int synced;
 	plugin_manager_cb_t callback;
 	void *user_data;
@@ -109,7 +112,8 @@ int plugin_manager_new(plugin_manager_t **manager)
 		}
 	}
 
-	retval->kv_caches = g_new0(GHashTable*, count);
+	provman_cache_new(&retval->cache);
+	retval->plugin_synced = g_new0(bool, count);
 	*manager = retval;
 
 	return err;
@@ -128,14 +132,11 @@ static void prv_clear_cache(plugin_manager_t *manager)
 	unsigned int i;
 	unsigned int count = provman_plugin_get_count();
 	
-	for (i = 0; i < count; ++i) {
-		if (manager->kv_caches[i]) {
-			g_hash_table_unref(manager->kv_caches[i]);
-			manager->kv_caches[i] = NULL;
-		}
-	}
-}
+	for (i = 0; i < count; ++i) 
+		manager->plugin_synced[i] = false;
 
+	(void) provman_cache_remove(manager->cache, "/");
+}
 
 void plugin_manager_delete(plugin_manager_t *manager)
 {
@@ -149,12 +150,11 @@ void plugin_manager_delete(plugin_manager_t *manager)
 			provman_schema_delete(manager->plugin_schemas[i]);
 			plugin = provman_plugin_get(i);
 			plugin->delete_fn(manager->plugin_instances[i]);
-			if (manager->kv_caches && manager->kv_caches[i])
-				g_hash_table_unref(manager->kv_caches[i]);
 		}
 		g_free(manager->plugin_schemas);
 		g_free(manager->plugin_instances);
-		g_free(manager->kv_caches);
+		provman_cache_delete(manager->cache);
+		g_free(manager->plugin_synced);
 		g_free(manager);
 	}
 }
@@ -193,7 +193,8 @@ static void prv_plugin_sync_in_cb(int err, GHashTable *settings, void *user_data
 		prv_schedule_completion(manager, err);
 	} else {
 		if (err == PROVMAN_ERR_NONE) {
-			manager->kv_caches[manager->synced] = settings;
+			provman_cache_add_settings(manager->cache, settings);
+			manager->plugin_synced[manager->synced] = true;
 		}
 		++manager->synced;
 		prv_sync_in_next_plugin(manager);       
@@ -221,8 +222,10 @@ static void prv_sync_in_next_plugin(plugin_manager_t *manager)
 		++manager->synced;
 	}
 
-	if (manager->synced == count)
+	if (manager->synced == count) {
+		provman_cache_dump_settings(manager->cache, "");
 		prv_schedule_completion(manager, PROVMAN_ERR_NONE);
+	}
 }
 
 int plugin_manager_sync_in(plugin_manager_t *manager, const char *imsi,
@@ -292,14 +295,17 @@ static void prv_sync_out_next_plugin(plugin_manager_t *manager)
 	const provman_plugin *plugin;
 	unsigned int count = provman_plugin_get_count();
 	int err;
+	GHashTable *settings;
 
 	while (manager->synced < count) {
 		plugin = provman_plugin_get(manager->synced);
-		if (manager->kv_caches[manager->synced]) {
+		if (manager->plugin_synced[manager->synced]) {
+			settings = provman_cache_get_settings(manager->cache,
+							      plugin->root);
 			err = plugin->sync_out_fn(
 				manager->plugin_instances[manager->synced], 
-				manager->kv_caches[manager->synced],
-				prv_plugin_sync_out_cb, manager);
+				settings, prv_plugin_sync_out_cb, manager);
+			g_hash_table_unref(settings);
 			
 			if (err == PROVMAN_ERR_NONE)
 				break;
@@ -388,89 +394,44 @@ int plugin_manager_get(plugin_manager_t* manager, const gchar* key,
 {
 	int err = PROVMAN_ERR_NONE;
 	unsigned int index;
-	gchar *val;
 
 	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
 		err = PROVMAN_ERR_DENIED;
 		goto on_error;
 	}
-	
-	err = provman_plugin_find_index(key, &index);
+
+	err = provman_utils_validate_key(key);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
-
-	if (!manager->kv_caches[index]) {
+	
+	err = provman_plugin_find_index(key, &index);
+	if ((err == PROVMAN_ERR_NONE) && (!manager->plugin_synced[index])) {
 		err = PROVMAN_ERR_CORRUPT;
 		goto on_error;
 	}
-
-	val = g_hash_table_lookup(manager->kv_caches[index], key);
-	if (!val) {
-		err = PROVMAN_ERR_DENIED;
-		goto on_error;
-	}
-
-	*value = g_strdup(val);
+	
+	err = provman_cache_get(manager->cache, key, value);
 
 on_error:
 
 	return err;
 }
 
-static bool prv_key_matches_search(const gchar *search_key, const gchar *key)
-{
-	bool retval = false;
-	unsigned int search_key_len = strlen(search_key);
-	unsigned int key_len = strlen(key);
-
-	if (key_len >= search_key_len) {
-		if (!strncmp(search_key, key, search_key_len)) {
-			if (key_len == search_key_len)
-				retval = true;
-			else if (search_key[search_key_len-1] == '/')
-				retval = true;
-			else if (key[search_key_len] == '/')
-				retval = true;
-		}
-	}
-
-	return retval;
-}
-
 int plugin_manager_get_all(plugin_manager_t* manager, const gchar* search_key,
 			   GVariant** values)
 {
 	int err = PROVMAN_ERR_NONE;
-	unsigned int i;
-	unsigned int count = provman_plugin_get_count();
-	GHashTable *ht;
-	GHashTableIter iter;
-	gpointer key;
-	gpointer value;
-	GVariantBuilder vb;
 
 	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
 		err = PROVMAN_ERR_DENIED;
 		goto on_error;
 	}
 
-	g_variant_builder_init(&vb, G_VARIANT_TYPE("a{ss}"));	
+	err = provman_utils_validate_key(search_key);
+	if (err != PROVMAN_ERR_NONE)
+		goto on_error;
 
-	for (i = 0; i < count; ++i) {
-		ht = manager->kv_caches[i];
-		if (ht) {
-			g_hash_table_iter_init(&iter, ht);
-			while (g_hash_table_iter_next(&iter, &key, &value)) {
-				if (prv_key_matches_search(search_key, key)) {
-					g_variant_builder_add(&vb, "{ss}", key,
-							      value);
-					PROVMAN_LOGF("Get %s=%s",key,value);
-				}
-			}
-		}
-	}
-
-	*values = g_variant_builder_end(&vb);
+	err = provman_cache_get_all(manager->cache, search_key, values);
 
 on_error:
        
@@ -513,7 +474,7 @@ static int prv_set_common(plugin_manager_t* manager, const gchar* key,
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
 
-	if (!manager->kv_caches[index]) {
+	if (!manager->plugin_synced[index]) {
 		err = PROVMAN_ERR_CORRUPT;
 		goto on_error;
 	}
@@ -524,8 +485,7 @@ static int prv_set_common(plugin_manager_t* manager, const gchar* key,
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
 
-	g_hash_table_insert(manager->kv_caches[index], 
-			    g_strdup(key), g_strdup(value));
+	err = provman_cache_set(manager->cache, key, value);
 	
 on_error:
 
@@ -541,6 +501,10 @@ int plugin_manager_set(plugin_manager_t* manager, const gchar* key,
 		err = PROVMAN_ERR_DENIED;
 		goto on_error;
 	}
+
+	err = provman_utils_validate_key(key);
+	if (err != PROVMAN_ERR_NONE)
+		goto on_error;
 
 	err = prv_set_common(manager, key, value);
 
@@ -590,8 +554,7 @@ on_error:
 	return err;
 }
 
-static int prv_validate_del(provman_schema_t *root, const char* key,
-			    bool *leaf)
+static int prv_validate_del(provman_schema_t *root, const char* key)
 {
 	int err = PROVMAN_ERR_NONE;
 	provman_schema_t *schema;
@@ -605,69 +568,7 @@ static int prv_validate_del(provman_schema_t *root, const char* key,
 		goto on_error;
 	}
 
-	*leaf = (schema->type == PROVMAN_SCHEMA_TYPE_KEY);
-
 on_error:
-
-	return err;
-}
-
-
-static int prv_delete_key(plugin_manager_t* manager, const gchar* raw_key,
-			  unsigned int index)
-{
-	int err = PROVMAN_ERR_NONE;
-	provman_schema_t *schema;
-	bool leaf;
-	unsigned int deleted;
-	GHashTableIter iter;
-	gpointer existing_key;
-	unsigned int key_length;
-	gchar *key;
-
-	key = g_strdup(raw_key);
-	key_length = strlen(key);
-
-	if (key[key_length - 1] == '/') {
-		--key_length;
-		key[key_length] = 0;
-	}	
-
-	if (!manager->kv_caches[index]) {
-		err = PROVMAN_ERR_CORRUPT;
-		goto on_error;
-	}
-
-	schema = manager->plugin_schemas[index];
-
-	err = prv_validate_del(schema, key, &leaf);
-	if (err != PROVMAN_ERR_NONE)
-		goto on_error;
-
-	if (leaf) {
-		if (!g_hash_table_remove(manager->kv_caches[index], key)) {
-			err = PROVMAN_ERR_NOT_FOUND;
-			goto on_error;
-		}
-	} else {
-		deleted = 0;			
-		g_hash_table_iter_init(&iter, manager->kv_caches[index]);
-		while (g_hash_table_iter_next(&iter, &existing_key, NULL)) {
-			if (!strncmp(existing_key, key, key_length) && 
-			    ((gchar*) existing_key)[key_length] == '/') {				
-				g_hash_table_iter_remove(&iter);
-				++deleted;
-			}
-		}
-		if (deleted == 0) {
-			err = PROVMAN_ERR_NOT_FOUND;
-			goto on_error;
-		}
-	}
-
-on_error:
-
-	g_free(key);
 
 	return err;
 }
@@ -675,40 +576,32 @@ on_error:
 int plugin_manager_remove(plugin_manager_t* manager, const gchar* key)
 {
 	int err = PROVMAN_ERR_NONE;
+	provman_schema_t *schema;
 	unsigned int index;
-	GPtrArray *children;
-	unsigned int i;
-	const gchar *root;
 
 	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
 		err = PROVMAN_ERR_DENIED;
 		goto on_error;
 	}
+
+	err = provman_utils_validate_key(key);
+	if (err != PROVMAN_ERR_NONE)
+		goto on_error;
 	
 	err = provman_plugin_find_index(key, &index);
-	if (err == PROVMAN_ERR_NONE) {
-		err = prv_delete_key(manager, key, index);
+	if ((err == PROVMAN_ERR_NONE) && !manager->plugin_synced[index]) {
+		err = PROVMAN_ERR_CORRUPT;
+		goto on_error;
+
+		schema = manager->plugin_schemas[index];
+		
+		err = prv_validate_del(schema, key);
 		if (err != PROVMAN_ERR_NONE)
 			goto on_error;
-	} else {
-		children = provman_plugin_find_children(key);
-		for (i = 0; i < children->len; ++i) {
-			root = g_ptr_array_index(children, i);
-			err = provman_plugin_find_index(root, &index);
-			if (err != PROVMAN_ERR_NONE) {
-				PROVMAN_LOGF("Unable to locate index for %s",
-					     root);
-				continue;
-			}
-			err = prv_delete_key(manager, root, index);
-			if (err != PROVMAN_ERR_NONE) {
-				err = PROVMAN_ERR_NONE;
-				PROVMAN_LOGF("Unable to delete %s", root);
-			}
-		}			
-		g_ptr_array_unref(children);
 	}
-	
+
+	err = provman_cache_remove(manager->cache, key);
+
 on_error:
 
 	PROVMAN_LOGF("Deleted %s returned with err %d", key, err);
@@ -846,6 +739,10 @@ int plugin_manager_get_children_type_info(plugin_manager_t* manager,
 		goto on_error;
 	}
 
+	err = provman_utils_validate_key(search_key);
+	if (err != PROVMAN_ERR_NONE)
+		goto on_error;
+
 	vb = g_variant_builder_new(G_VARIANT_TYPE("a{ss}"));
 	
 	err = provman_plugin_find_index(search_key, &index);
@@ -898,6 +795,10 @@ int plugin_manager_get_type_info(plugin_manager_t* manager,
 		err = PROVMAN_ERR_DENIED;
 		goto on_error;
 	}
+
+	err = provman_utils_validate_key(search_key);
+	if (err != PROVMAN_ERR_NONE)
+		goto on_error;
 
 	err = provman_plugin_find_index(search_key, &index);
 	if (err == PROVMAN_ERR_NONE) {
