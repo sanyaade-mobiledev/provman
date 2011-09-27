@@ -228,6 +228,9 @@ void Abort();
  *   
  * \exception com.intel.provman.Error.NotFound The key is not supported by provman
  *    or its plugins.
+ * \exception com.intel.provman.Error.Cancelled The call to #Get
+ *   has failed because provman has been killed.
+ * \exception com.intel.provman.Error.BadArgs The key is not valid
 */
 
 string GetTypeInfo(string key);
@@ -259,6 +262,8 @@ string GetTypeInfo(string key);
  *    provman or its plugins.
  * \exception com.intel.provman.Error.BadArgs The key represents a setting and
  *    not a directory.
+ * \exception com.intel.provman.Error.Cancelled The call to #Get
+ *   has failed because provman has been killed.
 */
 
 dictionary GetChildrenTypeInfo(string key);
