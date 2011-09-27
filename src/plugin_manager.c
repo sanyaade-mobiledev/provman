@@ -637,7 +637,7 @@ on_error:
 	return err;
 }
 
-static gchar *prv_getSchemaType(provman_schema_t *schema)
+static gchar *prv_get_schema_type(provman_schema_t *schema)
 {
 	gchar *retval = NULL;
 	const gchar *type = NULL;
@@ -706,7 +706,7 @@ static int prv_get_schema_dir_type_info(plugin_manager_t *manager,
 	g_hash_table_iter_init(&iter, parent->dir.children);
 	while (g_hash_table_iter_next(&iter, &key, &value)) {
 		child = value;
-		type = prv_getSchemaType(child);
+		type = prv_get_schema_type(child);
 		if (type) {
 			key_name = key;							
 			if (!key_name[0])
@@ -808,7 +808,7 @@ int plugin_manager_get_type_info(plugin_manager_t* manager,
 		if (err != PROVMAN_ERR_NONE)
 			goto on_error;
 		
-		type = prv_getSchemaType(schema);
+		type = prv_get_schema_type(schema);
 		if (!type) {
 			err = PROVMAN_ERR_CORRUPT;
 			goto on_error;
