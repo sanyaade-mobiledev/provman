@@ -259,8 +259,8 @@ void provman_task_get_all(plugin_manager_t *manager, provman_task *task)
 
 	PROVMAN_LOGF("Processing Get All task on key %s", task->key);
 
-	if (plugin_manager_get_all(manager, task->key, &array) !=
-	    PROVMAN_ERR_NONE)
+	err = plugin_manager_get_all(manager, task->key, &array);
+	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
 
 	g_dbus_method_invocation_return_value(task->invocation,
