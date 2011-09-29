@@ -58,7 +58,7 @@ static void prv_provman_schema_delete(gpointer data)
 static provman_schema_t *prv_provman_schema_dir_new(const gchar *name,
 						    gboolean can_delete)
 {
-	provman_schema_t *dir = g_new0(provman_schema_t, 1);
+	provman_schema_t *dir = g_slice_new0(provman_schema_t);
 
 	dir->name = g_strdup(name);
 	dir->type = PROVMAN_SCHEMA_TYPE_DIR;
@@ -77,7 +77,7 @@ static provman_schema_t *prv_provman_schema_key_new(const gchar *name,
 						    type,
 						    const gchar *allowed_values_str)
 {
-	provman_schema_t *key = g_new0(provman_schema_t, 1);
+	provman_schema_t *key = g_slice_new0(provman_schema_t);
 	gchar **allowed_values;
 	unsigned int i;
 	
@@ -456,7 +456,7 @@ void provman_schema_delete(provman_schema_t *schema)
 			if (schema->key.allowed_values)
 				g_hash_table_unref(schema->key.allowed_values);
 		}
-		g_free(schema);
+		g_slice_free(provman_schema_t, schema);
 	}
 }
 
