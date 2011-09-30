@@ -57,7 +57,7 @@ typedef void *provman_plugin_instance;
  *
  */
 typedef void (*provman_plugin_sync_in_cb)(int result, GHashTable* settings,
-					       void *user_data);
+					  void *user_data);
 /*! 
  * @brief Typedef for the callback function that plugins invoke when they
  *        want to complete a call to #provman_plugin_sync_out.
@@ -176,7 +176,7 @@ typedef void (*provman_plugin_sync_in_cancel)(
  * modifications to the middleware.
  * 
  * The plugin needs to compare the set of settings it receives in the settings
- * parmater to the current state of the data store of the middleware that it manages.
+ * parameter to the current state of the data store of the middleware that it manages.
  * Once the comparison is done it needs to modify the middleware data store so that
  * it corresponds to the settings contained with the settings parameter.  Doing so
  * may involve adding and deleting accounts or changing the values of various
@@ -204,8 +204,7 @@ typedef void (*provman_plugin_sync_in_cancel)(
 
 typedef int (*provman_plugin_sync_out)(
 	provman_plugin_instance instance, GHashTable* settings,
-	provman_plugin_sync_out_cb callback, 
-	void *user_data);
+	provman_plugin_sync_out_cb callback, void *user_data);
 
 /*! 
  * @brief Typedef for a function pointer that is called when provman
@@ -238,6 +237,31 @@ typedef void (*provman_plugin_sync_out_cancel)(
 
 typedef void (*provman_plugin_abort)(
 	provman_plugin_instance instance);
+
+/*! 
+ * @brief Typedef for a function pointer that informs provman of the 
+ *  SIM idenitifer currently being used by the plugin instance.
+ * 
+ * Provman does not know the SIM identifier or IMSI number of the
+ * current management session.  Although it receives a SIM identifier from the
+ * management client as a parameter to the #Start method this parameter may
+ * be an empty string, indicating that the default SIM identifier should be
+ * used.  The problem is that Provman has no way of transforming an empty string
+ * into the default identifier as it does not itself use the facilities of the
+ * underlying telephony system.  Therefore, it needs to ask the plugins that
+ * support SIM specific data to do this for it.  Provman uses this information
+ * when storing and retrieving meta data for SIM specific plugins.
+ *
+ * Plugins that do not support SIM specific data do not need to implement this
+ * function.
+ *
+ * @return a string containing the SIM identifier the plugin is using for the
+ *   current session.  Ownership of this string is retained by the plugin.
+ */
+
+typedef const gchar *(*provman_plugin_sim_id)(
+	provman_plugin_instance instance);
+
 
 /*! \brief Typedef for struct provman_plugin_ */
 typedef struct provman_plugin_ provman_plugin;
@@ -277,6 +301,8 @@ struct provman_plugin_
 	provman_plugin_sync_out_cancel sync_out_cancel_fn;
         /*! \brief Pointer to the plugin's abort function. */
 	provman_plugin_abort abort_fn;
+        /*! \brief Pointer to the plugin's sim_id function. */
+	provman_plugin_sim_id sim_id_fn;
 };
 
 /*! \cond */

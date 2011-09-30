@@ -45,7 +45,7 @@ provman_plugin g_provman_plugins[] = {
 	  ofono_plugin_new, ofono_plugin_delete, 
 	  ofono_plugin_sync_in, ofono_plugin_sync_in_cancel,
 	  ofono_plugin_sync_out, ofono_plugin_sync_out_cancel,
-	  ofono_plugin_abort
+	  ofono_plugin_abort, ofono_plugin_sim_id
 	}
 #endif
 };

@@ -64,6 +64,8 @@
 #define PROVMAN_INTERFACE_ABORT "Abort"
 #define PROVMAN_INTERFACE_GET_CHILDREN_TYPE_INFO "GetChildrenTypeInfo"
 #define PROVMAN_INTERFACE_GET_TYPE_INFO "GetTypeInfo"
+#define PROVMAN_INTERFACE_SET_META "SetMeta"
+#define PROVMAN_INTERFACE_GET_META "GetMeta"
 
 #define PROVMAN_TIMEOUT 30*1000
 
@@ -136,6 +138,22 @@ static const gchar g_provman_introspection[] =
 	"      <arg type='s' name='"PROVMAN_INTERFACE_KEY"'"
 	"           direction='in'/>"
 	"      <arg type='a{ss}' name='"PROVMAN_INTERFACE_DICT"'"
+	"           direction='out'/>"
+	"    </method>"
+	"    <method name='"PROVMAN_INTERFACE_SET_META"'>"
+	"      <arg type='s' name='"PROVMAN_INTERFACE_KEY"'"
+	"           direction='in'/>"
+	"      <arg type='s' name='"PROVMAN_INTERFACE_PROP"'"
+	"           direction='in'/>"
+	"      <arg type='s' name='"PROVMAN_INTERFACE_VALUE"'"
+	"           direction='in'/>"
+	"    </method>"
+	"    <method name='"PROVMAN_INTERFACE_GET_META"'>"
+	"      <arg type='s' name='"PROVMAN_INTERFACE_KEY"'"
+	"           direction='in'/>"
+	"      <arg type='s' name='"PROVMAN_INTERFACE_PROP"'"
+	"           direction='in'/>"
+	"      <arg type='s' name='"PROVMAN_INTERFACE_VALUE"'"
 	"           direction='out'/>"
 	"    </method>"
 	"  </interface>"
@@ -234,6 +252,12 @@ static gboolean prv_process_task(gpointer user_data)
 		case PROVMAN_TASK_GET_TYPE_INFO:
 			provman_task_get_type_info(
 				context->plugin_manager, task);
+			break;
+		case PROVMAN_TASK_SET_META:
+			provman_task_set_meta(context->plugin_manager, task);
+			break;
+		case PROVMAN_TASK_GET_META:
+			provman_task_get_meta(context->plugin_manager, task);
 			break;
 		default:
 			break;
@@ -493,6 +517,42 @@ static void prv_add_abort_task(provman_context *context,
 	prv_add_task(context, task);
 }
 
+static void prv_add_get_meta_task(provman_context *context,
+				  GDBusMethodInvocation *invocation,
+				  const gchar *key, const gchar *prop)
+{
+	provman_task *task;
+
+	PROVMAN_LOG("Add Task Get Meta");
+
+	provman_task_new(PROVMAN_TASK_GET_META, invocation, &task);
+	task->key = g_strdup(key);
+	task->prop = g_strdup(prop);
+	g_strstrip(task->key);
+	g_strstrip(task->prop);
+
+	prv_add_task(context, task);
+}
+
+static void prv_add_set_meta_task(provman_context *context,
+				  GDBusMethodInvocation *invocation,
+				  const gchar *key, const gchar *prop,
+				  const gchar *value)
+{
+	provman_task *task;
+
+	PROVMAN_LOG("Add Task Set Meta");
+
+	provman_task_new(PROVMAN_TASK_SET_META, invocation, &task);
+	task->key = g_strdup(key);
+	task->prop = g_strdup(prop);
+	task->value = g_strdup(value);
+	g_strstrip(task->key);
+	g_strstrip(task->prop);
+
+	prv_add_task(context, task);
+}
+
 static void prv_lost_client(GDBusConnection *connection, const gchar *name,
 			    gpointer user_data);
 
@@ -601,6 +661,7 @@ static void prv_provman_method_call(GDBusConnection *connection,
 	provman_context *context = user_data;
 	gchar *value;
 	gchar *key;
+	gchar *prop;
 	GVariant *variant;
 
 	PROVMAN_LOGF("%s called", method_name);
@@ -675,6 +736,16 @@ static void prv_provman_method_call(GDBusConnection *connection,
 				      PROVMAN_INTERFACE_DELETE)) {
 			g_variant_get(parameters, "(&s)", &key);
 			prv_add_delete_task(context, invocation, key);
+		} else if (!g_strcmp0(method_name,
+				      PROVMAN_INTERFACE_SET_META)) {
+			g_variant_get(parameters, "(&s&s&s)", &key, &prop,
+				      &value);
+			prv_add_set_meta_task(context, invocation, key, prop,
+					      value);
+		} else if (!g_strcmp0(method_name, 
+				      PROVMAN_INTERFACE_GET_META)) {
+			g_variant_get(parameters, "(&s&s)", &key, &prop);
+			prv_add_get_meta_task(context, invocation, key, prop);
 		}
 	}
 }

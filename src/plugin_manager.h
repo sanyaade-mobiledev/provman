@@ -63,5 +63,8 @@ int plugin_manager_get_children_type_info(plugin_manager_t* manager,
 int plugin_manager_get_type_info(plugin_manager_t* manager,
 				 const gchar* search_key, gchar **type_info);
 bool plugin_manager_busy(plugin_manager_t *manager);
-
+int plugin_manager_get_meta(plugin_manager_t* manager, const gchar* key,
+			    const gchar *prop, gchar** value);
+int plugin_manager_set_meta(plugin_manager_t* manager, const gchar* key,
+			    const gchar *prop, const gchar* value);
 #endif

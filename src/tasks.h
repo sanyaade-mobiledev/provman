@@ -47,7 +47,9 @@ enum provman_task_type_ {
 	PROVMAN_TASK_DELETE,
 	PROVMAN_TASK_ABORT,
 	PROVMAN_TASK_GET_CHILDREN_TYPE_INFO,
-	PROVMAN_TASK_GET_TYPE_INFO
+	PROVMAN_TASK_GET_TYPE_INFO,
+	PROVMAN_TASK_SET_META,
+	PROVMAN_TASK_GET_META
 };
 
 typedef enum provman_task_type_ provman_task_type;
@@ -59,6 +61,7 @@ struct provman_task_ {
 	gchar *imsi;
 	gchar *key;
 	gchar *value;
+	gchar *prop;
 	GVariant *variant;
 };
 
@@ -92,5 +95,8 @@ void provman_task_get_children_type_info(plugin_manager_t *manager,
 					 provman_task *task);
 void provman_task_get_type_info(plugin_manager_t *manager,
 				provman_task *task);
+void provman_task_set_meta(plugin_manager_t *manager, provman_task *task);
+void provman_task_get_meta(plugin_manager_t *manager, provman_task *task);
+
 
 #endif

@@ -42,6 +42,7 @@
 #include "plugin.h"
 #include "cache.h"
 #include "utils.h"
+#include "meta_data.h"
 
 enum plugin_manager_state_t_ {
 	PLUGIN_MANAGER_STATE_IDLE,
@@ -57,10 +58,13 @@ typedef enum plugin_manager_state_t_ plugin_manager_state_t;
 
 #define PLUGIN_MANAGER_UNNAMED_DIR "<X>"
 
+#define PROVMAN_META_DATA_NAME "metadata.ini"
+
 struct plugin_manager_t_ {
 	plugin_manager_state_t state;
 	provman_plugin_instance *plugin_instances;
 	provman_schema_t **plugin_schemas;
+	GHashTable **plugin_meta_data;
 	provman_cache_t *cache;
 	bool *plugin_synced;
 	unsigned int synced;
@@ -73,6 +77,12 @@ struct plugin_manager_t_ {
 
 static void prv_sync_in_next_plugin(plugin_manager_t *manager);
 static void prv_sync_out_next_plugin(plugin_manager_t *manager);
+
+static void prv_free_meta_data(gpointer md)
+{
+	if (md)
+		provman_meta_data_delete(md);
+}
 
 int plugin_manager_new(plugin_manager_t **manager)
 {
@@ -92,6 +102,7 @@ int plugin_manager_new(plugin_manager_t **manager)
 	retval->state = PLUGIN_MANAGER_STATE_IDLE;
 	retval->plugin_instances = g_new0(provman_plugin_instance, count);
 	retval->plugin_schemas = g_new0(provman_schema_t*, count);
+	retval->plugin_meta_data = g_new0(GHashTable*, count);
 	
 	for (i = 0; i < count; ++i) {
 		plugin = provman_plugin_get(i);
@@ -110,6 +121,10 @@ int plugin_manager_new(plugin_manager_t **manager)
 				      plugin->name);
 			goto on_error;
 		}
+
+		retval->plugin_meta_data[i] = 
+			g_hash_table_new_full(g_str_hash, g_str_equal, g_free,
+					      prv_free_meta_data);
 	}
 
 	provman_cache_new(&retval->cache);
@@ -150,7 +165,9 @@ void plugin_manager_delete(plugin_manager_t *manager)
 			provman_schema_delete(manager->plugin_schemas[i]);
 			plugin = provman_plugin_get(i);
 			plugin->delete_fn(manager->plugin_instances[i]);
+			g_hash_table_unref(manager->plugin_meta_data[i]);
 		}
+		g_free(manager->plugin_meta_data);
 		g_free(manager->plugin_schemas);
 		g_free(manager->plugin_instances);
 		provman_cache_delete(manager->cache);
@@ -181,9 +198,53 @@ static void prv_schedule_completion(plugin_manager_t *manager, int err)
 	manager->state = PLUGIN_MANAGER_STATE_IDLE;
 }
 
-static void prv_plugin_sync_in_cb(int err, GHashTable *settings, void *user_data)
+static provman_meta_data_t* prv_get_plugin_md(plugin_manager_t *manager)
+{
+	const provman_plugin *plugin;
+	const gchar *imsi;
+	provman_meta_data_t* md = NULL;
+	gchar *meta_data_path = NULL;
+	GString *fname = NULL;
+	GHashTable *ht = manager->plugin_meta_data[manager->synced];
+	
+	plugin = provman_plugin_get(manager->synced);
+	imsi = plugin->sim_id_fn ? 
+		plugin->sim_id_fn(manager->plugin_instances[manager->synced]) :
+		"";
+	md = g_hash_table_lookup(ht, imsi);
+	if (!md) {
+		fname = g_string_new(plugin->name);
+		if (imsi[0]) {
+			g_string_append_c(fname, '-');
+			g_string_append(fname, imsi);
+		}
+		g_string_append_c(fname, '-');
+		g_string_append(fname, PROVMAN_META_DATA_NAME);
+		if (provman_utils_make_file_path(fname->str, &meta_data_path)
+		    != PROVMAN_ERR_NONE)
+			goto on_error;
+
+		PROVMAN_LOGF("Loading meta data file %s", meta_data_path);
+
+		provman_meta_data_new(meta_data_path, &md);
+		g_hash_table_insert(ht, g_strdup(imsi), md);
+	}
+
+on_error:
+	
+	if (fname)
+		g_string_free(fname, TRUE);
+	g_free(meta_data_path);
+	
+	return md;
+}
+
+static void prv_plugin_sync_in_cb(int err, GHashTable *settings,
+				  void *user_data)
 {
 	plugin_manager_t *manager = user_data;
+	provman_meta_data_t* md;
+	GHashTable *ht;
 
 	PROVMAN_LOGF("Plugin %s sync_in completed with error %d",
 		      provman_plugin_get(manager->synced)->name, err);
@@ -194,6 +255,13 @@ static void prv_plugin_sync_in_cb(int err, GHashTable *settings, void *user_data
 	} else {
 		if (err == PROVMAN_ERR_NONE) {
 			provman_cache_add_settings(manager->cache, settings);
+			
+			md = prv_get_plugin_md(manager);
+			if (md) {
+				ht = provman_meta_data_get_all(md);
+				provman_cache_add_meta_data(manager->cache, ht);
+				g_hash_table_unref(ht);
+			}
 			manager->plugin_synced[manager->synced] = true;
 		}
 		++manager->synced;
@@ -223,7 +291,9 @@ static void prv_sync_in_next_plugin(plugin_manager_t *manager)
 	}
 
 	if (manager->synced == count) {
+#ifdef PROVMAN_LOGGING
 		provman_cache_dump_settings(manager->cache, "");
+#endif
 		prv_schedule_completion(manager, PROVMAN_ERR_NONE);
 	}
 }
@@ -296,6 +366,8 @@ static void prv_sync_out_next_plugin(plugin_manager_t *manager)
 	unsigned int count = provman_plugin_get_count();
 	int err;
 	GHashTable *settings;
+	GHashTable *ht;
+	provman_meta_data_t* md;
 
 	while (manager->synced < count) {
 		plugin = provman_plugin_get(manager->synced);
@@ -304,7 +376,15 @@ static void prv_sync_out_next_plugin(plugin_manager_t *manager)
 							      plugin->root);
 			err = plugin->sync_out_fn(
 				manager->plugin_instances[manager->synced], 
-				settings, prv_plugin_sync_out_cb, manager);
+				settings, prv_plugin_sync_out_cb,
+				manager);
+			md = prv_get_plugin_md(manager);
+			if (md) {
+				ht = provman_cache_get_meta_data(manager->cache,
+								 plugin->root);
+				provman_meta_data_update(md, ht);
+				g_hash_table_unref(ht);
+			}
 			g_hash_table_unref(settings);
 			
 			if (err == PROVMAN_ERR_NONE)
@@ -827,5 +907,75 @@ on_error:
 	
 	PROVMAN_LOGF("Get Type Info of %s returned with %d", search_key, err);
 	
+	return err;
+}
+
+int plugin_manager_get_meta(plugin_manager_t* manager, const gchar* key,
+			    const gchar *prop, gchar** value)
+{
+	int err = PROVMAN_ERR_NONE;
+	unsigned int index;
+
+	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
+		err = PROVMAN_ERR_DENIED;
+		goto on_error;
+	}
+
+	err = provman_utils_validate_key(key);
+	if (err != PROVMAN_ERR_NONE)
+		goto on_error;
+	
+	err = provman_plugin_find_index(key, &index);
+	if (err != PROVMAN_ERR_NONE)
+		goto on_error;
+
+	if (!manager->plugin_synced[index]) {
+		err = PROVMAN_ERR_CORRUPT;
+		goto on_error;
+	}
+	
+	err = provman_cache_get_meta(manager->cache, key, prop, value);
+
+on_error:
+
+	PROVMAN_LOGF("Get Meta (%s, %s) returned with error: %u", key, prop,
+		     err);
+
+	return err;
+}
+
+int plugin_manager_set_meta(plugin_manager_t* manager, const gchar* key,
+			    const gchar *prop, const gchar* value)
+{
+	int err = PROVMAN_ERR_NONE;
+	unsigned int index;
+
+	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
+		err = PROVMAN_ERR_DENIED;
+		goto on_error;
+	}
+
+	err = provman_utils_validate_key(key);
+	if (err != PROVMAN_ERR_NONE)
+		goto on_error;
+
+	err = provman_plugin_find_index(key, &index);
+	if (err != PROVMAN_ERR_NONE) {
+		err = PROVMAN_ERR_BAD_ARGS;
+		goto on_error;
+	}
+
+	if (!manager->plugin_synced[index]) {
+		err = PROVMAN_ERR_CORRUPT;
+		goto on_error;
+	}
+
+	err = provman_cache_set_meta(manager->cache, key, prop, value);
+
+on_error:
+
+	PROVMAN_LOGF("Set Meta (%s, %s, %p) returned with error: %u", key, prop,
+		     value, err);
+
 	return err;
 }

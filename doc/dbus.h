@@ -268,3 +268,54 @@ string GetTypeInfo(string key);
 
 dictionary GetChildrenTypeInfo(string key);
 
+/*!
+ * \brief Assigns a meta data property value to a given key.
+ *
+ * The key can be a setting or a directory.
+ *
+ * It is an error to assign a meta data property value to a
+ * a non-existent key.  If the meta data property does not
+ * exist it will be created.  If the property does exists
+ * its old value will be overwritten.
+ *
+ * Meta data can be assigned to read only leaf nodes.
+ *
+ * Finally, meta data can only be assigned to keys that are
+ * maintained by plugins.   Therefore meta data cannot be
+ * assoicated with '/' or '/applications'
+ *
+ * @param key the key to create or whose value you wish to change.
+ * @param prop the name of the meta data property.
+ * @param value the value to assign to the meta data property.
+ *
+ * \exception com.intel.provman.Error.Unexpected #SetMeta is invoked
+ * before #Start.
+ * \exception com.intel.provman.Error.Cancelled The call to #SetMeta
+ *   has failed because provman has been killed.
+ * \exception com.intel.provman.Error.NotFound The specified key
+ *   does not exist.
+ * \exception com.intel.provman.Error.BadArgs The key is not well formed
+ *   or is not managed by a plugin.
+*/
+
+void SetMeta(string key, string prop, string value);
+
+/*!
+ * \brief Retrieves a meta data property value from a given key.
+ *
+ * @param key the key to create or whose value you wish to change.
+ * @param prop the name of the meta data property.
+ *
+ * @return the value of the meta data property.
+ *
+ * \exception com.intel.provman.Error.Unexpected #GetMeta is invoked
+ * before #Start.
+ * \exception com.intel.provman.Error.Cancelled The call to #GetMeta
+ *   has failed because provman has been killed.
+ * \exception com.intel.provman.Error.NotFound The specified key
+ *   or meta data property does not exist.
+ * \exception com.intel.provman.Error.BadArgs The key is not well formed
+ *   or is not managed by a plugin.
+*/
+
+string GetMeta(string key, string prop);

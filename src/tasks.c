@@ -69,6 +69,7 @@ void provman_task_delete(provman_task *task)
 	if (task) {
 		g_free(task->key);
 		g_free(task->value);
+		g_free(task->prop);
 		if (task->variant)
 			g_variant_unref(task->variant);
 		
@@ -359,3 +360,45 @@ void provman_task_get_type_info(plugin_manager_t *manager,
 
 	task->invocation = NULL;
 }
+
+void provman_task_set_meta(plugin_manager_t *manager, provman_task *task)
+{
+	int err = PROVMAN_ERR_NONE;
+
+	PROVMAN_LOGF("Processing Set Meta task: %s?%s=%s", task->key,
+		     task->prop, task->value);
+	
+	err = plugin_manager_set_meta(manager, task->key, task->prop,
+				      task->value);
+
+	if (err == PROVMAN_ERR_NONE)
+		g_dbus_method_invocation_return_value(task->invocation, NULL);
+	else
+		g_dbus_method_invocation_return_dbus_error(
+			task->invocation, provman_err_to_dbus(err), "");
+
+	task->invocation = NULL;
+}
+
+void provman_task_get_meta(plugin_manager_t *manager, provman_task *task)
+{
+	int err = PROVMAN_ERR_NONE;
+	gchar *value = NULL;
+
+	PROVMAN_LOGF("Processing Get Meta task: %s?%s", task->key, task->prop);
+
+	err = plugin_manager_get_meta(manager, task->key, task->prop, &value);
+
+	if (err == PROVMAN_ERR_NONE)
+		g_dbus_method_invocation_return_value(task->invocation, 
+						      g_variant_new("(s)", 
+								     value));
+	else
+		g_dbus_method_invocation_return_dbus_error(
+			task->invocation, provman_err_to_dbus(err), "");
+
+	g_free(value);
+
+	task->invocation = NULL;
+}
+

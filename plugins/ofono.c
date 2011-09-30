@@ -1559,3 +1559,9 @@ void ofono_plugin_abort(provman_plugin_instance instance)
 	plugin_instance->imsi = NULL;
 }
 
+const gchar* ofono_plugin_sim_id(provman_plugin_instance instance)
+{
+	ofono_plugin_t *plugin_instance = instance;
+
+	return plugin_instance->imsi;
+}

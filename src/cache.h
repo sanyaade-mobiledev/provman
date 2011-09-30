@@ -41,13 +41,22 @@ void provman_cache_new(provman_cache_t **cache);
 int provman_cache_exists(provman_cache_t *cache, const gchar *key, bool *leaf);
 int provman_cache_set(provman_cache_t *cache, const gchar *key, 
 		      const gchar *value);
+int provman_cache_set_meta(provman_cache_t *cache, const gchar *key, 
+			   const gchar *prop, const gchar *value);
 int provman_cache_get(provman_cache_t *cache, const gchar *key, gchar **value);
+int provman_cache_get_meta(provman_cache_t *cache, const gchar *key,
+			   const gchar *prop, gchar **value);
 int provman_cache_remove(provman_cache_t *cache, const gchar *key);
 void provman_cache_add_settings(provman_cache_t *cache, GHashTable *settings);
-GHashTable *provman_cache_get_settings(provman_cache_t *cache, const gchar *root);
+void provman_cache_add_meta_data(provman_cache_t *cache, GHashTable *meta_data);
+GHashTable *provman_cache_get_settings(provman_cache_t *cache,
+				       const gchar *root);
+GHashTable *provman_cache_get_meta_data(provman_cache_t *cache,
+					const gchar *root);
 void provman_cache_delete(provman_cache_t *cache);
 int provman_cache_get_all(provman_cache_t *cache, const gchar *root,
 			  GVariant **variant);
+
 #ifdef PROVMAN_LOGGING
 void provman_cache_dump_settings(provman_cache_t *cache, const gchar *key);
 #endif

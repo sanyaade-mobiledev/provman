@@ -13,14 +13,16 @@ pm_sources = \
 		src/standard_schemas.c \
 		src/schema.c \
 		src/cache.c \
-		src/cache.h
+		src/cache.h \
+		src/meta_data.c
 
 pm_headers = \
 		include/error.h \
 		include/log.h \
 		include/map_file.h \
 		include/plugin.h \
-		include/utils.h
+		include/utils.h \
+		include/meta_data.h
 
 pm_docs = \
 		doc/coding-style.h \

@@ -147,6 +147,23 @@
  * supported by the device and the types and possible values that these 
  * settings can hold.
  *
+ * Finally, provman allows meta data to be associated with provman keys
+ * (settings or directories).  Each key can support an unlimited number
+ * of meta data key/value pairs.  Meta data keys and values are strings.
+ * For example, the key \a /applications/email/test might have a meta
+ * data key/value pair of 'Type' and 'com.intel.com.email' associated
+ * with it.  Meta data properties are bound to a key and are deleted if
+ * the key is deleted.  Provman supports meta data as a means to allow
+ * separate device management clients to communicate with each other.
+ * For example, an OMA CP client that processes an OMA CP document
+ * containing bootstrap information for a DM server must grant sufficient
+ * ACL rights to that server so that it can modify any of the settings
+ * provisioned in the OMA CP document.  The OMA CP client can satisify
+ * this requirement by associating an ACL property with the root node
+ * of each newly provisioned account.  This property can be read by the
+ * DM client at a later stage.  Two methods are provided for setting
+ * and retrieving meta data.  These are #SetMeta and #GetMeta, respectively.
+ *
  * A brief description of each D-Bus method is given below.  Click on the links
  * for more detailed information:
  * 
@@ -163,6 +180,8 @@
  * <tr><td>#Abort</td><td>\copybrief Abort</td></tr>
  * <tr><td>#GetTypeInfo</td><td>\copybrief GetTypeInfo</td></tr>
  * <tr><td>#GetChildrenTypeInfo</td><td>\copybrief GetChildrenTypeInfo</td></tr>
+ * <tr><td>#GetMeta</td><td>\copybrief GetMeta</td></tr>
+ * <tr><td>#SetMeta</td><td>\copybrief SetMeta</td></tr>
  * </table>
  *
  * A simple python script demonstrating how these methods can be used is shown below.
@@ -378,6 +397,23 @@ manager.End()
  * to the applications or middleware.  Instead #provman_plugin_abort is called
  * to give plugins a chance to delete any data they have cached for the session
  * such as the IMSI number.
+ *
+ * \subsection sim-id SIM ID and Meta Data
+ * All settings are stored by the plugins.  However, to ease the
+ * burden on plugin development, all meta data is stored by provman.  This
+ * creates difficulties when plugins exist that maintain SIM specific settings.
+ * SIM specific settings are assoicated with a given SIM identifier.  To
+ * associate the correct meta data with the correct set of SIM specific settings
+ * both provman and the plugin that manages these settings needs to use the
+ * same SIM identifier.  The problem is that provman does not know the SIM
+ * identifier or IMSI number of the current management session.  Although it
+ * receives a SIM identifier from the management client as a parameter to the
+ * #Start method this parameter may be an empty string, indicating that the 
+ * default SIM identifier should be used.  Provman has no
+ * way of transforming this empty string into the default identifier as it does
+ * not itself use the facilities of the underlying telephony system.  Therefore,
+ * it needs to ask the plugins that support SIM specific data to do this for
+ * it.  It does this by calling the plugins' #provman_plugin_sim_id methods.
  *
  * \subsection client-ids Mapping between Client and OS IDs
  * 

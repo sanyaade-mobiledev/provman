@@ -49,5 +49,7 @@ int ofono_plugin_sync_out(provman_plugin_instance instance,
 void ofono_plugin_sync_out_cancel(provman_plugin_instance instance);
 
 void ofono_plugin_abort(provman_plugin_instance instance);
+const gchar* ofono_plugin_sim_id(provman_plugin_instance instance);
+
 #endif
 

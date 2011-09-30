@@ -39,6 +39,7 @@
 
 struct provman_cache_t_ {
 	GHashTable *children;
+	GHashTable *meta_data;
 	gchar *value;
 	provman_cache_t *parent;
 };
@@ -49,9 +50,14 @@ struct provman_cache_key_t_ {
 	gchar *key_copy;
 };
 
-typedef void (*provman_cache_visit_cb_t)(const gchar* path, const gchar *value,
+typedef void (*provman_cache_visit_cb_t)(const gchar* path, provman_cache_t *node,
 					 gpointer user_data);
 
+static void prv_unref_hash_table(gpointer ht)
+{
+	if (ht)
+		g_hash_table_unref(ht);
+}
 
 static void prv_del_node(void *node)
 {	
@@ -243,6 +249,31 @@ on_error:
 	return err;
 }
 
+int provman_cache_set_meta(provman_cache_t *cache, const gchar *key, 
+			   const gchar *prop, const gchar *value)
+{
+	provman_cache_t *node;
+	int err;
+	provman_cache_key_t cache_key;
+
+	prv_provman_cache_key_init(&cache_key, key);
+	
+	err = prv_find_node(cache, cache_key.key, &node);
+	if (err != PROVMAN_ERR_NONE)
+		goto on_error;
+
+	if (!node->meta_data)
+		node->meta_data = g_hash_table_new_full(g_str_hash, g_str_equal,
+							g_free, g_free);
+	g_hash_table_insert(node->meta_data, g_strdup(prop), g_strdup(value));
+	
+on_error:
+
+	prv_provman_cache_key_free(&cache_key);
+
+	return err;
+}
+
 int provman_cache_remove(provman_cache_t *cache, const gchar *key)
 {
 	provman_cache_t *node;
@@ -332,18 +363,52 @@ on_error:
 	return err;
 }
 
-static void prv_add_node_to_vb(const gchar* path, const gchar *value,
+int provman_cache_get_meta(provman_cache_t *cache, const gchar *key,
+			   const gchar *prop, gchar **value)
+{
+	provman_cache_t *node;
+	int err;
+	provman_cache_key_t cache_key;
+	gchar *prop_value;
+
+	prv_provman_cache_key_init(&cache_key, key);
+	
+	err = prv_find_node(cache, cache_key.key, &node);
+	if (err != PROVMAN_ERR_NONE)
+		goto on_error;
+
+	if (!node->meta_data) {
+		err = PROVMAN_ERR_NOT_FOUND;
+		goto on_error;
+	}
+
+	prop_value = g_hash_table_lookup(node->meta_data, prop);
+	if (!prop_value) {
+		err = PROVMAN_ERR_NOT_FOUND;
+		goto on_error;
+	}
+
+	*value = g_strdup(prop_value);
+	
+on_error:
+
+	prv_provman_cache_key_free(&cache_key);
+
+	return err;
+}
+
+static void prv_add_node_to_vb(const gchar* path, provman_cache_t *node,
 			       gpointer user_data)
 {
 	GVariantBuilder *vb = user_data;
-	g_variant_builder_add(vb, "{ss}", path, value);
+	g_variant_builder_add(vb, "{ss}", path, node->value);
 }
 
-static void prv_add_node_to_ht(const gchar* path, const gchar *value,
+static void prv_add_node_to_ht(const gchar* path, provman_cache_t *node,
 			       gpointer user_data)
 {
 	GHashTable *settings = user_data;
-	g_hash_table_insert(settings, g_strdup(path), g_strdup(value));
+	g_hash_table_insert(settings, g_strdup(path), g_strdup(node->value));
 }
 
 static void prv_visit_leaves_r(provman_cache_t *node, GString *path,
@@ -364,7 +429,7 @@ static void prv_visit_leaves_r(provman_cache_t *node, GString *path,
 			g_string_set_size(path, path_len);
 		}		
 	} else {
-		cb(path->str, node->value, user_data);
+		cb(path->str, node, user_data);
 	}
 }
 
@@ -384,6 +449,52 @@ static int prv_visit_leaves(provman_cache_t *cache, const gchar *root,
 
 	path = g_string_new(!cache_key.key[1] ? "" : cache_key.key);	
 	prv_visit_leaves_r(node, path, cb, user_data);
+	(void) g_string_free(path, TRUE);
+
+on_error:
+
+	prv_provman_cache_key_free(&cache_key);
+
+	return err;
+}
+
+static void prv_visit_nodes_r(provman_cache_t *node, GString *path,
+			      provman_cache_visit_cb_t cb, gpointer user_data)
+{
+	GHashTableIter iter;
+	gpointer node_name;
+	gpointer value;
+	gsize path_len;
+
+	cb(path->str, node, user_data);	
+	if (node->children) {
+		g_hash_table_iter_init(&iter, node->children);
+		while (g_hash_table_iter_next(&iter, &node_name, &value)) {
+			path_len = path->len;
+			g_string_append_c(path, '/');
+			g_string_append(path, node_name);
+			prv_visit_nodes_r(value, path, cb, user_data);
+			g_string_set_size(path, path_len);
+		}		
+	}
+}
+
+static int prv_visit_nodes(provman_cache_t *cache, const gchar *root,
+			   provman_cache_visit_cb_t cb, gpointer user_data)
+{
+	provman_cache_key_t cache_key;
+	GString* path;
+	provman_cache_t *node;
+	int err;
+
+	prv_provman_cache_key_init(&cache_key, root);
+
+	err = prv_find_node(cache, cache_key.key, &node);
+	if (err != PROVMAN_ERR_NONE)
+		goto on_error;
+
+	path = g_string_new(!cache_key.key[1] ? "" : cache_key.key);	
+	prv_visit_nodes_r(node, path, cb, user_data);
 	(void) g_string_free(path, TRUE);
 
 on_error:
@@ -420,6 +531,8 @@ void provman_cache_delete(provman_cache_t *cache)
 			g_hash_table_unref(cache->children);
 		else		
 			g_free(cache->value);
+		if (cache->meta_data)
+			g_hash_table_unref(cache->meta_data);
 		g_slice_free(provman_cache_t, cache);
 	}
 }
@@ -435,6 +548,26 @@ void provman_cache_add_settings(provman_cache_t *cache, GHashTable *settings)
 		(void) provman_cache_set(cache, key, value); 
 }
 
+void provman_cache_add_meta_data(provman_cache_t *cache, GHashTable *meta_data)
+{
+	GHashTableIter iter;
+	gpointer key;
+	gpointer prop_values;
+	provman_cache_t *node;
+	provman_cache_key_t cache_key;	
+	
+	g_hash_table_iter_init(&iter, meta_data);
+	while (g_hash_table_iter_next(&iter, &key, &prop_values)) {
+		prv_provman_cache_key_init(&cache_key, key);
+		if (prv_find_node(cache, cache_key.key, &node) 
+		    == PROVMAN_ERR_NONE) {
+			node->meta_data = prop_values;
+			g_hash_table_ref(node->meta_data);
+		}
+		prv_provman_cache_key_free(&cache_key);
+	}
+}
+
 GHashTable *provman_cache_get_settings(provman_cache_t *cache, const gchar *root)
 {
 	GHashTable *settings;
@@ -444,6 +577,39 @@ GHashTable *provman_cache_get_settings(provman_cache_t *cache, const gchar *root
 	(void) prv_visit_leaves(cache, root, prv_add_node_to_ht, settings);
 
 	return settings;
+}
+
+static void prv_add_meta_data_to_ht(const gchar* path, provman_cache_t *node,
+				    gpointer user_data)
+{
+	GHashTable *meta_data;
+	GHashTable *prop_values;
+	GHashTableIter iter;
+	gpointer key;
+	gpointer value;
+
+	if (node->meta_data) {
+		meta_data = user_data;
+		prop_values = g_hash_table_new_full(g_str_hash, g_str_equal,
+					       g_free, g_free);
+		g_hash_table_iter_init(&iter, node->meta_data);
+		while (g_hash_table_iter_next(&iter, &key, &value))
+			g_hash_table_insert(prop_values, g_strdup(key),
+					    g_strdup(value));
+		g_hash_table_insert(meta_data, g_strdup(path), prop_values);
+	}
+}
+
+GHashTable *provman_cache_get_meta_data(provman_cache_t *cache,
+					const gchar *root)
+{
+	GHashTable *meta_data;
+
+	meta_data = g_hash_table_new_full(g_str_hash, g_str_equal, g_free,
+					  prv_unref_hash_table);
+	(void) prv_visit_nodes(cache, root, prv_add_meta_data_to_ht, meta_data);
+
+	return meta_data;
 }
 
 #ifdef PROVMAN_LOGGING
