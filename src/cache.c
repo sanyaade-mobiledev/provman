@@ -53,6 +53,9 @@ struct provman_cache_key_t_ {
 typedef void (*provman_cache_visit_cb_t)(const gchar* path, provman_cache_t *node,
 					 gpointer user_data);
 
+typedef void (*visit_fn_t)(provman_cache_t *node, GString *path,
+			   provman_cache_visit_cb_t cb, gpointer user_data);
+
 static void prv_unref_hash_table(gpointer ht)
 {
 	if (ht)
@@ -433,8 +436,9 @@ static void prv_visit_leaves_r(provman_cache_t *node, GString *path,
 	}
 }
 
-static int prv_visit_leaves(provman_cache_t *cache, const gchar *root,
-			    provman_cache_visit_cb_t cb, gpointer user_data)
+static int prv_visit(provman_cache_t *cache, const gchar *root,
+		     provman_cache_visit_cb_t cb, visit_fn_t visit_fn,
+		     gpointer user_data)
 {
 	provman_cache_key_t cache_key;
 	GString* path;
@@ -448,7 +452,7 @@ static int prv_visit_leaves(provman_cache_t *cache, const gchar *root,
 		goto on_error;
 
 	path = g_string_new(!cache_key.key[1] ? "" : cache_key.key);	
-	prv_visit_leaves_r(node, path, cb, user_data);
+	visit_fn(node, path, cb, user_data);
 	(void) g_string_free(path, TRUE);
 
 on_error:
@@ -456,6 +460,12 @@ on_error:
 	prv_provman_cache_key_free(&cache_key);
 
 	return err;
+}
+
+static int prv_visit_leaves(provman_cache_t *cache, const gchar *root,
+			    provman_cache_visit_cb_t cb, gpointer user_data)
+{
+	return prv_visit(cache, root, cb, prv_visit_leaves_r, user_data);
 }
 
 static void prv_visit_nodes_r(provman_cache_t *node, GString *path,
@@ -482,26 +492,7 @@ static void prv_visit_nodes_r(provman_cache_t *node, GString *path,
 static int prv_visit_nodes(provman_cache_t *cache, const gchar *root,
 			   provman_cache_visit_cb_t cb, gpointer user_data)
 {
-	provman_cache_key_t cache_key;
-	GString* path;
-	provman_cache_t *node;
-	int err;
-
-	prv_provman_cache_key_init(&cache_key, root);
-
-	err = prv_find_node(cache, cache_key.key, &node);
-	if (err != PROVMAN_ERR_NONE)
-		goto on_error;
-
-	path = g_string_new(!cache_key.key[1] ? "" : cache_key.key);	
-	prv_visit_nodes_r(node, path, cb, user_data);
-	(void) g_string_free(path, TRUE);
-
-on_error:
-
-	prv_provman_cache_key_free(&cache_key);
-
-	return err;
+	return prv_visit(cache, root, cb, prv_visit_nodes_r, user_data);
 }
 
 int provman_cache_get_all(provman_cache_t *cache, const gchar *root,
