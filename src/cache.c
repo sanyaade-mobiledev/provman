@@ -224,9 +224,9 @@ int provman_cache_set(provman_cache_t *cache, const gchar *key,
 		      const gchar *value)
 {
 	int err;
-	provman_cache_t *node;
+	provman_cache_t *node = NULL;
 	provman_cache_t *child;
-	gchar *node_name;
+	gchar *node_name = NULL;
 	provman_cache_key_t cache_key;
 
 	prv_provman_cache_key_init(&cache_key, key);	
