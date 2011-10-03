@@ -4,11 +4,6 @@ TODOs:
 Provman:
 -------
 
-* Meta data
- 
-  Need to allow meta data to be associated with settings.  Needed for OMA DM
-  and OMA CP.
-
 * Lazy invocation of sync_in
 
   Investigate whether it would be possible to use lazy evaluations for plugins,
