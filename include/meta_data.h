@@ -40,29 +40,6 @@
  * use whatever property names they choose.  Needless to say, clients that
  * wish to communicate with each other will need to agree on a naming protocol.
  *
- * Meta data is stored not by provman but by the plugins.  The reason for this
- * is that meta data is associated with specific keys and these keys may be
- * SIM specific.  The problem is that provman itself has no notion of SIM specific
- * data, as this feature is handled completely by the plugins.  Nor does it know
- * whether a plugin supports SIM specific data.  If meta data were implemented in 
- * provman we could end up with a situation that a change of SIM card could
- * cause provman to delete meta data associated with keys bound to the old SIM
- * card, as these keys would not be provided to provman during sync in.  When
- * the original SIM card is re-inserted the keys would re-appear but their meta
- * data would have been deleted as provman cannot distinguish between deleted
- * keys and keys that are simply not currently available because the plugin which 
- * manages the keys has detected a SIM card change.
- *
- * There are two implications of implementing meta data in the plugins.
- * <ol>
- * <li>Meta data can only be associated with keys managed by plguins.<li>
- * <li>Extra work is required in the plugins to support meta data.</li>
- * </ol>
- *
- * We regards to the second point, provman provides some helper functions that
- * plugins can call to easily implement meta data.  These functions are
- * described below.
- *
  *****************************************************************************/
 
 #ifndef PROVMAN_META_DATA_H
