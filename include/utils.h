@@ -120,7 +120,7 @@ GHashTable *provman_utils_get_contexts(GHashTable *settings, const char *root,
 /*! @brief Removes all keys from a hashtable belonging to a given account
  *         under a given root.
  *
- * This is a help function designed to be used by plugins when they want
+ * This is a helper function designed to be used by plugins when they want
  * to delete all the settings assocated with an account from their cache.
  *
  * @param settings a hash table of settings

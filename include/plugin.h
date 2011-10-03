@@ -255,6 +255,8 @@ typedef void (*provman_plugin_abort)(
  * Plugins that do not support SIM specific data do not need to implement this
  * function.
  *
+ * @param instance A pointer to the plugin instance.
+ *
  * @return a string containing the SIM identifier the plugin is using for the
  *   current session.  Ownership of this string is retained by the plugin.
  */
