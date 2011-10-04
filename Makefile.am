@@ -11,6 +11,7 @@ pm_sources = \
 		src/map_file.c \
 		src/log.c \
 		src/standard_schemas.c \
+		src/standard_schemas.h \
 		src/schema.c \
 		src/cache.c \
 		src/cache.h \
