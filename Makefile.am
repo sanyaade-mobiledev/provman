@@ -15,7 +15,8 @@ pm_sources = \
 		src/schema.c \
 		src/cache.c \
 		src/cache.h \
-		src/meta_data.c
+		src/meta_data.c \
+		src/meta_data.h
 
 pm_headers = \
 		include/error.h \
@@ -23,8 +24,7 @@ pm_headers = \
 		include/map_file.h \
 		include/plugin.h \
 		include/utils.h \
-		include/meta_data.h
-
+		include/schema.h 
 pm_docs = \
 		doc/coding-style.h \
 		doc/dbus.h \
