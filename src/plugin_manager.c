@@ -487,7 +487,12 @@ int plugin_manager_get(plugin_manager_t* manager, const gchar* key,
 		goto on_error;
 	
 	err = provman_plugin_find_index(key, &index);
-	if ((err == PROVMAN_ERR_NONE) && (!manager->plugin_synced[index])) {
+	if (err != PROVMAN_ERR_NONE) {
+		err = PROVMAN_ERR_BAD_ARGS;
+		goto on_error;
+	}
+
+	if (!manager->plugin_synced[index]) {
 		err = PROVMAN_ERR_CORRUPT;
 		goto on_error;
 	}
@@ -669,18 +674,23 @@ int plugin_manager_remove(plugin_manager_t* manager, const gchar* key)
 	err = provman_utils_validate_key(key);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
-	
+
 	err = provman_plugin_find_index(key, &index);
-	if ((err == PROVMAN_ERR_NONE) && !manager->plugin_synced[index]) {
+	if (err != PROVMAN_ERR_NONE) {
+		err = PROVMAN_ERR_BAD_ARGS;
+		goto on_error;
+	}
+
+	if (!manager->plugin_synced[index]) {
 		err = PROVMAN_ERR_CORRUPT;
 		goto on_error;
-
-		schema = manager->plugin_schemas[index];
-		
-		err = prv_validate_del(schema, key);
-		if (err != PROVMAN_ERR_NONE)
-			goto on_error;
 	}
+	
+	schema = manager->plugin_schemas[index];
+	
+	err = prv_validate_del(schema, key);
+	if (err != PROVMAN_ERR_NONE)
+		goto on_error;
 
 	err = provman_cache_remove(manager->cache, key);
 
