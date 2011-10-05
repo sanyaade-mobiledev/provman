@@ -33,6 +33,7 @@
 
 #include "plugin.h"
 #include "standard_schemas.h"
+#include "test_schemas.h"
 
 #ifdef PROVMAN_EVOLUTION
 #include "plugins/eds.h"
@@ -40,6 +41,10 @@
 
 #ifdef PROVMAN_SYNC_EVOLUTION
 #include "plugins/synce.h"
+#endif
+
+#ifdef PROVMAN_TEST_PLUGIN
+#include "plugins/test.h"
 #endif
 
 /*! \var g_provman_plugins
@@ -71,6 +76,18 @@ provman_plugin g_provman_plugins[] = {
 	  synce_plugin_sync_in, synce_plugin_sync_in_cancel,
 	  synce_plugin_sync_out, synce_plugin_sync_out_cancel,
 	  NULL, NULL
+	}
+#endif
+#ifdef PROVMAN_TEST_PLUGIN
+#if (defined PROVMAN_EVOLUTION || PROVMAN_SYNC_EVOLUTION)
+	,
+#endif
+	{ "test", "/applications/test_plugin/",
+	  g_provman_test_schema,
+	  test_plugin_new, test_plugin_delete, 
+	  test_plugin_sync_in, test_plugin_sync_in_cancel,
+	  test_plugin_sync_out, test_plugin_sync_out_cancel,
+	  test_plugin_abort, test_plugin_sim_id
 	}
 #endif
 };

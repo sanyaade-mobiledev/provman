@@ -23,6 +23,10 @@ AC_ARG_WITH([email],
 	[  --with-email indicates which email subsystem to use (evolution or none) ], 
 	[ email=${withval} ], [ email=evolution ] )
 
+AC_ARG_WITH([test],
+	[  --with-test indicates which test plugin to use (test or none) ], 
+	[ test_plugin=${withval} ], [ test_plugin=none ] )
+
 AC_ARG_ENABLE([docs], [  --enable-docs compiles doxygen documentation during build ],
 		      [ docs=${enableval} ], [ docs=yes] )
 
@@ -46,6 +50,13 @@ AC_DEFINE([PROVMAN_EVOLUTION], 1, [ evolution plugin enabled ])
 fi
 
 AM_CONDITIONAL([HAVE_EVOLUTION], [test "x${email}" = xevolution])
+
+if test "x${test_plugin}" = xtest; then
+AC_DEFINE([PROVMAN_TEST_PLUGIN], 1, [ test plugin enabled ])
+fi
+
+AM_CONDITIONAL([HAVE_TEST_PLUGIN], [test "x${test_plugin}" = xtest])
+
 AM_CONDITIONAL([TEST], test "x${tests}" = xyes)
 
 # Checks for libraries.
@@ -146,5 +157,6 @@ Package features:
 	with-telephony: ${telephony}
 	with-sync: ${sync}
 	with-email: ${email}
+	with-test: ${test_plugin}
 
  --------------------------------------------------"

@@ -12,6 +12,8 @@ pm_sources = \
 		src/log.c \
 		src/standard_schemas.c \
 		src/standard_schemas.h \
+		src/test_schemas.c \
+		src/test_schemas.h \
 		src/schema.c \
 		src/cache.c \
 		src/cache.h \
@@ -68,6 +70,13 @@ endif
 if HAVE_SYNC_EVOLUTION
 session_sources += plugins/synce.c
 session_sources += plugins/synce.h
+endif
+
+if HAVE_TEST_PLUGIN
+session_sources += plugins/test.c
+session_sources += plugins/test.h
+system_sources += plugins/test.c
+system_sources += plugins/test.h
 endif
 
 if TEST
