@@ -165,7 +165,9 @@ void plugin_manager_delete(plugin_manager_t *manager)
 			provman_schema_delete(manager->plugin_schemas[i]);
 			plugin = provman_plugin_get(i);
 			plugin->delete_fn(manager->plugin_instances[i]);
-			g_hash_table_unref(manager->plugin_meta_data[i]);
+			if (manager->plugin_meta_data[i])
+				g_hash_table_unref(
+					manager->plugin_meta_data[i]);
 		}
 		g_free(manager->plugin_meta_data);
 		g_free(manager->plugin_schemas);
