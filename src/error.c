@@ -57,6 +57,7 @@ const gchar* provman_err_to_dbus(int error)
 		err_str = PROVMAN_DBUS_ERR_NO_TRANSACTION;
 		break;
 	case PROVMAN_ERR_BAD_ARGS:
+	case PROVMAN_ERR_BAD_KEY:
 		err_str = PROVMAN_DBUS_ERR_BAD_ARGS;
 		break;
 	case PROVMAN_ERR_UNKNOWN:
