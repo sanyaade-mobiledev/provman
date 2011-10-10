@@ -56,7 +56,8 @@ GHashTable *provman_cache_get_meta_data(provman_cache_t *cache,
 void provman_cache_delete(provman_cache_t *cache);
 int provman_cache_get_all(provman_cache_t *cache, const gchar *root,
 			  GVariant **variant);
-
+int provman_cache_get_all_meta(provman_cache_t *cache, const gchar *root,
+			       GVariant **variant);
 #ifdef PROVMAN_LOGGING
 void provman_cache_dump_settings(provman_cache_t *cache, const gchar *key);
 #endif

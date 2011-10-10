@@ -182,6 +182,8 @@
  * <tr><td>#GetChildrenTypeInfo</td><td>\copybrief GetChildrenTypeInfo</td></tr>
  * <tr><td>#GetMeta</td><td>\copybrief GetMeta</td></tr>
  * <tr><td>#SetMeta</td><td>\copybrief SetMeta</td></tr>
+ * <tr><td>#GetAllMeta</td><td>\copybrief GetAllMeta</td></tr>
+ * <tr><td>#SetAllMeta</td><td>\copybrief SetAllMeta</td></tr>
  * </table>
  *
  * A simple python script demonstrating how these methods can be used is shown below.

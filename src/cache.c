@@ -407,6 +407,23 @@ static void prv_add_node_to_vb(const gchar* path, provman_cache_t *node,
 	g_variant_builder_add(vb, "{ss}", path, node->value);
 }
 
+static void prv_add_meta_to_vb(const gchar* path, provman_cache_t *node,
+			       gpointer user_data)
+{
+	GVariantBuilder *vb = user_data;
+	GHashTableIter iter;
+	gpointer key;
+	gpointer value;
+
+	if (node->meta_data) {
+		g_hash_table_iter_init(&iter, node->meta_data);
+		while (g_hash_table_iter_next(&iter, &key, &value))
+			g_variant_builder_add(vb, "(sss)", path,
+					      (const gchar *) key,
+					      (const gchar *) value);
+	}
+}
+
 static void prv_add_node_to_ht(const gchar* path, provman_cache_t *node,
 			       gpointer user_data)
 {
@@ -503,6 +520,26 @@ int provman_cache_get_all(provman_cache_t *cache, const gchar *root,
 
 	vb = g_variant_builder_new(G_VARIANT_TYPE("a{ss}"));
 	err = prv_visit_leaves(cache, root, prv_add_node_to_vb, vb);
+	if (err != PROVMAN_ERR_NONE)
+		goto on_error;
+
+	*variant = g_variant_builder_end(vb);
+		
+on_error:
+
+	g_variant_builder_unref(vb);
+
+	return err;
+}
+
+int provman_cache_get_all_meta(provman_cache_t *cache, const gchar *root,
+			       GVariant **variant)
+{
+	GVariantBuilder *vb;
+	int err;
+
+	vb = g_variant_builder_new(G_VARIANT_TYPE("a(sss)"));
+	err = prv_visit_nodes(cache, root, prv_add_meta_to_vb, vb);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
 

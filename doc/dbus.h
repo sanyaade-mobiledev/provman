@@ -319,3 +319,58 @@ void SetMeta(string key, string prop, string value);
 */
 
 string GetMeta(string key, string prop);
+
+/*!
+ * \brief Sets multiple meta data entries in a single command
+ *
+ * #SetAllMeta should be used to set multiple meta data values in a single
+ * command.  If you need to provision multiple meta data values it is more
+ * efficient to call #SetAllMeta once instead of invoking #SetMeta multiple
+ * times as doing so reduces the IPC overhead.
+ *
+ * The failure to set an individual piece of meta data  does not cause the
+ * entire #SetAllMeta command to fail.  It will continue to set the remaining
+ * pieces of meta data.  Once the command has finished, an array of structures,
+ * is returned.  Each structure in this list contains the key/  
+ * a property name pair to which provman failed to assign meta data.
+ * 
+ * As with #SetMeta it is an error to attempt to associate meta data with a 
+ * non-existent key.
+ *
+ * @param meta A dictionary of meta data structures, type \a a(sss).  Each
+ * structure contains, in order, the following values, key, meta data property
+ * name, meta data value, e.g., ("/telephony/mms", "ACL,"Get='*'").
+ * @return An array of key/property name pairs that could not be set,
+ * type \a a(ss).  If this array is empty then all pieces of meta data
+ * were correctly set.
+ *
+ * \exception com.intel.provman.Error.Unexpected #SetAllMeta is invoked
+ * before #Start.
+ * \exception com.intel.provman.Error.Cancelled The call to #SetAllMeta
+ *   has failed because provman has been killed.
+*/
+
+array SetAllMeta(array meta);
+
+/*!
+ * \brief Retrieves all the meta data associated with a given key
+ * 
+ *
+ * If #GetAllMeta is invoked on a directory, it returns all meta
+ * data properties associated with that key and its descendants.
+ *
+ * @param key the key whose value(s) you wish to retrieve
+ * @return an array of meta data structures of type \a a(sss).
+ * Each structure contains, in order, the key, the meta data property
+ * name, and the meta data value, e.g., ("/telephony/mms", "ACL,"Get='*'").
+ *
+ * \exception com.intel.provman.Error.Unexpected #GetAllMeta is invoked
+ * before #Start.
+ * \exception com.intel.provman.Error.Cancelled The call to #GetAllMeta
+ *   has failed because provman has been killed.
+ * \exception com.intel.provman.Error.NotFound The specified key
+ *   does not exist.
+ * \exception com.intel.provman.Error.BadArgs The key is not valid
+*/
+
+array GetAllMeta(string key);

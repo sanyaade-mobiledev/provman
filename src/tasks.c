@@ -227,6 +227,32 @@ on_error:
 	task->invocation = NULL;
 }
 
+void provman_task_set_all_meta(plugin_manager_t *manager, provman_task *task)
+{
+	int err = PROVMAN_ERR_NONE;
+	GVariant *array;
+
+	PROVMAN_LOG("Processing Set All Meta task");
+
+	err = plugin_manager_set_all_meta(manager, task->variant, &array);
+	if (err != PROVMAN_ERR_NONE)
+		goto on_error;
+
+	g_dbus_method_invocation_return_value(task->invocation,
+					      g_variant_new("(@a(ss))",array));
+
+	task->invocation = NULL;
+	return;
+
+on_error:
+
+	g_dbus_method_invocation_return_dbus_error(
+		task->invocation, provman_err_to_dbus(err), "");
+	
+	task->invocation = NULL;
+
+}
+
 void provman_task_get(plugin_manager_t *manager, provman_task *task)
 {
 	int err = PROVMAN_ERR_NONE;
@@ -266,6 +292,31 @@ void provman_task_get_all(plugin_manager_t *manager, provman_task *task)
 
 	g_dbus_method_invocation_return_value(task->invocation,
 					      g_variant_new("(@a{ss})",array));
+
+	task->invocation = NULL;
+	return;
+	
+on_error:
+
+	g_dbus_method_invocation_return_dbus_error(
+		task->invocation, provman_err_to_dbus(err), "");
+
+	task->invocation = NULL;
+}
+
+void provman_task_get_all_meta(plugin_manager_t *manager, provman_task *task)
+{
+	int err = PROVMAN_ERR_NONE;
+	GVariant *array;
+
+	PROVMAN_LOGF("Processing Get All Meta task on key %s", task->key);
+
+	err = plugin_manager_get_all_meta(manager, task->key, &array);
+	if (err != PROVMAN_ERR_NONE)
+		goto on_error;
+	
+	g_dbus_method_invocation_return_value(task->invocation,
+					      g_variant_new("(@a(sss))",array));
 
 	task->invocation = NULL;
 	return;

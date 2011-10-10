@@ -525,6 +525,28 @@ on_error:
 	return err;
 }
 
+int plugin_manager_get_all_meta(plugin_manager_t* manager,
+				const gchar* search_key, GVariant** values)
+{
+	int err = PROVMAN_ERR_NONE;
+
+	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
+		err = PROVMAN_ERR_DENIED;
+		goto on_error;
+	}
+
+	err = provman_utils_validate_key(search_key);
+	if (err != PROVMAN_ERR_NONE)
+		goto on_error;
+
+	err = provman_cache_get_all_meta(manager->cache, search_key, values);
+
+on_error:
+       
+	return err;
+}
+
+
 static int prv_validate_set(provman_schema_t *root, const char* key,
 			    const char* value)
 {
@@ -574,6 +596,34 @@ static int prv_set_common(plugin_manager_t* manager, const gchar* key,
 
 	err = provman_cache_set(manager->cache, key, value);
 	
+on_error:
+
+	return err;
+}
+
+static int prv_set_meta_common(plugin_manager_t* manager, const gchar* key,
+			       const gchar *prop, const gchar* value)
+{
+	int err;
+	unsigned int index;
+
+	err = provman_utils_validate_key(key);
+	if (err != PROVMAN_ERR_NONE)
+		goto on_error;
+
+	err = provman_plugin_find_index(key, &index);
+	if (err != PROVMAN_ERR_NONE) {
+		err = PROVMAN_ERR_BAD_ARGS;
+		goto on_error;
+	}
+
+	if (!manager->plugin_synced[index]) {
+		err = PROVMAN_ERR_CORRUPT;
+		goto on_error;
+	}
+
+	err = provman_cache_set_meta(manager->cache, key, prop, value);
+
 on_error:
 
 	return err;
@@ -640,6 +690,51 @@ on_error:
 
 	return err;
 }
+
+int plugin_manager_set_all_meta(plugin_manager_t* manager, GVariant* settings,
+				GVariant **errors)
+{
+	int err = PROVMAN_ERR_NONE;
+
+	GVariantIter *iter = NULL;
+	gchar *key;
+	const gchar *value;
+	const gchar *prop;
+	int err2;
+	GVariantBuilder vb;
+
+	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
+		err = PROVMAN_ERR_DENIED;
+		goto on_error;
+	}
+
+	g_variant_builder_init(&vb, G_VARIANT_TYPE("a(ss)"));
+
+	iter = g_variant_iter_new(settings);
+	while (g_variant_iter_next(iter,"(s&s&s)", &key, &prop, &value)) {
+		g_strstrip(key);			
+		err2 = prv_set_meta_common(manager, key, prop, value);
+		if (err2 != PROVMAN_ERR_NONE) {
+			g_variant_builder_add(&vb, "(ss)", key, prop);			
+			PROVMAN_LOGF("Unable to set %s?%s = %s", key, prop,
+				     value);
+		}				
+#ifdef PROVMAN_LOGGING
+		else {
+			PROVMAN_LOGF("Set %s?%s = %s", key, prop, value);
+		}
+		g_free(key);
+#endif
+	}
+	g_variant_iter_free(iter);
+
+	*errors = g_variant_builder_end(&vb);
+		
+on_error:
+
+	return err;
+}
+
 
 static int prv_validate_del(provman_schema_t *root, const char* key)
 {
@@ -960,29 +1055,13 @@ int plugin_manager_set_meta(plugin_manager_t* manager, const gchar* key,
 			    const gchar *prop, const gchar* value)
 {
 	int err = PROVMAN_ERR_NONE;
-	unsigned int index;
 
 	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
 		err = PROVMAN_ERR_DENIED;
 		goto on_error;
 	}
 
-	err = provman_utils_validate_key(key);
-	if (err != PROVMAN_ERR_NONE)
-		goto on_error;
-
-	err = provman_plugin_find_index(key, &index);
-	if (err != PROVMAN_ERR_NONE) {
-		err = PROVMAN_ERR_BAD_ARGS;
-		goto on_error;
-	}
-
-	if (!manager->plugin_synced[index]) {
-		err = PROVMAN_ERR_CORRUPT;
-		goto on_error;
-	}
-
-	err = provman_cache_set_meta(manager->cache, key, prop, value);
+	err = prv_set_meta_common(manager, key, prop, value);
 
 on_error:
 

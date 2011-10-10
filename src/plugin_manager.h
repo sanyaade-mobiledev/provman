@@ -50,10 +50,14 @@ int plugin_manager_get(plugin_manager_t* manager, const gchar* key,
 		       gchar** value);
 int plugin_manager_get_all(plugin_manager_t* manager, const gchar* key,
 			   GVariant** values);
+int plugin_manager_get_all_meta(plugin_manager_t* manager, const gchar* key,
+				GVariant** values);
 int plugin_manager_set(plugin_manager_t* manager, const gchar* key,
 		       const gchar* value);
 int plugin_manager_set_all(plugin_manager_t* manager, GVariant* settings,
 			   GVariant** errors);
+int plugin_manager_set_all_meta(plugin_manager_t* manager, GVariant* settings,
+				GVariant** errors);
 int plugin_manager_remove(plugin_manager_t* manager, const gchar* key);
 void plugin_manager_delete(plugin_manager_t *manager);
 int plugin_manager_abort(plugin_manager_t *manager);
