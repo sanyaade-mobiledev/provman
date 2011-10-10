@@ -43,7 +43,7 @@ void Start(string imsi);
  * created.  If any of the key's ancestors do not exist they will also be
  * created.
  *
- * A successful call to set
+ * A successful call to #Set
  * means that the setting is supported by provman and will be
  * be passed to the relevant plugin for storage in the appropriate
  * application/middleware data store when the management session
@@ -67,17 +67,17 @@ void Set(string key, string value);
 /*!
  * \brief Sets multiple keys in a single command
  *
- * SetAll should be used to set multiple settings in a single command.
+ * #SetAll should be used to set multiple settings in a single command.
  * If you need to provision multiple settings it is more efficient to
- * call SetAll once instead of invoking Set multiple times as doing so
+ * call #SetAll once instead of invoking #Set multiple times as doing so
  * reduces the IPC overhead.
  *
- * The failure to set an individual key does not cause the entire SetAll
+ * The failure to set an individual key does not cause the entire #SetAll
  * command to fail.  It will continue to set the remaining keys.  Once
  * the comamnd has finished a list of failed keys will be returned to
  * the caller.
  *
- * As with Set, if the key does not already exist it is
+ * As with #Set, if the key does not already exist it is
  * created.  If any of the key's ancestors do not exist they will also be
  * created.
 
@@ -99,7 +99,7 @@ array SetAll(dictionary dict);
  * If the key represents a setting the value of that setting
  * is returned.  If, on the other hand, the key represents a
  * directory, a '/' separated list of the names of the key's 
- * children is returned.  Calling Get on /applications might
+ * children is returned.  Calling #Get on /applications might
  * return "email/sync/browser", for example.
  * 
  * @param key the key whose value you wish to retrieve
@@ -120,15 +120,15 @@ string Get(string key);
  * \brief Retrieves the set of key/value pairs associated with a
  * given key.
  *
- * If GetAll is invoked on a directory, it returns all the keys
+ * If #GetAll is invoked on a directory, it returns all the keys
  * and values contained in that directory and its decendants.
  *
  * @param key the key whose value(s) you wish to retrieve
  * @return a dictionary of key value settings of type \a a{ss}
  *
- * \exception com.intel.provman.Error.Unexpected #Get is invoked
+ * \exception com.intel.provman.Error.Unexpected #GetAll is invoked
  * before #Start.
- * \exception com.intel.provman.Error.Cancelled The call to #Get
+ * \exception com.intel.provman.Error.Cancelled The call to #GetAll
  *   has failed because provman has been killed.
  * \exception com.intel.provman.Error.NotFound The specified key
  *   does not exist.
