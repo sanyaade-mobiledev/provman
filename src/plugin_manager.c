@@ -575,9 +575,13 @@ on_error:
 static int prv_set_common(plugin_manager_t* manager, const gchar* key,
 			  const gchar* value)
 {
-	int err = PROVMAN_ERR_NONE;
+	int err;
 	unsigned int index;
 	provman_schema_t *root;
+
+	err = provman_utils_validate_key(key);
+	if (err != PROVMAN_ERR_NONE)
+		goto on_error;
 	
 	err = provman_plugin_find_index(key, &index);
 	if (err != PROVMAN_ERR_NONE)
@@ -638,10 +642,6 @@ int plugin_manager_set(plugin_manager_t* manager, const gchar* key,
 		err = PROVMAN_ERR_DENIED;
 		goto on_error;
 	}
-
-	err = provman_utils_validate_key(key);
-	if (err != PROVMAN_ERR_NONE)
-		goto on_error;
 
 	err = prv_set_common(manager, key, value);
 
