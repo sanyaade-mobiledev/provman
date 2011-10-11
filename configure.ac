@@ -100,7 +100,7 @@ if test "x${logging}" = xyes; then
 fi
 
 AC_DEFINE([PROVMAN_SESSION_LOG], "/tmp/provman-session.log", [Path to session log file])
-AC_DEFINE([PROVMAN_SYSTEM_LOG], "/tmp/provman-system.log", [Path to session log file])
+AC_DEFINE([PROVMAN_SYSTEM_LOG], "/tmp/provman-system.log", [Path to system log file])
 
 DBUS_SESSION_DIR=`$PKG_CONFIG --variable=session_bus_services_dir dbus-1`
 AC_SUBST(DBUS_SESSION_DIR)
