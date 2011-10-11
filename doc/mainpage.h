@@ -285,6 +285,7 @@ manager.End()
         <key name='mmsc' delete='no' type='string'/>
         <key name='proxy' delete='no' type='string'/>
     </dir>
+    <key name='imsis' delete='no' write='no' type='string'/>
 </schema>
 \endcode
  *
@@ -545,6 +546,14 @@ manager.End()
  * <tr><td>proxy</td><td>The address of the MMS proxy</td><td>An IP address
  *         or a domain name.  The port number if specified should be separated
  *         from the proxy address with a ':', e.g., 192.168.0.1:8080
+ * </td></tr>
+ * <tr><td colspan="3" align="center"><i>General telephony settings stored under
+ *   /telephony</i></td></tr>
+ * <tr><td>imsis</td><td>Contains the IMSI number of each modem enabled on the
+ *  device.  If no modems are enabled this setting will not exist.  The first
+ *  number listed is the default IMSI number, i.e., the number used if a session
+ *  is started by passing an empty string to Start</td>
+ *  <td>A comma separated list of imsi numbers</td></tr>
  * </td></tr>
  * </table>
  *

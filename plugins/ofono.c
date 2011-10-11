@@ -73,6 +73,7 @@
 #define LOCAL_KEY_MMS_ROOT LOCAL_KEY_TEL_ROOT "mms/"
 #define LOCAL_PROP_MMS_PROXY "proxy"
 #define LOCAL_PROP_MMSC "mmsc"
+#define LOCAL_KEY_IMSIS LOCAL_KEY_TEL_ROOT "imsis"
 
 enum ofono_plugin_state_t_ {
 	OFONO_PLUGIN_IDLE,
@@ -843,6 +844,7 @@ static void prv_get_modems_cb(int result, utils_ofono_handle_t handle,
 	gpointer value;
 	bool again;
 	ofono_plugin_modem_t *modem;
+	GString *imsis_setting;
 
 	ofono_plugin_t *plugin_instance = user_data;
 
@@ -889,12 +891,27 @@ static void prv_get_modems_cb(int result, utils_ofono_handle_t handle,
 			err = PROVMAN_ERR_NOT_FOUND;
 			goto on_error;	
 		}			
-	} else if (!g_hash_table_lookup(plugin_instance->modems, 
-					plugin_instance->imsi)) {
+	}
+
+	modem = g_hash_table_lookup(plugin_instance->modems, 
+				    plugin_instance->imsi);
+
+	if (!modem) {
 		PROVMAN_LOG("IMSI number not associated with any active modem.");
 		err = PROVMAN_ERR_NOT_FOUND;
 		goto on_error;
 	}
+	
+	imsis_setting = g_string_new(default_imsi);
+	g_hash_table_iter_init(&iter, plugin_instance->modems);
+	while (g_hash_table_iter_next(&iter, &key, NULL)) {
+		if (strcmp((const char*) key, default_imsi)) {
+			g_string_append_c(imsis_setting, ',');
+			g_string_append(imsis_setting, key);
+		}
+	}
+	g_hash_table_insert(modem->settings, g_strdup(LOCAL_KEY_IMSIS),
+			    g_string_free(imsis_setting, FALSE));
 
 	do {
 		err = prv_sync_in_step(plugin_instance, &again);

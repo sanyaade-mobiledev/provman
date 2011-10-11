@@ -84,6 +84,7 @@ const gchar g_provman_telephony_schema[] =
 	"        <key name='mmsc' delete='no' type='string'/>"
 	"        <key name='proxy' delete='no' type='string'/>"
         "    </dir>"
+	"    <key name='imsis' delete='no' write='no' type='string'/>"
 	"</schema>";
 
 const gchar g_provman_sync_schema[] =
