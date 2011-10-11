@@ -31,7 +31,6 @@
 #include "config.h"
 
 #include <string.h>
-#include <unistd.h>
 
 #include <glib.h>
 
@@ -81,14 +80,14 @@ on_error:
 	return err;
 }
 
-int provman_utils_make_file_path(const char* fname, gchar **path)
+int provman_utils_make_file_path(const char* fname, bool system, gchar **path)
 {
 	int err = PROVMAN_ERR_NONE;
 
 	const char *home_dir;
 	GString *db_path = NULL;
 
-	if (getuid()) {
+	if (!system) {
 		home_dir = g_get_home_dir();
 		if (!home_dir) {
 			err = PROVMAN_ERR_NOT_FOUND;

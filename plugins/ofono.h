@@ -34,7 +34,7 @@
 
 #include "plugin.h"
 
-int ofono_plugin_new(provman_plugin_instance *instance);
+int ofono_plugin_new(provman_plugin_instance *instance, bool system);
 void ofono_plugin_delete(provman_plugin_instance instance);
 
 int ofono_plugin_sync_in(provman_plugin_instance instance, 

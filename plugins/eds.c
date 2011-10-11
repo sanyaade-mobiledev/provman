@@ -193,15 +193,15 @@ static const gchar* prv_find_type(const char *auth_type, const gchar **types,
 	return retval;
 }
 
-int eds_plugin_new(provman_plugin_instance *instance)
+int eds_plugin_new(provman_plugin_instance *instance, bool system)
 {
 	int err = PROVMAN_ERR_NONE;
 
 	eds_plugin_t *plugin_instance = g_new0(eds_plugin_t, 1);
 	gchar *map_file_path = NULL;
 	
-	err = provman_utils_make_file_path(EDS_MAP_FILE_NAME,
-						&map_file_path);
+	err = provman_utils_make_file_path(EDS_MAP_FILE_NAME, system,
+					   &map_file_path);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
 	

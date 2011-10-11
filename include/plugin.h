@@ -84,12 +84,15 @@ typedef void (*provman_plugin_sync_out_cb)(int result, void *user_data);
  * @param instance A pointer to the new plugin instance is returned via
  *                 parameter upon the successful execution of the function.
  *        in the user_data parameter.
+ * @param system Indicates whether the provman instance is running on
+ *        the system d-Bus
  * @returns result an error code indicating whether or not the plugin
  *        instance could be created.
  *
  */
 
-typedef int (*provman_plugin_new)(provman_plugin_instance *instance);
+typedef int (*provman_plugin_new)(provman_plugin_instance *instance,
+				  bool system);
 
 /*! 
  * @brief Typedef for a function pointer used to destroy a plugin

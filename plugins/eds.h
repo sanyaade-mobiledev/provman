@@ -34,7 +34,7 @@
 
 #include "plugin.h"
 
-int eds_plugin_new(provman_plugin_instance *instance);
+int eds_plugin_new(provman_plugin_instance *instance, bool system);
 void eds_plugin_delete(provman_plugin_instance instance);
 
 int eds_plugin_sync_in(provman_plugin_instance instance, 

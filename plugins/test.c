@@ -49,6 +49,7 @@
 
 typedef struct test_plugin_t_ test_plugin_t;
 struct test_plugin_t_ {
+	bool system;
 	gchar *fname;
 	gchar *imsi;
 	GHashTable *settings;
@@ -58,11 +59,12 @@ struct test_plugin_t_ {
 	void *sync_out_user_data;
 };
 
-int test_plugin_new(provman_plugin_instance *instance)
+int test_plugin_new(provman_plugin_instance *instance, bool system)
 {
 	test_plugin_t *retval;
 
 	retval = g_new0(test_plugin_t, 1);
+	retval->system = system;
 
 	*instance = retval;
 
@@ -121,7 +123,8 @@ int test_plugin_sync_in(provman_plugin_instance instance,
 	g_string_append_c(fname, '-');
 	g_string_append(fname, TEST_KEY_FILE_NAME);
 
-	err = provman_utils_make_file_path(fname->str, &plugin_instance->fname);
+	err = provman_utils_make_file_path(fname->str, plugin_instance->system,
+					   &plugin_instance->fname);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
 	

@@ -33,6 +33,7 @@
 #define PROVMAN_UTILS_H
 
 #include <glib.h>
+#include <stdbool.h>
 
 /*! @brief Checks a given key to ensure that it is syntatically valid.
  *
@@ -55,6 +56,8 @@ int provman_utils_validate_key(const char *key);
  *
  * @param fname the name of the file to create.  This should be a 
  * relative file name and not a complete path, e.g., "map_file.txt"
+ * @param system indicates whether the function has been called by the
+ * system instance of provman.
  * @param path the allocated path is passed to the caller in this 
  *  parameter.  The caller assumes ownership of this string and should
  *  free it when no longer needed by calling g_free.
@@ -63,7 +66,7 @@ int provman_utils_validate_key(const char *key);
  * @return PROVMAN_ERR_NOT_FOUND if the home directory cannot be determined
  */
 
-int provman_utils_make_file_path(const char* fname, gchar **path);
+int provman_utils_make_file_path(const char* fname, bool system, gchar **path);
 
 /*! @brief Extracts a client context identifier from a given key
  *

@@ -61,6 +61,7 @@ typedef enum plugin_manager_state_t_ plugin_manager_state_t;
 #define PROVMAN_META_DATA_NAME "metadata.ini"
 
 struct plugin_manager_t_ {
+	bool system;
 	plugin_manager_state_t state;
 	provman_plugin_instance *plugin_instances;
 	provman_schema_t **plugin_schemas;
@@ -84,7 +85,7 @@ static void prv_free_meta_data(gpointer md)
 		provman_meta_data_delete(md);
 }
 
-int plugin_manager_new(plugin_manager_t **manager)
+int plugin_manager_new(plugin_manager_t **manager, bool system)
 {
 	int err = PROVMAN_ERR_NONE;
 
@@ -98,7 +99,8 @@ int plugin_manager_new(plugin_manager_t **manager)
 	err = provman_plugin_check();
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
-	
+
+	retval->system = system;
 	retval->state = PLUGIN_MANAGER_STATE_IDLE;
 	retval->plugin_instances = g_new0(provman_plugin_instance, count);
 	retval->plugin_schemas = g_new0(provman_schema_t*, count);
@@ -115,7 +117,7 @@ int plugin_manager_new(plugin_manager_t **manager)
 			goto on_error;
 		}
 
-		err = plugin->new_fn(&retval->plugin_instances[i]);
+		err = plugin->new_fn(&retval->plugin_instances[i], system);
 		if (err != PROVMAN_ERR_NONE) {
 			PROVMAN_LOGF("Unable to instantiate plugin %s",
 				      plugin->name);
@@ -222,8 +224,9 @@ static provman_meta_data_t* prv_get_plugin_md(plugin_manager_t *manager)
 		}
 		g_string_append_c(fname, '-');
 		g_string_append(fname, PROVMAN_META_DATA_NAME);
-		if (provman_utils_make_file_path(fname->str, &meta_data_path)
-		    != PROVMAN_ERR_NONE)
+		if (provman_utils_make_file_path(fname->str, manager->system,
+						 &meta_data_path) != 
+		    PROVMAN_ERR_NONE)
 			goto on_error;
 
 		PROVMAN_LOGF("Loading meta data file %s", meta_data_path);

@@ -196,7 +196,7 @@ static void prv_g_object_unref(gpointer object)
 		g_object_unref(object);
 }
 
-int synce_plugin_new(provman_plugin_instance *instance)
+int synce_plugin_new(provman_plugin_instance *instance, bool system)
 {
 	synce_plugin_t *plugin_instance = g_new0(synce_plugin_t, 1);
 

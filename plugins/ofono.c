@@ -217,14 +217,15 @@ static ofono_plugin_modem_t* prv_ofono_plugin_modem_new(const gchar* path)
 	return modem;
 }
 
-int ofono_plugin_new(provman_plugin_instance *instance)
+int ofono_plugin_new(provman_plugin_instance *instance, bool system)
 {
 	int err = PROVMAN_ERR_NONE;
 
 	ofono_plugin_t *retval;
 	gchar *map_file_path;
 
-	err = provman_utils_make_file_path(OFONO_MAP_FILE_NAME, &map_file_path);
+	err = provman_utils_make_file_path(OFONO_MAP_FILE_NAME, system,
+					   &map_file_path);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
 

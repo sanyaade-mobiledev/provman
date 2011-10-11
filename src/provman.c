@@ -947,7 +947,8 @@ int provman_run(GBusType bus, const char *log_path)
 	PROVMAN_LOGF("============= provman starting (Bus %u)"
 		     "=============", bus);
 
-	err = plugin_manager_new(&context.plugin_manager);
+	err = plugin_manager_new(&context.plugin_manager,
+				 bus == G_BUS_TYPE_SYSTEM);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
 	

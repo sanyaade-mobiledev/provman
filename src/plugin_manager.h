@@ -40,7 +40,7 @@ typedef struct plugin_manager_t_ plugin_manager_t;
 
 typedef void (*plugin_manager_cb_t)(int result, void *user_data);
 
-int plugin_manager_new(plugin_manager_t **manager);
+int plugin_manager_new(plugin_manager_t **manager, bool system);
 int plugin_manager_sync_in(plugin_manager_t *manager, const char *imsi,
 			   plugin_manager_cb_t callback, void *user_data);
 int plugin_manager_sync_out(plugin_manager_t *manager,

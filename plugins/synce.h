@@ -34,7 +34,7 @@
 
 #include "plugin.h"
 
-int synce_plugin_new(provman_plugin_instance *instance);
+int synce_plugin_new(provman_plugin_instance *instance, bool system);
 void synce_plugin_delete(provman_plugin_instance instance);
 
 int synce_plugin_sync_in(provman_plugin_instance instance, 
