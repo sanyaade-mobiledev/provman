@@ -44,6 +44,7 @@
 	".Error.TransactionInProgress"
 #define PROVMAN_DBUS_ERR_NO_TRANSACTION PROVMAN_SERVICE\
 	".Error.NotInTransaction"
+#define PROVMAN_DBUS_ERR_DENIED PROVMAN_SERVICE".Error.Denied"
 
 enum provman_errors
 {

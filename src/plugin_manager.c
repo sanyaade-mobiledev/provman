@@ -587,8 +587,10 @@ static int prv_set_common(plugin_manager_t* manager, const gchar* key,
 		goto on_error;
 	
 	err = provman_plugin_find_index(key, &index);
-	if (err != PROVMAN_ERR_NONE)
+	if (err != PROVMAN_ERR_NONE) {
+		err = PROVMAN_ERR_BAD_ARGS;
 		goto on_error;
+	}
 
 	if (!manager->plugin_synced[index]) {
 		err = PROVMAN_ERR_CORRUPT;
@@ -749,7 +751,7 @@ static int prv_validate_del(provman_schema_t *root, const char* key)
 		goto on_error;
 
 	if (!schema->can_delete) {
-		err = PROVMAN_ERR_BAD_KEY;
+		err = PROVMAN_ERR_DENIED;
 		goto on_error;
 	}
 

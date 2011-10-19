@@ -60,6 +60,9 @@ const gchar* provman_err_to_dbus(int error)
 	case PROVMAN_ERR_BAD_KEY:
 		err_str = PROVMAN_DBUS_ERR_BAD_ARGS;
 		break;
+	case PROVMAN_ERR_DENIED:
+		err_str = PROVMAN_DBUS_ERR_DENIED;
+		break;
 	case PROVMAN_ERR_UNKNOWN:
 	default:
 		err_str = PROVMAN_DBUS_ERR_UNKNOWN;
