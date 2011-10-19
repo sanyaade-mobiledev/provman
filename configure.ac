@@ -61,6 +61,7 @@ AM_CONDITIONAL([TEST], test "x${tests}" = xyes)
 
 # Checks for libraries.
 PKG_PROG_PKG_CONFIG(0.16)
+PKG_CHECK_MODULES([DBUS], [dbus-1])
 PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.26.1])
 PKG_CHECK_MODULES([GIO], [gio-2.0 >= 2.26.1])
 if test "x${email}" = xevolution; then
