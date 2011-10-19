@@ -112,7 +112,7 @@ DBUS_CONF_DIR=`$PKG_CONFIG --variable=sysconfdir dbus-1`/dbus-1/system.d
 AC_SUBST(DBUS_CONF_DIR)
 
 AC_DEFINE([PROVMAN_SERVICE], "com.intel.provman", [Prefixed used for dbus names])
-AC_DEFINE([PROVMAN_OBJECT], "/com/intel/provman", [Name of object exposed by cpclient])
+AC_DEFINE([PROVMAN_OBJECT], "/com/intel/provman", [Name of object exposed by provman])
 AC_DEFINE([PROVMAN_SESSION_DB_PATH], ".config/provman", [Path to provman-session data files, relative to home directory])
 AC_DEFINE([PROVMAN_SYSTEM_DB_PATH], "/var/lib/provman", [Path to provman-system data files])
 
