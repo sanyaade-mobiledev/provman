@@ -5,6 +5,8 @@
 *.pc
 *.tgz
 *.gz
+.dirstamp
+*.pyc
 
 Makefile
 Makefile.in
