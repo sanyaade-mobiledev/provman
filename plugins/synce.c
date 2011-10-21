@@ -243,8 +243,10 @@ static gboolean prv_complete_sync_in(gpointer user_data)
 		settings = plugin_instance->settings;
 	}
 
-	g_ptr_array_unref(plugin_instance->new_accounts);
-	plugin_instance->new_accounts = NULL;
+	if (plugin_instance->new_accounts) {
+		g_ptr_array_unref(plugin_instance->new_accounts);
+		plugin_instance->new_accounts = NULL;
+	}
 
 	plugin_instance->sync_in_cb(plugin_instance->cb_err, settings,
 				    plugin_instance->sync_in_user_data);
@@ -663,6 +665,7 @@ int synce_plugin_sync_in(provman_plugin_instance instance,
 				 plugin_instance->cancellable,
 				 prv_server_proxy_created,
 				 plugin_instance);
+
 		
 	return PROVMAN_ERR_NONE;
 }
