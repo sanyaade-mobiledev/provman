@@ -54,6 +54,7 @@
 #define PROVMAN_INTERFACE_VALUE "value"
 #define PROVMAN_INTERFACE_GET "Get"
 #define PROVMAN_INTERFACE_GET_ALL "GetAll"
+#define PROVMAN_INTERFACE_GET_MULTIPLE "GetMultiple"
 #define PROVMAN_INTERFACE_DICT "dict"
 #define PROVMAN_INTERFACE_ARRAY "array"
 #define PROVMAN_INTERFACE_TYPE "type"
@@ -125,6 +126,12 @@ static const gchar g_provman_introspection[] =
 	"      <arg type='s' name='"PROVMAN_INTERFACE_KEY"'"
 	"           direction='in'/>"
 	"      <arg type='s' name='"PROVMAN_INTERFACE_VALUE"'"
+	"           direction='out'/>"
+	"    </method>"
+	"    <method name='"PROVMAN_INTERFACE_GET_MULTIPLE"'>"
+	"      <arg type='as' name='"PROVMAN_INTERFACE_DICT"'"
+	"           direction='in'/>"
+	"      <arg type='a{ss}' name='"PROVMAN_INTERFACE_DICT"'"
 	"           direction='out'/>"
 	"    </method>"
 	"    <method name='"PROVMAN_INTERFACE_GET_ALL"'>"
@@ -253,6 +260,10 @@ static gboolean prv_process_task(gpointer user_data)
 			break;
 		case PROVMAN_TASK_GET:
 			provman_task_get(context->plugin_manager, task);
+			break;
+		case PROVMAN_TASK_GET_MULTIPLE:
+			provman_task_get_multiple(context->plugin_manager,
+						  task);
 			break;
 		case PROVMAN_TASK_GET_ALL:
 			provman_task_get_all(context->plugin_manager, task);
@@ -432,6 +443,20 @@ static void prv_add_get_task(provman_context *context,
 	provman_task_new(PROVMAN_TASK_GET, invocation, &task);
 	task->key = g_strdup(key);
 	g_strstrip(task->key);
+
+	prv_add_task(context, task);
+}
+
+static void prv_add_get_multiple_task(provman_context *context,
+				      GDBusMethodInvocation *invocation,
+				      GVariant *variant)
+{
+	provman_task *task;
+
+	PROVMAN_LOG("Add Get Multiple");
+
+	provman_task_new(PROVMAN_TASK_GET_MULTIPLE, invocation, &task);
+	task->variant = g_variant_ref_sink(variant);
 
 	prv_add_task(context, task);
 }
@@ -785,6 +810,10 @@ static void prv_provman_method_call(GDBusConnection *connection,
 		} else if (!g_strcmp0(method_name, PROVMAN_INTERFACE_GET)) {
 			g_variant_get(parameters, "(&s)", &key);
 			prv_add_get_task(context, invocation, key);
+		} else if (!g_strcmp0(method_name, 
+				      PROVMAN_INTERFACE_GET_MULTIPLE)) {
+			variant = g_variant_get_child_value(parameters, 0);
+			prv_add_get_multiple_task(context, invocation, variant);
 		} else if (!g_strcmp0(method_name, 
 				      PROVMAN_INTERFACE_GET_ALL)) {
 			g_variant_get(parameters, "(&s)", &key);

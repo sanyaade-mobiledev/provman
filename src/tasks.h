@@ -42,6 +42,7 @@ enum provman_task_type_ {
 	PROVMAN_TASK_SYNC_OUT,
 	PROVMAN_TASK_SET,
 	PROVMAN_TASK_GET,
+	PROVMAN_TASK_GET_MULTIPLE,
 	PROVMAN_TASK_SET_MULTIPLE,
 	PROVMAN_TASK_SET_MULTIPLE_META,
 	PROVMAN_TASK_GET_ALL,
@@ -88,6 +89,7 @@ void provman_task_set_multiple_meta(plugin_manager_t *manager,
 void provman_task_get_all(plugin_manager_t *manager, provman_task *task);
 void provman_task_get_all_meta(plugin_manager_t *manager, provman_task *task);
 void provman_task_get(plugin_manager_t *manager, provman_task *task);
+void provman_task_get_multiple(plugin_manager_t *manager, provman_task *task);
 void provman_task_remove(plugin_manager_t *manager,
 			 provman_task *task);
 bool provman_task_sync_out(plugin_manager_t *plugin_manager,

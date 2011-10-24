@@ -48,6 +48,8 @@ int plugin_manager_sync_out(plugin_manager_t *manager,
 bool plugin_manager_cancel(plugin_manager_t *manager);
 int plugin_manager_get(plugin_manager_t* manager, const gchar* key,
 		       gchar** value);
+int plugin_manager_get_multiple(plugin_manager_t* manager, GVariant* keys,
+				GVariant **settings);
 int plugin_manager_get_all(plugin_manager_t* manager, const gchar* key,
 			   GVariant** values);
 int plugin_manager_get_all_meta(plugin_manager_t* manager, const gchar* key,

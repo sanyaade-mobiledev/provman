@@ -174,6 +174,7 @@
  * <tr><td>#Set</td><td>\copybrief Set</td></tr>
  * <tr><td>#SetMultiple</td><td>\copybrief SetMultiple</td></tr>
  * <tr><td>#Get</td><td>\copybrief Get</td></tr>
+ * <tr><td>#GetMultiple</td><td>\copybrief GetMultiple</td></tr>
  * <tr><td>#GetAll</td><td>\copybrief GetAll</td></tr>
  * <tr><td>#Delete</td><td>\copybrief Delete</td></tr>
  * <tr><td>#End</td><td>\copybrief End</td></tr>

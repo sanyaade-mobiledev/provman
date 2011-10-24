@@ -137,6 +137,25 @@ string Get(string key);
 
 dictionary GetAll(string key);
 
+/*!
+ * \brief Retrieves the individual values associated with one or more keys
+ *
+ * #GetMultiple executes the #Get command on each key passed to
+ * it by the caller.  It returns a dictionary that maps the input keys
+ * to their values.  If a requested key is a setting, the setting's
+ * value is returned.  If it is a directory, the '/' separated list
+ * of that directory's children is returned.
+ *
+ * @param keys an array of keys whose values you wish to retrieve
+ * @return a dictionary of key value settings of type \a a{ss}
+ *
+ * \exception com.intel.provman.Error.Unexpected #GetMultiple is invoked
+ * before #Start.
+ * \exception com.intel.provman.Error.Cancelled The call to #GetMultiple
+ *   has failed because provman has been killed.
+*/
+
+dictionary GetMultiple(array keys);
 
 /*!
  * \brief Deletes a key or directory.

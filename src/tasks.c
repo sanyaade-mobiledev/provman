@@ -280,6 +280,31 @@ on_error:
 	task->invocation = NULL;
 }
 
+void provman_task_get_multiple(plugin_manager_t *manager, provman_task *task)
+{
+	int err = PROVMAN_ERR_NONE;
+	GVariant *array;
+
+	PROVMAN_LOG("Processing Get Multiple task");
+
+	err = plugin_manager_get_multiple(manager, task->variant, &array);
+	if (err != PROVMAN_ERR_NONE)
+		goto on_error;
+
+	g_dbus_method_invocation_return_value(task->invocation,
+					      g_variant_new("(@a{ss})",array));
+
+	task->invocation = NULL;
+	return;
+	
+on_error:
+
+	g_dbus_method_invocation_return_dbus_error(
+		task->invocation, provman_err_to_dbus(err), "");
+
+	task->invocation = NULL;
+}
+
 void provman_task_get_all(plugin_manager_t *manager, provman_task *task)
 {
 	int err = PROVMAN_ERR_NONE;

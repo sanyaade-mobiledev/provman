@@ -474,16 +474,11 @@ bool plugin_manager_busy(plugin_manager_t *manager)
 	return manager->state != PLUGIN_MANAGER_STATE_IDLE;
 }
 
-int plugin_manager_get(plugin_manager_t* manager, const gchar* key,
-		       gchar** value)
+static int prv_get_common(plugin_manager_t* manager, const gchar* key,
+			  gchar** value)
 {
 	int err = PROVMAN_ERR_NONE;
 	unsigned int index;
-
-	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
-		err = PROVMAN_ERR_DENIED;
-		goto on_error;
-	}
 
 	err = provman_utils_validate_key(key);
 	if (err != PROVMAN_ERR_NONE)
@@ -502,6 +497,65 @@ int plugin_manager_get(plugin_manager_t* manager, const gchar* key,
 	
 	err = provman_cache_get(manager->cache, key, value);
 
+on_error:
+
+	return err;
+}
+
+int plugin_manager_get(plugin_manager_t* manager, const gchar* key,
+		       gchar** value)
+{
+	int err = PROVMAN_ERR_NONE;
+
+	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
+		err = PROVMAN_ERR_DENIED;
+		goto on_error;
+	}
+
+	err = prv_get_common(manager, key, value);
+
+on_error:
+
+	return err;
+}
+
+int plugin_manager_get_multiple(plugin_manager_t* manager, GVariant* keys,
+				GVariant **settings)
+{
+	int err = PROVMAN_ERR_NONE;
+	GVariantIter *iter = NULL;
+	gchar *key;
+	gchar *value;
+	int err2;
+	GVariantBuilder vb;
+
+	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
+		err = PROVMAN_ERR_DENIED;
+		goto on_error;
+	}
+
+	g_variant_builder_init(&vb, G_VARIANT_TYPE("a{ss}"));
+
+	iter = g_variant_iter_new(keys);
+	while (g_variant_iter_next(iter, "s", &key)) {
+		g_strstrip(key);
+		err2 = prv_get_common(manager, key, &value);
+		if (err2 == PROVMAN_ERR_NONE) {
+			g_variant_builder_add(&vb, "{ss}", key, value);
+			PROVMAN_LOGF("Retrieved %s = %s", key, value);
+			g_free(value);
+		}				
+#ifdef PROVMAN_LOGGING
+		else {
+			PROVMAN_LOGF("Unable to retrieve %s", key);
+		}
+		g_free(key);
+#endif
+	}
+	g_variant_iter_free(iter);
+
+	*settings = g_variant_builder_end(&vb);
+	
 on_error:
 
 	return err;
