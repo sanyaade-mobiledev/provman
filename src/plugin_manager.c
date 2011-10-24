@@ -485,16 +485,12 @@ static int prv_get_common(plugin_manager_t* manager, const gchar* key,
 		goto on_error;
 	
 	err = provman_plugin_find_index(key, &index);
-	if (err != PROVMAN_ERR_NONE) {
-		err = PROVMAN_ERR_BAD_ARGS;
-		goto on_error;
-	}
-
-	if (!manager->plugin_synced[index]) {
+	if ((err == PROVMAN_ERR_NONE) && 
+	    (!manager->plugin_synced[index])) {
 		err = PROVMAN_ERR_CORRUPT;
 		goto on_error;
 	}
-	
+		
 	err = provman_cache_get(manager->cache, key, value);
 
 on_error:
@@ -1001,7 +997,7 @@ int plugin_manager_get_children_type_info(plugin_manager_t* manager,
 			goto on_error;
 		}
 
-		err = PROVMAN_ERR_NONE;		
+		err = PROVMAN_ERR_NONE;
 		for (i = 0; i < children->len; ++i) {
 			root = g_ptr_array_index(children, i);
 			g_variant_builder_add(vb, "{ss}", root,
