@@ -655,8 +655,8 @@ on_error:
 	return err;
 }
 
-int plugin_manager_set_all(plugin_manager_t* manager, GVariant* settings,
-			   GVariant **errors)
+int plugin_manager_set_multiple(plugin_manager_t* manager, GVariant* settings,
+				GVariant **errors)
 {
 	int err = PROVMAN_ERR_NONE;
 	GVariantIter *iter = NULL;
@@ -696,8 +696,8 @@ on_error:
 	return err;
 }
 
-int plugin_manager_set_all_meta(plugin_manager_t* manager, GVariant* settings,
-				GVariant **errors)
+int plugin_manager_set_multiple_meta(plugin_manager_t* manager,
+				     GVariant* settings, GVariant **errors)
 {
 	int err = PROVMAN_ERR_NONE;
 

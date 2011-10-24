@@ -172,7 +172,7 @@
  * <tr><th>Method</th><th>Description</th></tr>
  * <tr><td>#Start</td><td>\copybrief Start</td></tr>
  * <tr><td>#Set</td><td>\copybrief Set</td></tr>
- * <tr><td>#SetAll</td><td>\copybrief SetAll</td></tr>
+ * <tr><td>#SetMultiple</td><td>\copybrief SetMultiple</td></tr>
  * <tr><td>#Get</td><td>\copybrief Get</td></tr>
  * <tr><td>#GetAll</td><td>\copybrief GetAll</td></tr>
  * <tr><td>#Delete</td><td>\copybrief Delete</td></tr>
@@ -183,7 +183,7 @@
  * <tr><td>#GetMeta</td><td>\copybrief GetMeta</td></tr>
  * <tr><td>#SetMeta</td><td>\copybrief SetMeta</td></tr>
  * <tr><td>#GetAllMeta</td><td>\copybrief GetAllMeta</td></tr>
- * <tr><td>#SetAllMeta</td><td>\copybrief SetAllMeta</td></tr>
+ * <tr><td>#SetMultipleMeta</td><td>\copybrief SetMultipleMeta</td></tr>
  * </table>
  *
  * A simple python script demonstrating how these methods can be used is shown below.

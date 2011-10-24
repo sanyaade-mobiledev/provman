@@ -8,7 +8,7 @@ bus = dbus.SessionBus()
 manager = dbus.Interface(bus.get_object('com.intel.provman.server', '/com/intel/provman'),
 					'com.intel.provman.Settings')
 manager.Start("")
-errors = manager.SetAll({
+errors = manager.SetMultiple({
 "/applications/sync/tulius/username":"markus",
 "/applications/sync/tulius/password":"clodia",
 "/applications/sync/tulius/url":"http://localhost",

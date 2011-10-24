@@ -67,12 +67,12 @@ void Set(string key, string value);
 /*!
  * \brief Sets multiple keys in a single command
  *
- * #SetAll should be used to set multiple settings in a single command.
+ * #SetMultiple should be used to set multiple settings in a single command.
  * If you need to provision multiple settings it is more efficient to
- * call #SetAll once instead of invoking #Set multiple times as doing so
+ * call #SetMultiple once instead of invoking #Set multiple times as doing so
  * reduces the IPC overhead.
  *
- * The failure to set an individual key does not cause the entire #SetAll
+ * The failure to set an individual key does not cause the entire #SetMultiple
  * command to fail.  It will continue to set the remaining keys.  Once
  * the comamnd has finished a list of failed keys will be returned to
  * the caller.
@@ -85,13 +85,13 @@ void Set(string key, string value);
  * @return An array of keys that could not be set, of type \a as.  If this
  * array is empty then all keys were correctly set.
  *
- * \exception com.intel.provman.Error.Unexpected #SetAll is invoked
+ * \exception com.intel.provman.Error.Unexpected #SetMultiple is invoked
  * before #Start.
- * \exception com.intel.provman.Error.Cancelled The call to #SetAll
+ * \exception com.intel.provman.Error.Cancelled The call to #SetMultiple
  *   has failed because provman has been killed.
 */
 
-array SetAll(dictionary dict);
+array SetMultiple(dictionary dict);
 
 /*!
  * \brief Retrieves the value associated with a key.
@@ -323,15 +323,15 @@ string GetMeta(string key, string prop);
 /*!
  * \brief Sets multiple meta data entries in a single command
  *
- * #SetAllMeta should be used to set multiple meta data values in a single
+ * #SetMultipleMeta should be used to set multiple meta data values in a single
  * command.  If you need to provision multiple meta data values it is more
- * efficient to call #SetAllMeta once instead of invoking #SetMeta multiple
+ * efficient to call #SetMultipleMeta once instead of invoking #SetMeta multiple
  * times as doing so reduces the IPC overhead.
  *
  * The failure to set an individual piece of meta data  does not cause the
- * entire #SetAllMeta command to fail.  It will continue to set the remaining
- * pieces of meta data.  Once the command has finished, an array of structures,
- * is returned.  Each structure in this list contains the key/  
+ * entire #SetMultipleMeta command to fail.  It will continue to set the
+ * remaining pieces of meta data.  Once the command has finished, an array of
+ * structures, is returned.  Each structure in this list contains the key/  
  * a property name pair to which provman failed to assign meta data.
  * 
  * As with #SetMeta it is an error to attempt to associate meta data with a 
@@ -344,13 +344,13 @@ string GetMeta(string key, string prop);
  * type \a a(ss).  If this array is empty then all pieces of meta data
  * were correctly set.
  *
- * \exception com.intel.provman.Error.Unexpected #SetAllMeta is invoked
+ * \exception com.intel.provman.Error.Unexpected #SetMultipleMeta is invoked
  * before #Start.
- * \exception com.intel.provman.Error.Cancelled The call to #SetAllMeta
+ * \exception com.intel.provman.Error.Cancelled The call to #SetMultipleMeta
  *   has failed because provman has been killed.
 */
 
-array SetAllMeta(array meta);
+array SetMultipleMeta(array meta);
 
 /*!
  * \brief Retrieves all the meta data associated with a given key

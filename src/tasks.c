@@ -202,14 +202,14 @@ on_error:
 	task->invocation = NULL;
 }
 
-void provman_task_set_all(plugin_manager_t *manager, provman_task *task)
+void provman_task_set_multiple(plugin_manager_t *manager, provman_task *task)
 {
 	int err = PROVMAN_ERR_NONE;
 	GVariant *array;
 
-	PROVMAN_LOG("Processing Set All task");
+	PROVMAN_LOG("Processing Set Multiple task");
 
-	err = plugin_manager_set_all(manager, task->variant, &array);
+	err = plugin_manager_set_multiple(manager, task->variant, &array);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
 
@@ -227,14 +227,15 @@ on_error:
 	task->invocation = NULL;
 }
 
-void provman_task_set_all_meta(plugin_manager_t *manager, provman_task *task)
+void provman_task_set_multiple_meta(plugin_manager_t *manager,
+				    provman_task *task)
 {
 	int err = PROVMAN_ERR_NONE;
 	GVariant *array;
 
-	PROVMAN_LOG("Processing Set All Meta task");
+	PROVMAN_LOG("Processing Set Multiple Meta task");
 
-	err = plugin_manager_set_all_meta(manager, task->variant, &array);
+	err = plugin_manager_set_multiple_meta(manager, task->variant, &array);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
 
