@@ -177,6 +177,36 @@ dictionary GetMultiple(array keys);
 void Delete(string key);
 
 /*!
+ * \brief Deletes one or more specified keys.
+ *
+ * This function essentially just calls delete multiple times,
+ * once for every key in the keys array parameter.
+ *
+ * As with delete, if the key to be deleted is a subdirectory, that
+ * key and all its chilren (and their meta data) will be deleted.
+ * 
+ * The keys array should not contain any overlapping keys, e.g.,
+ * '/applications', '/applications/email'.  If this occurs errors
+ * may be raised as multiple attempts may be made to delete the same key,
+ * depending on the order in which the keys are specified.
+ * 
+ * Failure to delete a key does not cause #DeleteMultiple to abort.  Rather
+ * it attempts to delete the remaining keys and returns an array of the
+ * keys that could not be deleted when it is finished.
+ *
+ * @param keys an array of keys to delete
+ * @return an array of keys that could not be deleted.  If this array is
+ * empty then everything has been successfully deleted.
+ *
+ * \exception com.intel.provman.Error.Unexpected #DeleteMultiple is invoked
+ * before #Start.
+ * \exception com.intel.provman.Error.Cancelled The call to #DeleteMultiple
+ *   has failed because provman has been killed.
+*/
+
+array DeleteMultiple(array keys);
+
+/*!
  * \brief Ends the device management session begun by #Start
  *
  * All changes made during the session will be push to the plugins who

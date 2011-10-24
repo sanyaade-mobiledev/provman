@@ -177,6 +177,7 @@
  * <tr><td>#GetMultiple</td><td>\copybrief GetMultiple</td></tr>
  * <tr><td>#GetAll</td><td>\copybrief GetAll</td></tr>
  * <tr><td>#Delete</td><td>\copybrief Delete</td></tr>
+ * <tr><td>#DeleteMultiple</td><td>\copybrief DeleteMultiple</td></tr>
  * <tr><td>#End</td><td>\copybrief End</td></tr>
  * <tr><td>#Abort</td><td>\copybrief Abort</td></tr>
  * <tr><td>#GetTypeInfo</td><td>\copybrief GetTypeInfo</td></tr>

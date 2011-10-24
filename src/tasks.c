@@ -376,6 +376,31 @@ on_error:
 	task->invocation = NULL;
 }
 
+void provman_task_remove_multiple(plugin_manager_t *manager,
+				  provman_task *task)
+{
+	GVariant *array;
+	int err = PROVMAN_ERR_NONE;
+
+	PROVMAN_LOG("Processing Delete Multiple task:");
+
+	err = plugin_manager_remove_multiple(manager, task->variant, &array);
+	if (err != PROVMAN_ERR_NONE)
+		goto on_error;
+
+	g_dbus_method_invocation_return_value(task->invocation,
+					      g_variant_new("(@as)",array));	
+	task->invocation = NULL;
+	return;
+
+on_error:
+
+	g_dbus_method_invocation_return_dbus_error(
+		task->invocation, provman_err_to_dbus(err), "");
+
+	task->invocation = NULL;
+}
+
 void provman_task_abort(plugin_manager_t *plugin_manager, provman_task *task)
 {
 	int err;

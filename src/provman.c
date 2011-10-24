@@ -61,6 +61,7 @@
 #define PROVMAN_INTERFACE_ERRORS "errors"
 #define PROVMAN_INTERFACE_PROP "prop"
 #define PROVMAN_INTERFACE_DELETE "Delete"
+#define PROVMAN_INTERFACE_DELETE_MULTIPLE "DeleteMultiple"
 #define PROVMAN_INTERFACE_IMSI "imsi"
 #define PROVMAN_INTERFACE_END "End"
 #define PROVMAN_INTERFACE_ABORT "Abort"
@@ -149,6 +150,12 @@ static const gchar g_provman_introspection[] =
 	"    <method name='"PROVMAN_INTERFACE_DELETE"'>"
 	"      <arg type='s' name='"PROVMAN_INTERFACE_KEY"'"
 	"           direction='in'/>"
+	"    </method>"
+	"    <method name='"PROVMAN_INTERFACE_DELETE_MULTIPLE"'>"
+	"      <arg type='as' name='"PROVMAN_INTERFACE_ARRAY"'"
+	"           direction='in'/>"
+	"      <arg type='as' name='"PROVMAN_INTERFACE_ERRORS"'"
+	"           direction='out'/>"
 	"    </method>"
 	"    <method name='"PROVMAN_INTERFACE_GET_TYPE_INFO"'>"
 	"      <arg type='s' name='"PROVMAN_INTERFACE_KEY"'"
@@ -273,7 +280,11 @@ static gboolean prv_process_task(gpointer user_data)
 						  task);
 			break;
 		case PROVMAN_TASK_DELETE:
-			provman_task_remove(context->plugin_manager,task);
+			provman_task_remove(context->plugin_manager, task);
+			break;
+		case PROVMAN_TASK_DELETE_MULTIPLE:
+			provman_task_remove_multiple(context->plugin_manager,
+						     task);
 			break;
 		case PROVMAN_TASK_ABORT:
 			provman_task_abort(context->plugin_manager,task);
@@ -582,6 +593,20 @@ static void prv_add_delete_task(provman_context *context,
 	prv_add_task(context, task);
 }
 
+static void prv_add_delete_multiple_task(provman_context *context,
+					 GDBusMethodInvocation *invocation,
+					 GVariant *variant)
+{
+	provman_task *task;
+
+	PROVMAN_LOG("Add Task Delete Multiple");
+
+	provman_task_new(PROVMAN_TASK_DELETE_MULTIPLE, invocation, &task);
+	task->variant = g_variant_ref_sink(variant);
+
+	prv_add_task(context, task);
+}
+
 static void prv_add_abort_task(provman_context *context,
 			       GDBusMethodInvocation *invocation)
 {
@@ -826,6 +851,10 @@ static void prv_provman_method_call(GDBusConnection *connection,
 				      PROVMAN_INTERFACE_DELETE)) {
 			g_variant_get(parameters, "(&s)", &key);
 			prv_add_delete_task(context, invocation, key);
+		} else if (!g_strcmp0(method_name, 
+				      PROVMAN_INTERFACE_DELETE_MULTIPLE)) {
+			variant = g_variant_get_child_value(parameters, 0);
+			prv_add_delete_multiple_task(context, invocation, variant);
 		} else if (!g_strcmp0(method_name,
 				      PROVMAN_INTERFACE_SET_META)) {
 			g_variant_get(parameters, "(&s&s&s)", &key, &prop,

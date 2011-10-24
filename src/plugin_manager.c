@@ -810,16 +810,11 @@ on_error:
 	return err;
 }
 
-int plugin_manager_remove(plugin_manager_t* manager, const gchar* key)
+static int prv_remove_common(plugin_manager_t* manager, const gchar* key)
 {
 	int err = PROVMAN_ERR_NONE;
 	provman_schema_t *schema;
 	unsigned int index;
-
-	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
-		err = PROVMAN_ERR_DENIED;
-		goto on_error;
-	}
 
 	err = provman_utils_validate_key(key);
 	if (err != PROVMAN_ERR_NONE)
@@ -843,7 +838,65 @@ int plugin_manager_remove(plugin_manager_t* manager, const gchar* key)
 
 on_error:
 
+	return err;
+}
+
+int plugin_manager_remove(plugin_manager_t* manager, const gchar* key)
+{
+	int err = PROVMAN_ERR_NONE;
+
+	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
+		err = PROVMAN_ERR_DENIED;
+		goto on_error;
+	}
+
+	err = prv_remove_common(manager, key);
+
+on_error:
+
 	PROVMAN_LOGF("Deleted %s returned with err %d", key, err);
+
+	return err;
+}
+
+int plugin_manager_remove_multiple(plugin_manager_t* manager, GVariant* keys,
+				   GVariant **errors)
+{
+	int err = PROVMAN_ERR_NONE;
+	GVariantIter *iter = NULL;
+	gchar *key;
+	int err2;
+	GVariantBuilder vb;
+
+	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
+		err = PROVMAN_ERR_DENIED;
+		goto on_error;
+	}
+
+	g_variant_builder_init(&vb, G_VARIANT_TYPE("as"));
+
+	iter = g_variant_iter_new(keys);
+	while (g_variant_iter_next(iter,"s", &key)) {
+		g_strstrip(key);			
+		err2 = prv_remove_common(manager, key);
+		if (err2 != PROVMAN_ERR_NONE) {
+			g_variant_builder_add(&vb, "s", key);			
+			PROVMAN_LOGF("Unable to remove %s", key);
+		}				
+#ifdef PROVMAN_LOGGING
+		else {
+			PROVMAN_LOGF("Removed %s", key);
+		}
+		g_free(key);
+#endif
+	}
+	g_variant_iter_free(iter);
+
+	*errors = g_variant_builder_end(&vb);
+	
+on_error:
+
+	PROVMAN_LOGF("DeletMultiple returned with err %d", err);
 
 	return err;
 }
