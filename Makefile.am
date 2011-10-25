@@ -38,7 +38,9 @@ pm_testcases = \
 		testcases/bad-set \
 		testcases/create-apn \
 		testcases/create-email \
+		testcases/create-email-abort \
 		testcases/create-mms \
+		testcases/create-mms-abort \
 		testcases/create-sync \
 		testcases/create-sync-eas \
 		testcases/create-sync-no-source \
@@ -46,10 +48,16 @@ pm_testcases = \
 		testcases/del-key-session \
 		testcases/del-key-system \
 		testcases/get-all-session \
+		testcases/get-all-meta-session \
 		testcases/get-all-system \
+		testcases/get-all-meta-system \
+		testcases/get-all-ti-session \
+		testcases/get-all-ti-system \
+		testcases/get-ti-children-session \
+		testcases/get-ti-children-system \
 		testcases/noop-session \
 		testcases/noop-system \
-		testcases/set-all
+		testcases/set-multiple
 
 
 session_sources = src/provman-session.c src/plugin-session.c
