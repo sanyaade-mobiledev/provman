@@ -57,8 +57,9 @@ pm_testcases = \
 		testcases/get-ti-children-system \
 		testcases/noop-session \
 		testcases/noop-system \
-		testcases/set-multiple
-
+		testcases/set-multiple \
+		testharness/runtestcases.py \
+		testharness/testprovman.py
 
 session_sources = src/provman-session.c src/plugin-session.c
 system_sources = src/provman-system.c src/plugin-system.c
