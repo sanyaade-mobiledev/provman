@@ -252,6 +252,16 @@ const gchar g_provman_test_schema[] =
 	"        </dir>"
 	"      </dir>"
 	"    </dir>"
+	"    <dir name='subdir_same_name_begin' delete='yes'>"
+	"      <dir name='subdir' delete='yes'>"
+	"        <key name='key' delete='yes' type='string'/>"
+	"        <key name='key_suffix' delete='yes' type='string'/>"
+	"      </dir>"
+	"      <dir name='subdir_suffix' delete='yes'>"
+	"        <key name='key' delete='yes' type='string'/>"
+	"      </dir>"
+	"      <key name='subdir_suffix_but_i_am_a_key' delete='yes' type='string'/>"
+	"    </dir>"
 	"  </dir>"
 	"</schema>";
 #endif

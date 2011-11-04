@@ -524,6 +524,88 @@ class TestProvmanTestCases(testprovman.TestProvman):
 
         self.get_auto(root, dir_list)
 
+    def test_keys_posi_del_key_key_same_name_begin_not_affect(self):
+    
+        """test_keys_posi_del_key_key_same_name_begin_not_affect"""
+
+        #Delete key, key with same beginning name is not affected
+
+        #initialization
+        self.set_bus_type(bus_type_any)
+        self.set_imsi(imsi_any)
+
+        #case where key points to a setting
+        self.reset()
+        #set the keys with same beginning names (1 short, 1 long name)
+        self.set_auto(key_dir_same, key_dir_same_val)
+        self.set_auto(key_dir_same_suffix, key_dir_same_suffix_val)
+        #check that keys were successfully set
+        self.get_auto(key_dir_same, key_dir_same_val)
+        self.get_auto(key_dir_same_suffix, key_dir_same_suffix_val)
+        #delete key (with short name)
+        self.delete_auto(key_dir_same)
+        #check key was successully deleted
+        self.get_auto(key_dir_same, "", PROVMAN_EXCEPT_NOT_FOUND)
+        #check that other key (with long name) was not deleted
+        self.get_auto(key_dir_same_suffix, key_dir_same_suffix_val)
+
+        #case where key points to a directory
+        self.reset()
+        #set keys with same beginning names (1 short, 2 long names)
+        self.set_auto(key_dir_same, key_dir_same_val)
+        self.set_auto(key_dir_same_suffix2, key_dir_same_suffix2_val)
+        self.set_auto(key_same_suffix, key_same_suffix_val)
+        #check that keys were successfully set
+        self.get_auto(key_dir_same, key_dir_same_val)
+        self.get_auto(key_dir_same_suffix2, key_dir_same_suffix2_val)
+        self.get_auto(key_same_suffix, key_same_suffix_val)
+        #delete key (with short name)
+        self.delete_auto(dir_same)
+        #check key was successully deleted
+        self.get_auto(key_dir_same, "", PROVMAN_EXCEPT_NOT_FOUND)
+        self.get_auto(dir_same, "", PROVMAN_EXCEPT_NOT_FOUND)
+        #extract name of key
+        key_name = os.path.split(key_dir_same_suffix2)[1]
+        #check that other keys (with long names) were not deleted
+        self.get_auto(dir_same_suffix, key_name)
+        self.get_auto(key_same_suffix, key_same_suffix_val)
+
+    def test_keys_posi_get_all_result_same_name_begin_not_returned(self):
+    
+        """test_keys_posi_get_all_result_same_name_begin_not_returned"""
+        
+        #GetAll key, result of key with same beginning name is not returned
+
+        #initialization
+        self.set_bus_type(bus_type_any)
+        self.set_imsi(imsi_any)
+
+        #case where key points to a setting
+        
+        self.reset()
+        #set the keys with same beginning names (1 short, 1 long name)
+        self.set_auto(key_dir_same, key_dir_same_val)
+        self.set_auto(key_dir_same_suffix, key_dir_same_suffix_val)
+        #check that keys were successfully set
+        self.get_auto(key_dir_same, key_dir_same_val)
+        self.get_auto(key_dir_same_suffix, key_dir_same_suffix_val)
+        #GetAll key (with short name)
+        self.get_all_auto(key_dir_same, {key_dir_same : key_dir_same_val})
+
+        #case where key points to a directory
+        
+        self.reset()
+        #set keys with same beginning names (1 short, 2 long names)
+        self.set_auto(key_dir_same, key_dir_same_val)
+        self.set_auto(key_dir_same_suffix2, key_dir_same_suffix2_val)
+        self.set_auto(key_same_suffix, key_same_suffix_val)
+        #check that keys were successfully set
+        self.get_auto(key_dir_same, key_dir_same_val)
+        self.get_auto(key_dir_same_suffix2, key_dir_same_suffix2_val)
+        self.get_auto(key_same_suffix, key_same_suffix_val)
+        #GetAll key (with short name)
+        self.get_all_auto(dir_same, {key_dir_same : key_dir_same_val})
+
     def test_keys_neg_set_key_root_dir(self):
     
         """test_keys_neg_set_key_root_dir"""
@@ -1067,64 +1149,84 @@ imsi_any           = IMSI_DEFAULT_SIM
 bus_type_any       = BUS_TYPE_SESSION
 
 
-
 #data tree used in test cases
-#root/                   <-- root of plug-in
-#    subdir/             <-- subdir, deletable or undeletable
-#        key1            <-- key, deletable or undeletable
-#        key2            <-- key, deletable or undeletable
-#        key3            <-- key, deletable or undeletable
-#    dir_del/            <-- subdir, deletable
-#        key_dir_del     <-- key, deletable or undeletable
-#    dir_undel/          <-- subdir, undeletable
-#        key_dir_undel   <-- key, deletable or undeletable
-#    dir_key_del_undel/  <-- subdir, deletable or undeletable
-#        key_del         <-- key, deletable
-#        key_undel       <-- key, undeletable
-#    dir_key_type/       <-- subdir, deletable or undeletable
-#        key_string      <-- key, string type
-#        key_enum        <-- key, enum type
-#        key_int         <-- key, int type
-#    dir_many_levels     <-- subdir (last level), deletable or undeletable
-#        key_dir_many_levels   <--key, deletable or undeletable
-#    dir_many_keys       <-- subdir, deletable or undeletable
-#        keyxxx          <-- key, deletable or undeletable
-root                = "/applications/test_plugin/test/"
-subdir              = root + "subdir/"
-key1                = subdir + "key1"
-key1_val            = "value of key1"
-key2                = subdir + "key2"
-key2_val            = "value of key2"
-key3                = subdir + "key3"
-key3_val            = "value of key3"
-dir_del             = root + "subdir_deletable/"
-key_dir_del         = dir_del + "string_deletable"
-key_dir_del_val     = "key_dir_del"
-dir_undel           = root + "subdir_undeletable/"
-key_dir_undel       = dir_undel + "string_deletable"
-key_dir_undel_val   = "value of key_dir_undel"
-dir_key_del_undel   = root + "subdir_deletable/"
-key_del             = dir_key_del_undel + "string_deletable"
-key_del_val         = "value of key_del"
-key_undel           = dir_key_del_undel + "string_undeletable"
-key_undel_val       = "value of key_undel"
-dir_key_type        = root + "subdir_undeletable/"
-key_string          = dir_key_type + "string_deletable"
-key_string_val      = "value of key_string"
-key_enum            = dir_key_type + "enum_deletable"
-key_enum_val        = "value of key_enum"
-key_int             = dir_key_type + "int_deletable"
-key_int_val         = "value of key_int"
-dir_many_levels     = root + "subdir_many_levels/" + "subdir/" * 19
-key_dir_many_levels = dir_many_levels + "key"
+#root/                           <-- root of plug-in
+#    subdir/                     <-- subdir
+#        key1                    <-- key
+#        key2                    <-- key
+#        key3                    <-- key
+#    dir_del/                    <-- subdir, deletable
+#        key_dir_del             <-- key
+#    dir_undel/                  <-- subdir, undeletable
+#        key_dir_undel           <-- key
+#    dir_key_del_undel/          <-- subdir
+#        key_del                 <-- key, deletable
+#        key_undel               <-- key, undeletable
+#    dir_key_type/               <-- subdir
+#        key_string              <-- key, string type
+#        key_enum                <-- key, enum type
+#        key_int                 <-- key, int type
+#    dir_many_levels             <-- subdir (20 levels)
+#        ...
+#            ...
+#                key_dir_many_levels    <--key
+#    dir_many_keys               <-- subdir
+#        ...
+#        keyxxx                  <-- key (100 total)
+#    dir_same_name_begin/        <-- subdir
+#        dir_same/               <-- subdir
+#            key_dir_same        <-- key
+#            key_dir_same_suffix <-- key, name starts as 'key_dir_same'
+#        dir_same_suffix/        <-- subdir, name starts as 'dir_same'
+#            key_dir_same_suffix2 <-- key
+#        key_same_suffix         <-- key, name starts as 'dir_same'
+
+root                    = "/applications/test_plugin/test/"
+subdir                  = root + "subdir/"
+key1                    = subdir + "key1"
+key1_val                = "value of key1"
+key2                    = subdir + "key2"
+key2_val                = "value of key2"
+key3                    = subdir + "key3"
+key3_val                = "value of key3"
+dir_del                 = root + "subdir_deletable/"
+key_dir_del             = dir_del + "string_deletable"
+key_dir_del_val         = "key_dir_del"
+dir_undel               = root + "subdir_undeletable/"
+key_dir_undel           = dir_undel + "string_deletable"
+key_dir_undel_val       = "value of key_dir_undel"
+dir_key_del_undel       = root + "subdir_deletable/"
+key_del                 = dir_key_del_undel + "string_deletable"
+key_del_val             = "value of key_del"
+key_undel               = dir_key_del_undel + "string_undeletable"
+key_undel_val           = "value of key_undel"
+dir_key_type            = root + "subdir_undeletable/"
+key_string              = dir_key_type + "string_deletable"
+key_string_val          = "value of key_string"
+key_enum                = dir_key_type + "enum_deletable"
+key_enum_val            = "value of key_enum"
+key_int                 = dir_key_type + "int_deletable"
+key_int_val             = "value of key_int"
+dir_many_levels         = root + "subdir_many_levels/" + "subdir/" * 19
+key_dir_many_levels     = dir_many_levels + "key"
 key_dir_many_levels_val = "value of key_dir_many_levels_val"
-dir_many_keys       = root + "subdir_many_keys/"
+dir_many_keys           = root + "subdir_many_keys/"
+dir_same_name_begin     = root + "subdir_same_name_begin/"
+dir_same                = dir_same_name_begin + "subdir/"
+key_dir_same            = dir_same + "key"
+key_dir_same_val        = "value of key_dir_same"
+key_dir_same_suffix     = key_dir_same + "_suffix"
+key_dir_same_suffix_val = "value of key_dir_same_suffix"
+dir_same_suffix         = dir_same[:-1] + "_suffix/"
+key_dir_same_suffix2    = dir_same_suffix + "key"
+key_dir_same_suffix2_val= "value of key_dir_same_suffix2"
+key_same_suffix         = dir_same[:-1] + "_suffix_but_i_am_a_key"
+key_same_suffix_val     = "value of key_same_suffix"
 
 keys                = {key1 : key1_val, key2: key2_val, key3: key3_val}
 keys_subdir         = subdir
 
 many_keys           = many_keys(dir_many_keys)
-
 
 
 #-------------------------------------------------------------------

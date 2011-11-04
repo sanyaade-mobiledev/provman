@@ -143,7 +143,10 @@ class TestProvman(unittest.TestCase):
         else:
             with self.assertRaises(dbus.exceptions.DBusException) as cm:
                 self.__dbus.Set(key, val)
-            self.assertEquals(cm.exception.get_dbus_name(), expect_except)
+            returned_except = cm.exception.get_dbus_name()
+            self.log("expected exception: %s" % expect_except)
+            self.log("returned exception: %s" % returned_except)
+            self.assertEquals(returned_except, expect_except)
 
     def set_mult(self, keys, expect_keys_fail=[], expect_except=""):
     
@@ -174,7 +177,10 @@ class TestProvman(unittest.TestCase):
         else:
             with self.assertRaises(dbus.exceptions.DBusException) as cm:
                 self.__dbus.SetMultiple(keys)
-            self.assertEquals(cm.exception.get_dbus_name(), expect_except)
+            returned_except = cm.exception.get_dbus_name()
+            self.log("expected exception: %s" % expect_except)
+            self.log("returned exception: %s" % returned_except)
+            self.assertEquals(returned_except, expect_except)
 
     def get_auto(self, key, expect_val="", expect_except=""):
     
@@ -289,7 +295,10 @@ class TestProvman(unittest.TestCase):
         else:
             with self.assertRaises(dbus.exceptions.DBusException) as cm:
                 self.__dbus.Get(key)
-            self.assertEquals(cm.exception.get_dbus_name(), expect_except)
+            returned_except = cm.exception.get_dbus_name()
+            self.log("expected exception: %s" % expect_except)
+            self.log("returned exception: %s" % returned_except)
+            self.assertEquals(returned_except, expect_except)
             
     def get_all(self, path, expect_keys={}, expect_except=""):
     
@@ -316,7 +325,10 @@ class TestProvman(unittest.TestCase):
         else:
             with self.assertRaises(dbus.exceptions.DBusException) as cm:
                 self.__dbus.GetAll(path)
-            self.assertEquals(cm.exception.get_dbus_name(), expect_except)
+            returned_except = cm.exception.get_dbus_name()
+            self.log("expected exception: %s" % expect_except)
+            self.log("returned exception: %s" % returned_except)
+            self.assertEquals(returned_except, expect_except)
     
     def delete(self, key, expect_except=""):
     
@@ -338,7 +350,10 @@ class TestProvman(unittest.TestCase):
         else:
             with self.assertRaises(dbus.exceptions.DBusException) as cm:
                 self.__dbus.Delete(key)
-            self.assertEquals(cm.exception.get_dbus_name(), expect_except)
+            returned_except = cm.exception.get_dbus_name()
+            self.log("expected exception: %s" % expect_except)
+            self.log("returned exception: %s" % returned_except)
+            self.assertEquals(returned_except, expect_except)
 
     def start(self, expect_except=""):
     
@@ -362,7 +377,10 @@ class TestProvman(unittest.TestCase):
         else:
             with self.assertRaises(dbus.exceptions.DBusException) as cm:
                 self.__dbus.Start(self.imsi)
-            self.assertEquals(cm.exception.get_dbus_name(), expect_except)
+            returned_except = cm.exception.get_dbus_name()
+            self.log("expected exception: %s" % expect_except)
+            self.log("returned exception: %s" % returned_except)
+            self.assertEquals(returned_except, expect_except)
 
     def abort(self, expect_except=""):
     
@@ -385,7 +403,10 @@ class TestProvman(unittest.TestCase):
         else:
             with self.assertRaises(dbus.exceptions.DBusException) as cm:
                 self.__dbus.Abort()
-            self.assertEquals(cm.exception.get_dbus_name(), expect_except)
+            returned_except = cm.exception.get_dbus_name()
+            self.log("expected exception: %s" % expect_except)
+            self.log("returned exception: %s" % returned_except)
+            self.assertEquals(returned_except, expect_except)
 
     def end(self, expect_except=""):
     
@@ -408,7 +429,10 @@ class TestProvman(unittest.TestCase):
         else:
             with self.assertRaises(dbus.exceptions.DBusException) as cm:
                 self.__dbus.End()
-            self.assertEquals(cm.exception.get_dbus_name(), expect_except)
+            returned_except = cm.exception.get_dbus_name()
+            self.log("expected exception: %s" % expect_except)
+            self.log("returned exception: %s" % returned_except)
+            self.assertEquals(returned_except, expect_except)
 
     def reset(self):
 
@@ -420,6 +444,7 @@ class TestProvman(unittest.TestCase):
         self.start()
         self.delete("/")
         self.end()
+        self.log("Reset completed")
 
     def log(self, string=""):
     
