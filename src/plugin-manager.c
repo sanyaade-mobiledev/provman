@@ -94,7 +94,7 @@ int plugin_manager_new(plugin_manager_t **manager, bool system)
 	const provman_plugin *plugin;
 	plugin_manager_t *retval = g_new0(plugin_manager_t, 1);
 
-	PROVMAN_LOGF("%s called", __FUNCTION__);
+	PROVMAN_LOGF("%s called system %d", __FUNCTION__, system);
 
 	err = provman_plugin_check();
 	if (err != PROVMAN_ERR_NONE)
@@ -160,6 +160,8 @@ void plugin_manager_delete(plugin_manager_t *manager)
 	unsigned int count;
 	unsigned int i;
 	const provman_plugin *plugin;
+
+	PROVMAN_LOGF("%s called", __FUNCTION__);
 
 	if (manager) {
 		count = provman_plugin_get_count();
@@ -308,6 +310,8 @@ int plugin_manager_sync_in(plugin_manager_t *manager, const char *imsi,
 {
 	int err = PROVMAN_ERR_NONE;
 
+	PROVMAN_LOGF("%s called with imsi %s", __FUNCTION__, imsi);
+
 	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
 		err = PROVMAN_ERR_DENIED;
 		goto on_error;
@@ -324,6 +328,8 @@ int plugin_manager_sync_in(plugin_manager_t *manager, const char *imsi,
 	prv_sync_in_next_plugin(manager);
 	
 on_error:
+
+	PROVMAN_LOGF("%s exit with err %d", __FUNCTION__, err);
 
 	return err;
 }
@@ -417,6 +423,8 @@ int plugin_manager_sync_out(plugin_manager_t *manager,
 {
 	int err = PROVMAN_ERR_NONE;
 
+	PROVMAN_LOGF("%s called", __FUNCTION__);
+
 	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
 		err = PROVMAN_ERR_DENIED;
 		goto on_error;
@@ -432,6 +440,8 @@ int plugin_manager_sync_out(plugin_manager_t *manager,
 	prv_sync_out_next_plugin(manager);
 	
 on_error:
+
+	PROVMAN_LOGF("%s exit with err %d", __FUNCTION__, err);
 
 	return err;
 }
@@ -455,6 +465,9 @@ static void prv_sync_out_cancel(plugin_manager_t *manager)
 bool plugin_manager_cancel(plugin_manager_t *manager)
 {
 	bool retval = false;
+
+	PROVMAN_LOGF("%s called", __FUNCTION__);
+
 	if (!manager->completion_source) {
 		if (manager->state == PLUGIN_MANAGER_STATE_SYNC_IN) {
 			prv_sync_in_cancel(manager);
@@ -466,12 +479,19 @@ bool plugin_manager_cancel(plugin_manager_t *manager)
 	} else {
 		retval = true;
 	}
+
+	PROVMAN_LOGF("Can quit straight away: %d", !retval);
+
 	return retval;
 }
 
 bool plugin_manager_busy(plugin_manager_t *manager)
 {
-	return manager->state != PLUGIN_MANAGER_STATE_IDLE;
+	bool busy = manager->state != PLUGIN_MANAGER_STATE_IDLE;
+
+	PROVMAN_LOGF("%s called.  Busy %d", __FUNCTION__, busy);
+
+	return busy;
 }
 
 static int prv_get_common(plugin_manager_t* manager, const gchar* key,
@@ -503,6 +523,8 @@ int plugin_manager_get(plugin_manager_t* manager, const gchar* key,
 {
 	int err = PROVMAN_ERR_NONE;
 
+	PROVMAN_LOGF("%s called on key %s", __FUNCTION__, key);
+
 	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
 		err = PROVMAN_ERR_DENIED;
 		goto on_error;
@@ -511,6 +533,8 @@ int plugin_manager_get(plugin_manager_t* manager, const gchar* key,
 	err = prv_get_common(manager, key, value);
 
 on_error:
+
+	PROVMAN_LOGF("%s exit with err %d", __FUNCTION__, err);
 
 	return err;
 }
@@ -524,6 +548,8 @@ int plugin_manager_get_multiple(plugin_manager_t* manager, GVariant* keys,
 	gchar *value;
 	int err2;
 	GVariantBuilder vb;
+
+	PROVMAN_LOGF("%s called", __FUNCTION__);
 
 	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
 		err = PROVMAN_ERR_DENIED;
@@ -554,6 +580,8 @@ int plugin_manager_get_multiple(plugin_manager_t* manager, GVariant* keys,
 	
 on_error:
 
+	PROVMAN_LOGF("%s exit with err %d", __FUNCTION__, err);
+
 	return err;
 }
 
@@ -561,6 +589,8 @@ int plugin_manager_get_all(plugin_manager_t* manager, const gchar* search_key,
 			   GVariant** values)
 {
 	int err = PROVMAN_ERR_NONE;
+
+	PROVMAN_LOGF("%s called on key %s", __FUNCTION__, search_key);
 
 	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
 		err = PROVMAN_ERR_DENIED;
@@ -574,6 +604,8 @@ int plugin_manager_get_all(plugin_manager_t* manager, const gchar* search_key,
 	err = provman_cache_get_all(manager->cache, search_key, values);
 
 on_error:
+
+	PROVMAN_LOGF("%s exit with err %d", __FUNCTION__, err);
        
 	return err;
 }
@@ -582,6 +614,8 @@ int plugin_manager_get_all_meta(plugin_manager_t* manager,
 				const gchar* search_key, GVariant** values)
 {
 	int err = PROVMAN_ERR_NONE;
+
+	PROVMAN_LOGF("%s called on key %s", __FUNCTION__, search_key);
 
 	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
 		err = PROVMAN_ERR_DENIED;
@@ -595,6 +629,8 @@ int plugin_manager_get_all_meta(plugin_manager_t* manager,
 	err = provman_cache_get_all_meta(manager->cache, search_key, values);
 
 on_error:
+
+	PROVMAN_LOGF("%s exit with err %d", __FUNCTION__, err);
        
 	return err;
 }
@@ -693,6 +729,9 @@ int plugin_manager_set(plugin_manager_t* manager, const gchar* key,
 {
 	int err = PROVMAN_ERR_NONE;
 
+	PROVMAN_LOGF("%s called with key %s value %s", __FUNCTION__, key,
+		value);
+
 	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
 		err = PROVMAN_ERR_DENIED;
 		goto on_error;
@@ -701,6 +740,8 @@ int plugin_manager_set(plugin_manager_t* manager, const gchar* key,
 	err = prv_set_common(manager, key, value);
 
 on_error:
+
+	PROVMAN_LOGF("%s exit with err %d", __FUNCTION__, err);
 
 	return err;
 }
@@ -714,6 +755,8 @@ int plugin_manager_set_multiple(plugin_manager_t* manager, GVariant* settings,
 	const gchar *value;
 	int err2;
 	GVariantBuilder vb;
+
+	PROVMAN_LOGF("%s called", __FUNCTION__);
 
 	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
 		err = PROVMAN_ERR_DENIED;
@@ -743,6 +786,8 @@ int plugin_manager_set_multiple(plugin_manager_t* manager, GVariant* settings,
 	
 on_error:
 
+	PROVMAN_LOGF("%s exit with err %d", __FUNCTION__, err);
+
 	return err;
 }
 
@@ -757,6 +802,8 @@ int plugin_manager_set_multiple_meta(plugin_manager_t* manager,
 	const gchar *prop;
 	int err2;
 	GVariantBuilder vb;
+
+	PROVMAN_LOGF("%s called", __FUNCTION__);
 
 	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
 		err = PROVMAN_ERR_DENIED;
@@ -786,6 +833,8 @@ int plugin_manager_set_multiple_meta(plugin_manager_t* manager,
 	*errors = g_variant_builder_end(&vb);
 		
 on_error:
+
+	PROVMAN_LOGF("%s called", __FUNCTION__);
 
 	return err;
 }
@@ -845,6 +894,8 @@ int plugin_manager_remove(plugin_manager_t* manager, const gchar* key)
 {
 	int err = PROVMAN_ERR_NONE;
 
+	PROVMAN_LOGF("%s called on key %s", __FUNCTION__, key);
+
 	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
 		err = PROVMAN_ERR_DENIED;
 		goto on_error;
@@ -854,7 +905,7 @@ int plugin_manager_remove(plugin_manager_t* manager, const gchar* key)
 
 on_error:
 
-	PROVMAN_LOGF("Deleted %s returned with err %d", key, err);
+	PROVMAN_LOGF("%s %s returned with err %d", __FUNCTION__, key, err);
 
 	return err;
 }
@@ -867,6 +918,8 @@ int plugin_manager_remove_multiple(plugin_manager_t* manager, GVariant* keys,
 	gchar *key;
 	int err2;
 	GVariantBuilder vb;
+
+	PROVMAN_LOGF("%s called", __FUNCTION__);
 
 	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
 		err = PROVMAN_ERR_DENIED;
@@ -896,7 +949,7 @@ int plugin_manager_remove_multiple(plugin_manager_t* manager, GVariant* keys,
 	
 on_error:
 
-	PROVMAN_LOGF("DeletMultiple returned with err %d", err);
+	PROVMAN_LOGF("%s returned with err %d", __FUNCTION__, err);
 
 	return err;
 }
@@ -908,6 +961,8 @@ int plugin_manager_abort(plugin_manager_t *manager)
 	const provman_plugin *plugin;
 	provman_plugin_instance pi;
 	unsigned int count = provman_plugin_get_count();
+
+	PROVMAN_LOGF("%s called", __FUNCTION__);
 
 	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
 		err = PROVMAN_ERR_DENIED;
@@ -925,6 +980,8 @@ int plugin_manager_abort(plugin_manager_t *manager)
 	prv_clear_cache(manager);
 
 on_error:
+
+	PROVMAN_LOGF("%s exit with err %d", __FUNCTION__, err);
 
 	return err;
 }
@@ -1026,6 +1083,8 @@ int plugin_manager_get_children_type_info(plugin_manager_t* manager,
 	unsigned int i;
 	const gchar *root;
 
+	PROVMAN_LOGF("%s called on key %s", __FUNCTION__, search_key);
+
 	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
 		err = PROVMAN_ERR_DENIED;
 		goto on_error;
@@ -1083,6 +1142,8 @@ int plugin_manager_get_type_info(plugin_manager_t* manager,
 	provman_schema_t *schema;
 	gchar *type;
 
+	PROVMAN_LOGF("%s called on key %s", __FUNCTION__, search_key);
+
 	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
 		err = PROVMAN_ERR_DENIED;
 		goto on_error;
@@ -1128,6 +1189,8 @@ int plugin_manager_get_meta(plugin_manager_t* manager, const gchar* key,
 	int err = PROVMAN_ERR_NONE;
 	unsigned int index;
 
+	PROVMAN_LOGF("%s called with key %s prop %s", __FUNCTION__, key, prop);
+
 	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
 		err = PROVMAN_ERR_DENIED;
 		goto on_error;
@@ -1160,6 +1223,9 @@ int plugin_manager_set_meta(plugin_manager_t* manager, const gchar* key,
 			    const gchar *prop, const gchar* value)
 {
 	int err = PROVMAN_ERR_NONE;
+
+	PROVMAN_LOGF("%s called with key %s prop %s value %s", __FUNCTION__,
+		     key, prop, value);
 
 	if (manager->state != PLUGIN_MANAGER_STATE_IDLE) {
 		err = PROVMAN_ERR_DENIED;
