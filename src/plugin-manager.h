@@ -23,7 +23,7 @@
  */
 
 /*!
- * @file plugin_manager.h
+ * @file plugin-manager.h
  *
  * @brief contains functions for managing plugins
  *

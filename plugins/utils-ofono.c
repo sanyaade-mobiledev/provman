@@ -23,7 +23,7 @@
  */
 
 /*!
- * @file utils_ofono.c
+ * @file utils-ofono.c
  *
  * @brief oFono utility functions used by multiple daemons
  *
@@ -40,7 +40,7 @@
 #include "log.h"
 #include "error.h"
 
-#include "utils_ofono.h"
+#include "utils-ofono.h"
 
 #define OFONO_SERVER_NAME "org.ofono"
 #define OFONO_MANAGER_INTERFACE	"org.ofono.Manager"

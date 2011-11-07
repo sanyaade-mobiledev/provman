@@ -8,7 +8,7 @@ DEPENDENCIES = \
 	$(top_srcdir)/doc/coding-style.h \
 	$(top_srcdir)/doc/getting-started.h \
 	$(top_srcdir)/include/plugin.h \
-	$(top_srcdir)/include/map_file.h \
+	$(top_srcdir)/include/map-file.h \
 	$(top_srcdir)/include/utils.h \
 	$(top_srcdir)/src/plugin-session.c
 

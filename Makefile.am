@@ -6,24 +6,24 @@ pm_sources = \
 		src/error.c \
 		src/utils.c \
 		src/plugin.c \
-		src/plugin_manager.c \
-		src/plugin_manager.h \
-		src/map_file.c \
+		src/plugin-manager.c \
+		src/plugin-manager.h \
+		src/map-file.c \
 		src/log.c \
-		src/standard_schemas.c \
-		src/standard_schemas.h \
-		src/test_schemas.c \
-		src/test_schemas.h \
+		src/standard-schemas.c \
+		src/standard-schemas.h \
+		src/test-schemas.c \
+		src/test-schemas.h \
 		src/schema.c \
 		src/cache.c \
 		src/cache.h \
-		src/meta_data.c \
-		src/meta_data.h
+		src/meta-data.c \
+		src/meta-data.h
 
 pm_headers = \
 		include/error.h \
 		include/log.h \
-		include/map_file.h \
+		include/map-file.h \
 		include/plugin.h \
 		include/utils.h \
 		include/schema.h 
@@ -65,8 +65,8 @@ session_sources = src/provman-session.c src/plugin-session.c
 system_sources = src/provman-system.c src/plugin-system.c
 
 if HAVE_OFONO
-system_sources += plugins/utils_ofono.c
-system_sources += plugins/utils_ofono.h
+system_sources += plugins/utils-ofono.c
+system_sources += plugins/utils-ofono.h
 system_sources += plugins/ofono.c
 system_sources += plugins/ofono.h
 endif

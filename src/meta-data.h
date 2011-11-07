@@ -23,7 +23,7 @@
  */
 
 /*!
- * @file meta_data.h
+ * @file meta-data.h
  *
  * @brief contains definitions for the storage and retrieval of meta data
  *

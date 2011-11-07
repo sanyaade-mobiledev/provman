@@ -35,7 +35,7 @@
 #include <stdbool.h>
 #include <gio/gio.h>
 
-#include "plugin_manager.h"
+#include "plugin-manager.h"
 
 enum provman_task_type_ {
 	PROVMAN_TASK_SYNC_IN,

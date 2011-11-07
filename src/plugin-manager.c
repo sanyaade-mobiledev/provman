@@ -23,7 +23,7 @@
  */
 
 /*!
- * @file plugin_manager.c
+ * @file plugin-manager.c
  *
  * @brief contains functions for managing plugins
  *
@@ -38,11 +38,11 @@
 #include "log.h"
 #include "schema.h"
 
-#include "plugin_manager.h"
+#include "plugin-manager.h"
 #include "plugin.h"
 #include "cache.h"
 #include "utils.h"
-#include "meta_data.h"
+#include "meta-data.h"
 
 enum plugin_manager_state_t_ {
 	PLUGIN_MANAGER_STATE_IDLE,

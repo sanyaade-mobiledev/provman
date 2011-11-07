@@ -32,8 +32,8 @@
 #include "config.h"
 
 #include "plugin.h"
-#include "standard_schemas.h"
-#include "test_schemas.h"
+#include "standard-schemas.h"
+#include "test-schemas.h"
 
 #ifdef PROVMAN_EVOLUTION
 #include "plugins/eds.h"

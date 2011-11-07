@@ -46,7 +46,7 @@
 #include "utils.h"
 #include "plugin.h"
 #include "eds.h"
-#include "map_file.h"
+#include "map-file.h"
 
 #define EDS_MAP_FILE_CAT "Default"
 #define EDS_MAP_FILE_NAME "eds-mapfile.ini"

@@ -23,7 +23,7 @@
  */
 
 /*!
- * @file test_schemas.c
+ * @file test-schemas.c
  *
  * @brief contains schemas test plugins
  *

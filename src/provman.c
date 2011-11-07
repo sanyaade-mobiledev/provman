@@ -45,7 +45,7 @@
 
 #include "tasks.h"
 #include "utils.h"
-#include "plugin_manager.h"
+#include "plugin-manager.h"
 
 #define PROVMAN_INTERFACE_START "Start"
 #define PROVMAN_INTERFACE_SET "Set"

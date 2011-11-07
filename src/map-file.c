@@ -23,7 +23,7 @@
  */
 
 /*!
- * @file map_file.c
+ * @file map-file.c
  *
  * @brief Main file the map_file.  Contains methods to manipulate map files.
  *        Map files are a way to persistently store mappings between user account
@@ -37,7 +37,7 @@
 #include <glib.h>
 #include <string.h>
 
-#include "map_file.h"
+#include "map-file.h"
 #include "log.h"
 #include "error.h"
 

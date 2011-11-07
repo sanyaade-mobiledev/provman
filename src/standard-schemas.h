@@ -23,7 +23,7 @@
  */
 
 /*!
- * @file standard_schemas.h
+ * @file standard-schemas.h
  *
  * @brief contains schemas for support interfaces
  *

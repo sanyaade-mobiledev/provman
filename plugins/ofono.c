@@ -40,10 +40,10 @@
 #include "error.h"
 #include "log.h"
 
-#include "utils_ofono.h"
+#include "utils-ofono.h"
 #include "plugin.h"
 #include "utils.h"
-#include "map_file.h"
+#include "map-file.h"
 
 #define OFONO_MAP_FILE_NAME "ofono-mapfile.ini"
 

@@ -23,7 +23,7 @@
  */
 
 /*!
- *  @file utils_ofono.h
+ *  @file utils-ofono.h
  *
  * @brief contains definitions for ofono utility functions
  *

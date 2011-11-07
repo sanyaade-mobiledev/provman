@@ -23,7 +23,7 @@
  */
 
 /*!
- * @file meta_data.c
+ * @file meta-data.c
  *
  * @brief Main file meta data.  Contains methods to associate meta data with
  * existing settings.  Meta data is store persistently and survives the end
@@ -36,7 +36,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include "meta_data.h"
+#include "meta-data.h"
 #include "log.h"
 
 struct provman_meta_data_t_ {
