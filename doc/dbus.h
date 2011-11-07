@@ -333,7 +333,7 @@ dictionary GetChildrenTypeInfo(string key);
  * maintained by plugins.   Therefore meta data cannot be
  * assoicated with '/' or '/applications'
  *
- * @param key the key to create or whose value you wish to change.
+ * @param key the key with which you would like to associate meta data
  * @param prop the name of the meta data property.
  * @param value the value to assign to the meta data property.
  *
@@ -352,7 +352,7 @@ void SetMeta(string key, string prop, string value);
 /*!
  * \brief Retrieves a meta data property value from a given key.
  *
- * @param key the key to create or whose value you wish to change.
+ * @param key the key whose meta data you would like to retrieve
  * @param prop the name of the meta data property.
  *
  * @return the value of the meta data property.
@@ -412,6 +412,10 @@ array SetMultipleMeta(array meta);
  * @return an array of meta data structures of type \a a(sss).
  * Each structure contains, in order, the key, the meta data property
  * name, and the meta data value, e.g., ("/telephony/mms", "ACL,"Get='*'").
+ * The returned array contains no entries for keys that do not define any
+ * meta data.  Therefore, if you were to execute this command on a sub-tree
+ * that contained 1000 nodes, but none of these nodes defined any meta data,
+ * the returned array would be empty.
  *
  * \exception com.intel.provman.Error.Unexpected #GetAllMeta is invoked
  * before #Start.
