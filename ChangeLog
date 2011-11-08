@@ -1,3 +1,20 @@
+version 0.1.0
+	- Implemented the Provman cache ( a tree based in-memory model of
+	    the settings for a given session )
+	- Added support for Meta Data
+	- Added the test plugin
+	- Session and System config files no longer conflict
+	- Session log filenames now include the user name
+	- The oFono plugin now exposes a device's imsi numbers
+	- Added the python test harness
+	- Added GetMultiple
+	- Added DeleteMultiple
+	- Added SetMeta
+	- Added GetMeta
+	- Added SetMultipleMeta
+	- Added GetAllMeta
+	- Fixed lots of bugs and tidied up the code
+
 version 0.0.4
 	- Added d-Bus Introspection methods.
 	- Added plugin schemas
