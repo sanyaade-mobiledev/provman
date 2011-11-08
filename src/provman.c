@@ -419,14 +419,14 @@ static void prv_add_task(provman_context *context, provman_task *task)
 }
 
 static void prv_add_sync_in_task(provman_context *context,
-				 const gchar *imsi)
+				 GVariant *parameters)
 {
 	provman_task *task;
 
 	PROVMAN_LOG("Add Task Sync IN");
 
 	provman_task_new(PROVMAN_TASK_SYNC_IN, NULL, &task);
-	task->imsi = g_strdup(imsi);
+	g_variant_get(parameters, "(s)", &task->imsi);
 
 	prv_add_task(context, task);
 }
@@ -445,14 +445,14 @@ static void prv_add_sync_out_task(provman_context *context,
 
 static void prv_add_get_task(provman_context *context,
 			     GDBusMethodInvocation *invocation,
-			     const gchar* key)
+			     GVariant *parameters)
 {
 	provman_task *task;
 
 	PROVMAN_LOG("Add Task Get");
 
 	provman_task_new(PROVMAN_TASK_GET, invocation, &task);
-	task->key = g_strdup(key);
+	g_variant_get(parameters, "(s)", &task->key);
 	g_strstrip(task->key);
 
 	prv_add_task(context, task);
@@ -460,13 +460,15 @@ static void prv_add_get_task(provman_context *context,
 
 static void prv_add_get_multiple_task(provman_context *context,
 				      GDBusMethodInvocation *invocation,
-				      GVariant *variant)
+				      GVariant *parameters)
 {
 	provman_task *task;
+	GVariant *variant;
 
 	PROVMAN_LOG("Add Get Multiple");
 
 	provman_task_new(PROVMAN_TASK_GET_MULTIPLE, invocation, &task);
+	variant = g_variant_get_child_value(parameters, 0);
 	task->variant = g_variant_ref_sink(variant);
 
 	prv_add_task(context, task);
@@ -474,14 +476,14 @@ static void prv_add_get_multiple_task(provman_context *context,
 
 static void prv_add_get_all_task(provman_context *context,
 				 GDBusMethodInvocation *invocation,
-				 const gchar *key)
+				 GVariant *parameters)
 {
 	provman_task *task;
 
 	PROVMAN_LOG("Add Task Get All");
 
 	provman_task_new(PROVMAN_TASK_GET_ALL, invocation, &task);
-	task->key = g_strdup(key);
+	g_variant_get(parameters, "(s)", &task->key);
 	g_strstrip(task->key);
 
 	prv_add_task(context, task);
@@ -489,14 +491,14 @@ static void prv_add_get_all_task(provman_context *context,
 
 static void prv_add_get_all_meta_task(provman_context *context,
 				      GDBusMethodInvocation *invocation,
-				      const gchar *key)
+				      GVariant *parameters)
 {
 	provman_task *task;
 
 	PROVMAN_LOG("Add Task Get All Meta");
 
 	provman_task_new(PROVMAN_TASK_GET_ALL_META, invocation, &task);
-	task->key = g_strdup(key);
+	g_variant_get(parameters, "(s)", &task->key);
 	g_strstrip(task->key);
 
 	prv_add_task(context, task);
@@ -505,7 +507,7 @@ static void prv_add_get_all_meta_task(provman_context *context,
 static void prv_add_get_children_type_info_task(
 	provman_context *context,
 	GDBusMethodInvocation *invocation,
-	const gchar *key)
+	GVariant *parameters)
 {
 	provman_task *task;
 
@@ -513,7 +515,7 @@ static void prv_add_get_children_type_info_task(
 
 	provman_task_new(PROVMAN_TASK_GET_CHILDREN_TYPE_INFO, invocation,
 			 &task);
-	task->key = g_strdup(key);
+	g_variant_get(parameters, "(s)", &task->key);
 	g_strstrip(task->key);
 
 	prv_add_task(context, task);
@@ -521,14 +523,14 @@ static void prv_add_get_children_type_info_task(
 
 static void prv_add_get_type_info_task(provman_context *context,
 				       GDBusMethodInvocation *invocation,
-				       const gchar *key)
+				       GVariant *parameters)
 {
 	provman_task *task;
 
 	PROVMAN_LOG("Add Task Get Type Info");
 
 	provman_task_new(PROVMAN_TASK_GET_TYPE_INFO, invocation, &task);
-	task->key = g_strdup(key);
+	g_variant_get(parameters, "(s)", &task->key);
 	g_strstrip(task->key);
 
 	prv_add_task(context, task);
@@ -536,15 +538,14 @@ static void prv_add_get_type_info_task(provman_context *context,
 
 static void prv_add_set_task(provman_context *context,
 			     GDBusMethodInvocation *invocation,
-			     const gchar *key, const gchar *value)
+			     GVariant *parameters)
 {
 	provman_task *task;
 
 	PROVMAN_LOG("Add Task Set");
 
 	provman_task_new(PROVMAN_TASK_SET, invocation, &task);
-	task->key = g_strdup(key);
-	task->value = g_strdup(value);
+	g_variant_get(parameters, "(ss)", &task->key, &task->value);
 	g_strstrip(task->key);
 
 	prv_add_task(context, task);
@@ -552,12 +553,14 @@ static void prv_add_set_task(provman_context *context,
 
 static void prv_add_set_multiple_task(provman_context *context,
 				      GDBusMethodInvocation *invocation,
-				      GVariant *variant)
+				      GVariant *parameters)
 {
 	provman_task *task;
+	GVariant *variant;
 
 	PROVMAN_LOG("Add Set Multiple");
 
+	variant = g_variant_get_child_value(parameters, 0);
 	provman_task_new(PROVMAN_TASK_SET_MULTIPLE, invocation, &task);
 	task->variant = g_variant_ref_sink(variant);
 
@@ -566,12 +569,14 @@ static void prv_add_set_multiple_task(provman_context *context,
 
 static void prv_add_set_multiple_meta_task(provman_context *context,
 					   GDBusMethodInvocation *invocation,
-					   GVariant *variant)
+					   GVariant *parameters)
 {
 	provman_task *task;
+	GVariant *variant;
 
 	PROVMAN_LOG("Add Set Multiple Meta");
-
+	
+	variant = g_variant_get_child_value(parameters, 0);
 	provman_task_new(PROVMAN_TASK_SET_MULTIPLE_META, invocation, &task);
 	task->variant = g_variant_ref_sink(variant);
 
@@ -580,14 +585,14 @@ static void prv_add_set_multiple_meta_task(provman_context *context,
 
 static void prv_add_delete_task(provman_context *context,
 				GDBusMethodInvocation *invocation,
-				const gchar *key)
+				GVariant *parameters)
 {
 	provman_task *task;
 
 	PROVMAN_LOG("Add Task Delete");
 
 	provman_task_new(PROVMAN_TASK_DELETE, invocation, &task);
-	task->key = g_strdup(key);
+	g_variant_get(parameters, "(s)", &task->key);
 	g_strstrip(task->key);
 
 	prv_add_task(context, task);
@@ -595,13 +600,15 @@ static void prv_add_delete_task(provman_context *context,
 
 static void prv_add_delete_multiple_task(provman_context *context,
 					 GDBusMethodInvocation *invocation,
-					 GVariant *variant)
+					 GVariant *parameters)
 {
 	provman_task *task;
+	GVariant *variant;
 
 	PROVMAN_LOG("Add Task Delete Multiple");
 
 	provman_task_new(PROVMAN_TASK_DELETE_MULTIPLE, invocation, &task);
+	variant = g_variant_get_child_value(parameters, 0);
 	task->variant = g_variant_ref_sink(variant);
 
 	prv_add_task(context, task);
@@ -621,15 +628,14 @@ static void prv_add_abort_task(provman_context *context,
 
 static void prv_add_get_meta_task(provman_context *context,
 				  GDBusMethodInvocation *invocation,
-				  const gchar *key, const gchar *prop)
+				  GVariant *parameters)
 {
 	provman_task *task;
 
 	PROVMAN_LOG("Add Task Get Meta");
 
 	provman_task_new(PROVMAN_TASK_GET_META, invocation, &task);
-	task->key = g_strdup(key);
-	task->prop = g_strdup(prop);
+	g_variant_get(parameters, "(ss)", &task->key, &task->prop);
 	g_strstrip(task->key);
 	g_strstrip(task->prop);
 
@@ -638,17 +644,17 @@ static void prv_add_get_meta_task(provman_context *context,
 
 static void prv_add_set_meta_task(provman_context *context,
 				  GDBusMethodInvocation *invocation,
-				  const gchar *key, const gchar *prop,
-				  const gchar *value)
+				  GVariant *parameters)
 {
 	provman_task *task;
 
 	PROVMAN_LOG("Add Task Set Meta");
 
 	provman_task_new(PROVMAN_TASK_SET_META, invocation, &task);
-	task->key = g_strdup(key);
-	task->prop = g_strdup(prop);
-	task->value = g_strdup(value);
+
+	g_variant_get(parameters, "(sss)", &task->key, &task->prop,
+		      &task->value);
+
 	g_strstrip(task->key);
 	g_strstrip(task->prop);
 
@@ -752,19 +758,15 @@ static void prv_reset_startup_timer(provman_context *context)
 }
 
 static void prv_provman_method_call(GDBusConnection *connection, 
-					 const gchar *sender,
-					 const gchar *object_path,
-					 const gchar *interface_name,
-					 const gchar *method_name,
-					 GVariant *parameters,
-					 GDBusMethodInvocation *invocation,
-					 gpointer user_data)
+				    const gchar *sender,
+				    const gchar *object_path,
+				    const gchar *interface_name,
+				    const gchar *method_name,
+				    GVariant *parameters,
+				    GDBusMethodInvocation *invocation,
+				    gpointer user_data)
 {
 	provman_context *context = user_data;
-	gchar *value;
-	gchar *key;
-	gchar *prop;
-	GVariant *variant;
 
 	PROVMAN_LOGF("%s called", method_name);
 
@@ -782,9 +784,8 @@ static void prv_provman_method_call(GDBusConnection *connection,
 
 			PROVMAN_LOGF("start session with %s", context->holder);
 
-			g_variant_get(parameters, "(&s)", &value);
-			g_dbus_method_invocation_return_value(invocation, NULL);
-			prv_add_sync_in_task(context, value);
+			prv_add_sync_in_task(context, parameters);
+			g_dbus_method_invocation_return_value(invocation, NULL);			
 		} else if (!prv_find_connection(context, invocation)) {
 			PROVMAN_LOG("Queuing start request");
 			context->queued_clients = g_slist_append(
@@ -798,13 +799,11 @@ static void prv_provman_method_call(GDBusConnection *connection,
 	} else if (!g_strcmp0(method_name,
 			      PROVMAN_INTERFACE_GET_CHILDREN_TYPE_INFO)) {
 		prv_reset_startup_timer(context);
-		g_variant_get(parameters, "(&s)", &key);
-		prv_add_get_children_type_info_task(context, invocation, key);
-	} else if (!g_strcmp0(method_name,
-			      PROVMAN_INTERFACE_GET_TYPE_INFO)) {
+		prv_add_get_children_type_info_task(context, invocation,
+						    parameters);
+	} else if (!g_strcmp0(method_name, PROVMAN_INTERFACE_GET_TYPE_INFO)) {
 		prv_reset_startup_timer(context);
-		g_variant_get(parameters, "(&s)", &key);
-		prv_add_get_type_info_task(context, invocation, key);
+		prv_add_get_type_info_task(context, invocation, parameters);
 	} else {
 		if (g_strcmp0(context->holder, 
 			      g_dbus_method_invocation_get_sender(
@@ -821,50 +820,41 @@ static void prv_provman_method_call(GDBusConnection *connection,
 			prv_add_abort_task(context, invocation);
 		} else if (!g_strcmp0(method_name, 
 				      PROVMAN_INTERFACE_SET)) {
-			g_variant_get(parameters, "(&s&s)", &key, &value);
-			prv_add_set_task(context, invocation, key, value);
+			prv_add_set_task(context, invocation, parameters);
 		} else if (!g_strcmp0(method_name, 
 				      PROVMAN_INTERFACE_SET_MULTIPLE)) {
-			variant = g_variant_get_child_value(parameters, 0);
-			prv_add_set_multiple_task(context, invocation, variant);
+			prv_add_set_multiple_task(context, invocation,
+						  parameters);
 		} else if (!g_strcmp0(method_name, 
 				      PROVMAN_INTERFACE_SET_MULTIPLE_META)) {
-			variant = g_variant_get_child_value(parameters, 0);
 			prv_add_set_multiple_meta_task(context, invocation,
-						       variant);
+						       parameters);
 		} else if (!g_strcmp0(method_name, PROVMAN_INTERFACE_GET)) {
-			g_variant_get(parameters, "(&s)", &key);
-			prv_add_get_task(context, invocation, key);
+			prv_add_get_task(context, invocation, parameters);
 		} else if (!g_strcmp0(method_name, 
 				      PROVMAN_INTERFACE_GET_MULTIPLE)) {
-			variant = g_variant_get_child_value(parameters, 0);
-			prv_add_get_multiple_task(context, invocation, variant);
+			prv_add_get_multiple_task(context, invocation,
+						  parameters);
 		} else if (!g_strcmp0(method_name, 
 				      PROVMAN_INTERFACE_GET_ALL)) {
-			g_variant_get(parameters, "(&s)", &key);
-			prv_add_get_all_task(context, invocation, key);
+			prv_add_get_all_task(context, invocation, parameters);
 		} else if (!g_strcmp0(method_name, 
 				      PROVMAN_INTERFACE_GET_ALL_META)) {
-			g_variant_get(parameters, "(&s)", &key);
-			prv_add_get_all_meta_task(context, invocation, key);
+			prv_add_get_all_meta_task(context, invocation,
+						  parameters);
 		} else if (!g_strcmp0(method_name, 
 				      PROVMAN_INTERFACE_DELETE)) {
-			g_variant_get(parameters, "(&s)", &key);
-			prv_add_delete_task(context, invocation, key);
+			prv_add_delete_task(context, invocation, parameters);
 		} else if (!g_strcmp0(method_name, 
 				      PROVMAN_INTERFACE_DELETE_MULTIPLE)) {
-			variant = g_variant_get_child_value(parameters, 0);
-			prv_add_delete_multiple_task(context, invocation, variant);
+			prv_add_delete_multiple_task(context, invocation,
+						     parameters);
 		} else if (!g_strcmp0(method_name,
 				      PROVMAN_INTERFACE_SET_META)) {
-			g_variant_get(parameters, "(&s&s&s)", &key, &prop,
-				      &value);
-			prv_add_set_meta_task(context, invocation, key, prop,
-					      value);
+			prv_add_set_meta_task(context, invocation, parameters);
 		} else if (!g_strcmp0(method_name, 
 				      PROVMAN_INTERFACE_GET_META)) {
-			g_variant_get(parameters, "(&s&s)", &key, &prop);
-			prv_add_get_meta_task(context, invocation, key, prop);
+			prv_add_get_meta_task(context, invocation, parameters);
 		}
 	}
 }
