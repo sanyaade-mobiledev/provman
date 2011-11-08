@@ -72,7 +72,10 @@ void provman_task_delete(provman_task *task)
 		g_free(task->prop);
 		if (task->variant)
 			g_variant_unref(task->variant);
-		
+		if (task->invocation)
+			g_dbus_method_invocation_return_dbus_error(
+				task->invocation,
+				PROVMAN_DBUS_ERR_DIED, "");					
 		g_free(task->imsi);
 		g_free(task);
 	}

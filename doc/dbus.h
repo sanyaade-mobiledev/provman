@@ -31,7 +31,9 @@
  *   in process with this client.  #Start cannot be called again on this client
  *   until #End has been called.
  * \exception com.intel.provman.Error.Cancelled The call to #Start
- *   has failed because provman has been killed.
+ *   was begun but it failed because provman was killed.
+ * \exception com.intel.provman.Error.Died Provman was killed before
+ *   the #Start command could be initiated.
 */
 
 void Start(string imsi);
@@ -55,11 +57,13 @@ void Start(string imsi);
  *
  * \exception com.intel.provman.Error.Unexpected #Set is invoked
  * before #Start.
- * \exception com.intel.provman.Error.Cancelled The call to #Set
- *   has failed because provman has been killed.
  * \exception com.intel.provman.Error.NotFound The specified key
  *   is not associated with any plugin.
  * \exception com.intel.provman.Error.BadArgs The key is not valid
+ * \exception com.intel.provman.Error.Cancelled The call to #Set
+ *   was begun but it failed because provman was killed.
+ * \exception com.intel.provman.Error.Died Provman was killed before
+ *   the #Set command could be initiated.
 */
 
 void Set(string key, string value);
@@ -88,7 +92,9 @@ void Set(string key, string value);
  * \exception com.intel.provman.Error.Unexpected #SetMultiple is invoked
  * before #Start.
  * \exception com.intel.provman.Error.Cancelled The call to #SetMultiple
- *   has failed because provman has been killed.
+ *   was begun but it failed because provman was killed.
+ * \exception com.intel.provman.Error.Died Provman was killed before
+ *   the #SetMultiple command could be initiated.
 */
 
 array SetMultiple(dictionary dict);
@@ -107,11 +113,13 @@ array SetMultiple(dictionary dict);
  *
  * \exception com.intel.provman.Error.Unexpected #Get is invoked
  * before #Start.
- * \exception com.intel.provman.Error.Cancelled The call to #Get
- *   has failed because provman has been killed.
  * \exception com.intel.provman.Error.NotFound The specified key
  *   does not exist.
  * \exception com.intel.provman.Error.BadArgs The key is not valid
+ * \exception com.intel.provman.Error.Cancelled The call to #Get
+ *   was begun but it failed because provman was killed.
+ * \exception com.intel.provman.Error.Died Provman was killed before
+ *   the #Get command could be initiated.
 */
 
 string Get(string key);
@@ -128,11 +136,13 @@ string Get(string key);
  *
  * \exception com.intel.provman.Error.Unexpected #GetAll is invoked
  * before #Start.
- * \exception com.intel.provman.Error.Cancelled The call to #GetAll
- *   has failed because provman has been killed.
  * \exception com.intel.provman.Error.NotFound The specified key
  *   does not exist.
  * \exception com.intel.provman.Error.BadArgs The key is not valid
+ * \exception com.intel.provman.Error.Cancelled The call to #GetAll
+ *   was begun but it failed because provman was killed.
+ * \exception com.intel.provman.Error.Died Provman was killed before
+ *   the #GetAll command could be initiated.
 */
 
 dictionary GetAll(string key);
@@ -152,7 +162,9 @@ dictionary GetAll(string key);
  * \exception com.intel.provman.Error.Unexpected #GetMultiple is invoked
  * before #Start.
  * \exception com.intel.provman.Error.Cancelled The call to #GetMultiple
- *   has failed because provman has been killed.
+ *   was begun but it failed because provman was killed.
+ * \exception com.intel.provman.Error.Died Provman was killed before
+ *   the #GetMultiple command could be initiated.
 */
 
 dictionary GetMultiple(array keys);
@@ -167,11 +179,13 @@ dictionary GetMultiple(array keys);
  *
  * \exception com.intel.provman.Error.Unexpected #Delete is invoked
  * before #Start.
- * \exception com.intel.provman.Error.Cancelled The call to #Delete
- *   has failed because provman has been killed.
  * \exception com.intel.provman.Error.NotFound The specified key
  *   does not exist.
  * \exception com.intel.provman.Error.BadArgs The key is not valid
+ * \exception com.intel.provman.Error.Cancelled The call to #Delete
+ *   was begun but it failed because provman was killed.
+ * \exception com.intel.provman.Error.Died Provman was killed before
+ *   the #Delete command could be initiated.
 */
 
 void Delete(string key);
@@ -201,7 +215,9 @@ void Delete(string key);
  * \exception com.intel.provman.Error.Unexpected #DeleteMultiple is invoked
  * before #Start.
  * \exception com.intel.provman.Error.Cancelled The call to #DeleteMultiple
- *   has failed because provman has been killed.
+ *   was begun but it failed because provman was killed.
+ * \exception com.intel.provman.Error.Died Provman was killed before
+ *   the #DeleteMultiple command could be initiated.
 */
 
 array DeleteMultiple(array keys);
@@ -218,7 +234,9 @@ array DeleteMultiple(array keys);
  * \exception com.intel.provman.Error.Unexpected #End is invoked
  * before #Start.
  * \exception com.intel.provman.Error.Cancelled The call to #End
- *   has failed because provman has been killed.
+ *   was begun but it failed because provman was killed.
+ * \exception com.intel.provman.Error.Died Provman was killed before
+ *   the #End command could be initiated.
 */
 
 void End();
@@ -235,7 +253,9 @@ void End();
  * \exception com.intel.provman.Error.Unexpected #Abort is invoked
  * before #Start.
  * \exception com.intel.provman.Error.Cancelled The call to #Abort
- *   has failed because provman has been killed.
+ *   was begun but it failed because provman was killed.
+ * \exception com.intel.provman.Error.Died Provman was killed before
+ *   the #Abort command could be initiated.
 */
 
 void Abort();
@@ -277,9 +297,11 @@ void Abort();
  *   
  * \exception com.intel.provman.Error.NotFound The key is not supported by provman
  *    or its plugins.
- * \exception com.intel.provman.Error.Cancelled The call to #Get
- *   has failed because provman has been killed.
  * \exception com.intel.provman.Error.BadArgs The key is not valid
+ * \exception com.intel.provman.Error.Cancelled The call to #GetTypeInfo
+ *   was begun but it failed because provman was killed.
+ * \exception com.intel.provman.Error.Died Provman was killed before
+ *   the #GetTypeInfo command could be initiated.
 */
 
 string GetTypeInfo(string key);
@@ -311,8 +333,10 @@ string GetTypeInfo(string key);
  *    provman or its plugins.
  * \exception com.intel.provman.Error.BadArgs The key represents a setting and
  *    not a directory.
- * \exception com.intel.provman.Error.Cancelled The call to #Get
- *   has failed because provman has been killed.
+ * \exception com.intel.provman.Error.Cancelled The call to #GetChildrenTypeInfo
+ *   was begun but it failed because provman was killed.
+ * \exception com.intel.provman.Error.Died Provman was killed before
+ *   the #GetChildrenTypeInfo command could be initiated.
 */
 
 dictionary GetChildrenTypeInfo(string key);
@@ -339,12 +363,14 @@ dictionary GetChildrenTypeInfo(string key);
  *
  * \exception com.intel.provman.Error.Unexpected #SetMeta is invoked
  * before #Start.
- * \exception com.intel.provman.Error.Cancelled The call to #SetMeta
- *   has failed because provman has been killed.
  * \exception com.intel.provman.Error.NotFound The specified key
  *   does not exist.
  * \exception com.intel.provman.Error.BadArgs The key is not well formed
  *   or is not managed by a plugin.
+ * \exception com.intel.provman.Error.Cancelled The call to #SetMeta
+ *   was begun but it failed because provman was killed.
+ * \exception com.intel.provman.Error.Died Provman was killed before
+ *   the #SetMeta command could be initiated.
 */
 
 void SetMeta(string key, string prop, string value);
@@ -359,12 +385,14 @@ void SetMeta(string key, string prop, string value);
  *
  * \exception com.intel.provman.Error.Unexpected #GetMeta is invoked
  * before #Start.
- * \exception com.intel.provman.Error.Cancelled The call to #GetMeta
- *   has failed because provman has been killed.
  * \exception com.intel.provman.Error.NotFound The specified key
  *   or meta data property does not exist.
  * \exception com.intel.provman.Error.BadArgs The key is not well formed
  *   or is not managed by a plugin.
+ * \exception com.intel.provman.Error.Cancelled The call to #GetMeta
+ *   was begun but it failed because provman was killed.
+ * \exception com.intel.provman.Error.Died Provman was killed before
+ *   the #GetMeta command could be initiated.
 */
 
 string GetMeta(string key, string prop);
@@ -396,7 +424,9 @@ string GetMeta(string key, string prop);
  * \exception com.intel.provman.Error.Unexpected #SetMultipleMeta is invoked
  * before #Start.
  * \exception com.intel.provman.Error.Cancelled The call to #SetMultipleMeta
- *   has failed because provman has been killed.
+ *   was begun but it failed because provman was killed.
+ * \exception com.intel.provman.Error.Died Provman was killed before
+ *   the #SetMultipleMeta command could be initiated.
 */
 
 array SetMultipleMeta(array meta);
@@ -419,11 +449,13 @@ array SetMultipleMeta(array meta);
  *
  * \exception com.intel.provman.Error.Unexpected #GetAllMeta is invoked
  * before #Start.
- * \exception com.intel.provman.Error.Cancelled The call to #GetAllMeta
- *   has failed because provman has been killed.
  * \exception com.intel.provman.Error.NotFound The specified key
  *   does not exist.
  * \exception com.intel.provman.Error.BadArgs The key is not valid
+ * \exception com.intel.provman.Error.Cancelled The call to #GetAllMeta
+ *   was begun but it failed because provman was killed.
+ * \exception com.intel.provman.Error.Died Provman was killed before
+ *   the #GetAllMeta command could be initiated.
 */
 
 array GetAllMeta(string key);

@@ -371,7 +371,7 @@ static void prv_provman_context_free(provman_context *context)
 		g_dbus_method_invocation_return_error(
 			ptr->data, G_IO_ERROR,
 			G_IO_ERROR_FAILED_HANDLED,
-			"exit_before_execute");
+			PROVMAN_DBUS_ERR_DIED);
 		ptr = ptr->next;
 	}
 
