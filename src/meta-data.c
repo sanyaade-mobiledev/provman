@@ -161,7 +161,9 @@ void provman_meta_data_update(provman_meta_data_t *meta_data,
 	gpointer value;
 	gsize length;
 	gchar *data;
+#ifdef PROVMAN_LOGGING
 	bool saved = false;
+#endif
 
 	groups = g_key_file_get_groups(meta_data->key_file, NULL);
 	
@@ -185,8 +187,13 @@ void provman_meta_data_update(provman_meta_data_t *meta_data,
 	if (dirty) {
 		data = g_key_file_to_data(meta_data->key_file, &length, NULL);
 		if (data) {
+#ifdef PROVMAN_LOGGING
 			saved = g_file_set_contents(meta_data->fname, data,
 						    length, NULL);
+#else
+			(void) g_file_set_contents(meta_data->fname, data,
+						   length, NULL);
+#endif
 			g_free(data);
 		}
 
