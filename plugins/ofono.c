@@ -1298,8 +1298,6 @@ static void prv_prop_set_cb(GObject *source_object,
 	GVariant *retvals;
 	ofono_plugin_t *plugin_instance = user_data;
 	bool again;
-	ofono_plugin_modem_t *modem;
-	ofono_plugin_cmd_t *cmd;
 
 	err = prv_complete_results_call(plugin_instance, 
 					plugin_instance->current_ctx_proxy,
@@ -1307,15 +1305,8 @@ static void prv_prop_set_cb(GObject *source_object,
 					&retvals);
 
 	if (err != PROVMAN_ERR_CANCELLED) {
-		if (err == PROVMAN_ERR_NONE) {
-			modem = g_hash_table_lookup(plugin_instance->modems, 
-						    plugin_instance->imsi);
-			
-			cmd = plugin_instance->cmds->pdata[
-				plugin_instance->current_cmd];
-			
+		if (err == PROVMAN_ERR_NONE)
 			g_variant_unref(retvals);							
-		}
 		
 		++plugin_instance->current_cmd;
 		do 
