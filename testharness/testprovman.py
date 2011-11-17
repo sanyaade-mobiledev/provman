@@ -148,6 +148,214 @@ class TestProvman(unittest.TestCase):
             self.log("returned exception: %s" % returned_except)
             self.assertEquals(returned_except, expect_except)
 
+    def set_meta(self, key, prop, val, expect_except=""):
+    
+        """Sets meta data property to a key via D-Bus SetMeta method. Checks
+        also raised exception, if any.
+        
+        parameters:
+            key (string)
+                full path and name of key to set.
+            prop (string)
+                property name of meta data
+            val (string)
+                value to assign to property.
+            expect_except (string)
+                Type of exception expected to be raised.
+        """
+        
+        self.log("SetMeta: %s <- (%s, %s)" % (key, prop, val))
+
+        if expect_except == "":
+            self.__dbus.SetMeta(key, prop, val)
+
+        else:
+            with self.assertRaises(dbus.exceptions.DBusException) as cm:
+                self.__dbus.SetMeta(key, prop, val)
+            returned_except = cm.exception.get_dbus_name()
+            self.log("expected exception: %s" % expect_except)
+            self.log("returned exception: %s" % returned_except)
+            self.assertEquals(returned_except, expect_except)
+
+    def set_meta_auto(self, key, prop, val, expect_except=""):
+    
+        """starts a DM session automatically and calls the SetMeta method.
+
+        parameters:
+            key (string)
+                full path and name of key to set.
+            prop (string)
+                property name of meta data
+            val (string)
+                value to assign to property.
+            expect_except (string)
+                Type of exception expected to be raised.
+        """
+
+        self.connect_dbus()
+        self.start()
+        self.set_meta(key, prop, val, expect_except)
+        self.end()
+
+    def get_meta(self, key, prop, expect_val="", expect_except=""):
+    
+        """Gets meta data property from a key via D-Bus GetMeta method. Checks
+        also raised exception, if any.
+        
+        parameters:
+            key (string)
+                full path and name of key to set.
+            prop (string)
+                name of property to et in meta data
+            expect_val (string)
+                expected property's value to be returned by GetMeta method.
+            expect_except (string)
+                Type of exception expected to be raised.
+        """
+
+        self.log("GetMeta: %s -> %s" % (key, prop))
+
+        if expect_except == "":
+            ret = self.__dbus.GetMeta(key, prop)
+            self.log("returned value: %s" % ret)
+            self.log("expected value: %s" % expect_val)
+            self.assertEqual(ret, expect_val)
+
+        else:
+            with self.assertRaises(dbus.exceptions.DBusException) as cm:
+                self.__dbus.GetMeta(key, prop)
+            returned_except = cm.exception.get_dbus_name()
+            self.log("expected exception: %s" % expect_except)
+            self.log("returned exception: %s" % returned_except)
+            self.assertEquals(returned_except, expect_except)
+
+    def get_meta_auto(self, key, prop, expect_val="", expect_except=""):
+    
+        """starts a DM session automatically and calls the GetMeta method.
+
+        parameters:
+            key (string)
+                full path and name of key to set.
+            prop (string)
+                name of property to et in meta data
+            expect_val (string)
+                expected property's value to be returned by GetMeta method.
+            expect_except (string)
+                Type of exception expected to be raised.
+        """
+
+        self.connect_dbus()
+        self.start()
+        self.get_meta(key, prop, expect_val, expect_except)
+        self.end()
+
+    def get_all_meta(self, key, expect_props=[], expect_except=""):
+    
+        """Gets all meta data properties from a key via D-Bus GetAllMeta
+        method. Checks also raised exception, if any.
+        
+        parameters:
+            key (string)
+                full path and name of key to set.
+            expect_props (list)
+                list of properties of key
+            expect_except (string)
+                Type of exception expected to be raised.
+        """
+        
+        self.log("GetAllMeta: %s" % key)
+
+        if expect_except == "":
+            ret = self.__dbus.GetAllMeta(key)
+
+            ret_sort = sorted(ret)
+            expect_props_sort = sorted(expect_props)
+            self.log("Returned list of properties (sorted): %s" % ret_sort)
+            self.log("Expected list of properties (sorted): %s" % 
+                    expect_props_sort)
+            compare = cmp(ret_sort, expect_props_sort)
+            self.assertEqual(compare, 0)
+
+        else:
+            with self.assertRaises(dbus.exceptions.DBusException) as cm:
+                self.__dbus.GetAllMeta(key)
+            returned_except = cm.exception.get_dbus_name()
+            self.log("expected exception: %s" % expect_except)
+            self.log("returned exception: %s" % returned_except)
+            self.assertEquals(returned_except, expect_except)
+
+    def get_all_meta_auto(self, key, expect_props=[], expect_except=""):
+
+        """starts a DM session automatically and calls the GetAllMeta method.
+
+        parameters:
+            key (string)
+                full path and name of key to set.
+            expect_props (list)
+                list of properties of key
+            expect_except (string)
+                Type of exception expected to be raised.
+        """
+        
+        self.connect_dbus()
+        self.start()
+        self.get_all_meta(key, expect_props, expect_except)
+        self.end()
+
+    def set_mult_meta(self, keys, expect_keys_fail=[], expect_except=""):
+    
+        """Sets meta data properties to keys via D-Bus SetMultipleMeta
+        method. Checks also raised exception, if any.
+        
+        parameters:
+            keys (list)
+                list of keys/properties/values to set
+            expect_keys_fail (list)
+                list of keys/properties that have not been set
+            expect_except (string)
+                Type of exception expected to be raised.
+        """
+        
+        self.log("SetMultipleMeta: %s" % keys)
+
+        if expect_except == "":
+            ret = self.__dbus.SetMultipleMeta(keys)
+
+            ret_sort = sorted(ret)
+            expect_keys_fail_sort = sorted(expect_keys_fail)
+            self.log("Returned list of keys (sorted): %s" % ret_sort)
+            self.log("Expected list of keys (sorted): %s" % 
+                    expect_keys_fail_sort)
+            compare = cmp(ret_sort, expect_keys_fail_sort)
+            self.assertEqual(compare, 0)
+
+        else:
+            with self.assertRaises(dbus.exceptions.DBusException) as cm:
+                self.__dbus.GetAllMeta(key)
+            returned_except = cm.exception.get_dbus_name()
+            self.log("expected exception: %s" % expect_except)
+            self.log("returned exception: %s" % returned_except)
+            self.assertEquals(returned_except, expect_except)
+
+    def set_mult_meta_auto(self, keys, expect_keys_fail=[], expect_except=""):
+    
+        """starts a DM session automatically and calls the SetMultipleMeta 
+        method.
+        
+        parameters:
+            keys (list)
+                list of keys/properties/values to set
+            expect_keys_fail (list)
+                list of keys/properties that have not been set
+            expect_except (string)
+                Type of exception expected to be raised.
+        """
+
+        self.connect_dbus()
+        self.start()
+        self.set_mult_meta(keys, expect_keys_fail, expect_except)
+        self.end()
+
     def set_mult(self, keys, expect_keys_fail=[], expect_except=""):
     
         """Sets key/value pairs via D-Bus SetMultiple method. Checks keys that
@@ -156,8 +364,8 @@ class TestProvman(unittest.TestCase):
         parameters:
             keys (dictionary)
                 key/value pairs.
-            expect_keys_fail (array)
-                array of keys that have not been set
+            expect_keys_fail (list)
+                list of keys that have not been set
             expect_except (string)
                 Type of exception expected to be raised.
         """
@@ -170,7 +378,8 @@ class TestProvman(unittest.TestCase):
             #check if list of keys that were not set is expected
             ret_sort = sorted(ret)
             expect_keys_fail_sort = sorted(expect_keys_fail)
-            self.log("Returned list of keys not set: %s" % ret_sort)
+            self.log("Returned list of keys not set (sorted): %s" % ret_sort)
+            self.log("Expected list of keys not set (sorted): %s" % expect_keys_fail)
             compare = cmp(ret_sort, expect_keys_fail_sort)
             self.assertEqual(compare, 0)
             
@@ -243,8 +452,8 @@ class TestProvman(unittest.TestCase):
         parameters:
             keys (dictionary)
                 key/value pairs.
-            expect_keys_fail (array)
-                array of keys that have not been set
+            expect_keys_fail (list)
+                list of keys that have not been set
             expect_except (string)
                 Type of exception expected to be raised.
         """

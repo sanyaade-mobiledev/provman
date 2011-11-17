@@ -178,6 +178,40 @@ class TestProvmanTestCases(testprovman.TestProvman):
         self.set_imsi("003")
         self.get_auto(key1, key1_val)
 
+    def test_sim_posi_meta_data_associated_to_sim_card(self):
+
+        """test_sim_posi_meta_data_associated_to_sim_card"""
+
+        #Check meta data is associated to a SIM card
+
+        self.set_bus_type(bus_type_any)
+        self.set_imsi("001")
+        self.reset()
+        self.set_imsi("002")
+        self.reset()
+
+        #create setting and meta data with SIM card #001
+        self.set_imsi("001")
+        self.set_auto(key1, key1_val)
+        self.get_auto(key1, key1_val)
+        self.set_meta_auto(key1, prop_name_1, prop_val_1)
+        self.get_meta_auto(key1, prop_name_1, prop_val_1)
+        
+        #check meta data from SIM #001 is hidden
+        self.set_imsi("002")
+        self.get_meta_auto(key1, prop_name_1, "", PROVMAN_EXCEPT_NOT_FOUND)
+
+        #create setting with SIM card #002
+        self.set_imsi("002")
+        self.set_auto(key1, key1_val)
+        #check meta data from SIM #001 is still hidden
+        self.get_meta_auto(key1, prop_name_1, "", PROVMAN_EXCEPT_NOT_FOUND)
+
+        #check meta data from SIM card #001 is back
+        self.set_imsi("001")
+        self.get_meta_auto(key1, prop_name_1, prop_val_1)
+        
+
     def test_keys_posi_set_key_in_subdir(self):
 
         """test_keys_posi_set_key_in_subdir"""
@@ -522,7 +556,7 @@ class TestProvmanTestCases(testprovman.TestProvman):
 
         dir_list = dir2 + "/" + dir3 + "/" + dir1
 
-        self.get_auto(root, dir_list)
+        self.get_auto(root_all, dir_list)
 
     def test_keys_posi_del_key_key_same_name_begin_not_affect(self):
     
@@ -616,7 +650,9 @@ class TestProvmanTestCases(testprovman.TestProvman):
         self.set_imsi(imsi_any)
         self.reset()
         
-        self.set_auto("/", "val", PROVMAN_EXCEPT_BAD_ARGS)
+        self.set_auto(root0, "val", PROVMAN_EXCEPT_BAD_ARGS)
+        self.set_auto(root1, "val", PROVMAN_EXCEPT_BAD_ARGS)
+        self.set_auto(root2, "val", PROVMAN_EXCEPT_BAD_ARGS)
 
     def test_keys_neg_set_mult_some_keys_not_existing(self):
     
@@ -1126,8 +1162,496 @@ class TestProvmanTestCases(testprovman.TestProvman):
         self.get_all_auto(key1, {}, PROVMAN_EXCEPT_NOT_FOUND)
         self.delete_auto(key1, PROVMAN_EXCEPT_NOT_FOUND)
 
+    def test_meta_posi_get_meta_key_is_setting(self):
+        
+        """test_meta_posi_get_meta_key_is_setting"""
+        
+        #call GetMeta, key points to setting
+        
+        self.set_bus_type(bus_type_any)
+        self.set_imsi(imsi_any)
+        self.reset()
+
+        self.set_auto(key1, key1_val)
+        self.get_auto(key1, key1_val)
+
+        self.set_meta_auto(key1, prop_name_1, prop_val_1)
+        self.get_meta_auto(key1, prop_name_1, prop_val_1)
+
+    def test_meta_posi_set_meta_key_is_setting(self):
+    
+        """test_meta_posi_set_meta_key_is_setting"""
+        
+        #call SetMeta, key points to setting
+        
+        self.set_bus_type(bus_type_any)
+        self.set_imsi(imsi_any)
+        self.reset()
+
+        self.set_auto(key1, key1_val)
+        self.get_auto(key1, key1_val)
+
+        self.set_meta_auto(key1, prop_name_1, prop_val_1)
+        self.get_meta_auto(key1, prop_name_1, prop_val_1)
+
+    def test_meta_posi_get_all_meta_key_is_setting(self):
+        
+        """test_meta_posi_get_all_meta_key_is_setting"""
+        
+        #call GetAllMeta, key points to setting
+
+        self.set_bus_type(bus_type_any)
+        self.set_imsi(imsi_any)
+        self.reset()
+
+        self.set_auto(key1, key1_val)
+        self.get_auto(key1, key1_val)
+        
+        self.set_meta_auto(key1, prop_name_1, prop_val_1)
+        self.set_meta_auto(key1, prop_name_2, prop_val_2)
+
+        self.get_all_meta_auto(key1, key1_props_vals)
+
+    def test_meta_posi_get_meta_key_is_dir(self):
+        
+        """test_meta_posi_get_meta_key_is_dir"""
+        
+        #call GetMeta, key points to directory
+        
+        self.set_bus_type(bus_type_any)
+        self.set_imsi(imsi_any)
+        self.reset()
+
+        self.set_auto(key1, key1_val)
+        self.get_auto(key1, key1_val)
+
+        self.set_meta_auto(subdir, prop_name_1, prop_val_1)
+        self.get_meta_auto(subdir, prop_name_1, prop_val_1)
+
+    def test_meta_posi_set_meta_key_is_dir(self):
+        
+        """test_meta_posi_set_meta_key_is_dir"""
+        
+        #call SetMeta, key points to directory
+        
+        self.set_bus_type(bus_type_any)
+        self.set_imsi(imsi_any)
+        self.reset()
+
+        self.set_auto(key1, key1_val)
+        self.get_auto(key1, key1_val)
+
+        self.set_meta_auto(subdir, prop_name_1, prop_val_1)
+        self.get_meta_auto(subdir, prop_name_1, prop_val_1)
+        
+    def test_meta_posi_set_mult_meta_key_is_setting(self):
+        
+        """test_meta_posi_set_mult_meta_one_prop_key_is_setting"""
+        
+        #call SetMultipleMeta, set one property to one setting
+        
+        self.set_bus_type(bus_type_any)
+        self.set_imsi(imsi_any)
+        self.reset()
+
+        self.set_auto(key1, key1_val)
+        self.get_auto(key1, key1_val)
+
+        one_prop = [(key1, prop_name_1, prop_val_1)]
+        
+        self.set_mult_meta_auto(one_prop)
+
+        self.get_all_meta_auto(key1, one_prop)
+
+    def test_meta_posi_set_mult_meta_key_is_dir(self):
+
+        """test_meta_posi_set_mult_meta_one_prop_key_is_dir"""
+        
+        #call SetMultipleMeta, set one property to one directory
+        
+        self.set_bus_type(bus_type_any)
+        self.set_imsi(imsi_any)
+        self.reset()
+
+        self.set_auto(key1, key1_val)
+        self.get_auto(key1, key1_val)
+        
+        one_prop = [(subdir_no_slash, prop_name_1, prop_val_1)]
+        
+        self.set_mult_meta_auto(one_prop)
+
+        self.get_all_meta_auto(subdir_no_slash, one_prop)
+        
+    def test_meta_posi_set_mult_meta_multi_prop_key_is_setting(self):
+        
+        """test_meta_posi_set_mult_meta_multi_prop_key_is_setting("""
+        
+        #call SetMultipleMeta, set more than one property to one setting
+        
+        self.set_bus_type(bus_type_any)
+        self.set_imsi(imsi_any)
+        self.reset()
+
+        self.set_auto(key1, key1_val)
+        self.get_auto(key1, key1_val)
+        
+        self.set_mult_meta_auto(key1_props_vals)
+
+        self.get_all_meta_auto(key1, key1_props_vals)
+
+    def test_meta_posi_set_mult_meta_multi_prop_key_is_dir(self):
+
+        """test_meta_posi_set_mult_meta_multi_prop_key_is_dir"""
+        
+        #call SetMultipleMeta, set more than one property to one directory
+        
+        self.set_bus_type(bus_type_any)
+        self.set_imsi(imsi_any)
+        self.reset()
+
+        self.set_auto(key1, key1_val)
+        self.get_auto(key1, key1_val)
+        
+        self.set_mult_meta_auto(subdir_props_vals)
+
+        self.get_all_meta_auto(subdir, subdir_props_vals)
+        
+    def test_meta_posi_set_mult_meta_keys_dirs_and_settings(self):
+
+        """test_meta_posi_set_mult_meta_keys_dirs_and_settings"""
+        
+        #call SetMultipleMeta, set properties of directories and settings
+        
+        self.set_bus_type(bus_type_any)
+        self.set_imsi(imsi_any)
+        self.reset()
+
+        self.set_auto(key1, key1_val)
+        self.set_auto(key2, key2_val)
+        self.get_auto(key1, key1_val)
+        self.get_auto(key2, key2_val)
+        
+        #we want to set meta data for 1 dir and 2 settings
+        k = [(subdir_no_slash, prop_name_3, prop_val_3), 
+             (key1, prop_name_1, prop_val_1),
+             (key2, prop_name_2, prop_val_2)]
+             
+        self.set_mult_meta_auto(k)
+
+        self.get_all_meta_auto(subdir_no_slash, k)
+
+    def test_meta_posi_set_mult_meta_dir_contains_one_setting(self):
+
+        """test_meta_posi_set_mult_meta_dir_contains_one_setting"""
+        
+        #call GetAllMeta, key points to directory containing one setting
+        
+        self.set_bus_type(bus_type_any)
+        self.set_imsi(imsi_any)
+        self.reset()
+
+        self.set_auto(key1, key1_val)
+        self.get_auto(key1, key1_val)
+        
+        k = [(key1, prop_name_1, prop_val_1)]
+             
+        self.set_mult_meta_auto(k)
+
+        self.get_all_meta_auto(key1, k)
+
+    def test_meta_posi_set_mult_meta_dir_contains_multi_settings(self):
+
+        """test_meta_posi_set_mult_meta_dir_contains_multi_settings"""
+        
+        #call GetAllMeta, key points to directory containing more than one 
+        #setting
+        
+        self.set_bus_type(bus_type_any)
+        self.set_imsi(imsi_any)
+        self.reset()
+
+        self.set_auto(key1, key1_val)
+        self.set_auto(key2, key2_val)
+        self.get_auto(key1, key1_val)
+        self.get_auto(key2, key2_val)
+        
+        k = [(key1, prop_name_1, prop_val_1),
+             (key2, prop_name_2, prop_val_2)]
+             
+        self.set_mult_meta_auto(k)
+
+        self.get_all_meta_auto(subdir, k)
+
+    def test_meta_posi_get_meta_one_session(self):
+
+        """test_meta_posi_get_meta_one_session"""
+        
+        #call GetMeta, get several properties in one single session
+        
+        self.set_bus_type(bus_type_any)
+        self.set_imsi(imsi_any)
+        self.reset()
+
+        self.set_auto(key1, key1_val)
+        self.set_auto(key2, key2_val)
+        self.set_auto(key3, key3_val)
+        self.get_auto(key1, key1_val)
+        self.get_auto(key2, key2_val)
+        self.get_auto(key3, key3_val)
+
+        self.set_meta_auto(key1, prop_name_1, prop_val_1)
+        self.set_meta_auto(key2, prop_name_2, prop_val_2)
+        self.set_meta_auto(key3, prop_name_3, prop_val_3)
+
+        self.connect_dbus()
+        self.start()
+        self.get_meta(key1, prop_name_1, prop_val_1)
+        self.get_meta(key2, prop_name_2, prop_val_2)
+        self.get_meta(key3, prop_name_3, prop_val_3)
+        self.end()
+
+    def test_meta_posi_set_meta_overwrite_value(self):
+    
+        """test_meta_posi_set_meta_overwrite_value"""
+        
+        #call SetMeta, overwrite value
+        
+        self.set_bus_type(bus_type_any)
+        self.set_imsi(imsi_any)
+        self.reset()
+
+        self.set_auto(key1, key1_val)
+        self.get_auto(key1, key1_val)
+
+        self.set_meta_auto(key1, prop_name_1, prop_val_1)
+        self.get_meta_auto(key1, prop_name_1, prop_val_1)
+
+        #value is overwritten here
+        self.set_meta_auto(key1, prop_name_1, prop_val_1)
+
+    def test_meta_posi_set_meta_new_value(self):
+    
+        """test_meta_posi_set_meta_new_value"""
+        
+        #call SetMeta, create new property
+        
+        self.set_bus_type(bus_type_any)
+        self.set_imsi(imsi_any)
+        self.reset()
+
+        self.set_auto(key1, key1_val)
+        self.get_auto(key1, key1_val)
+
+        #check propery does not exist
+        self.get_meta_auto(key1, prop_name_1, "", PROVMAN_EXCEPT_NOT_FOUND)
+
+        #create new property
+        self.set_meta_auto(key1, prop_name_1, prop_val_1)
+        
+        self.get_meta_auto(key1, prop_name_1, prop_val_1)
+
+    def test_meta_posi_get_meta_value_empty_string(self):
+    
+        """test_meta_posi_get_meta_value_empty_string"""
+        
+        #call GetMeta, property's value is an empty string
+        
+        self.set_bus_type(bus_type_any)
+        self.set_imsi(imsi_any)
+        self.reset()
+
+        self.set_auto(key1, key1_val)
+        self.get_auto(key1, key1_val)
+
+        self.set_meta_auto(key1, prop_name_1, "")
+        
+        self.get_meta_auto(key1, prop_name_1, "")
+
+    def test_meta_posi_get_all_meta_value_empty_string(self):
+    
+        """test_meta_posi_get_all_meta_value_empty_string"""
+        
+        #call GetAllMeta, property's value is an empty string
+        
+        self.set_bus_type(bus_type_any)
+        self.set_imsi(imsi_any)
+        self.reset()
+
+        self.set_auto(key1, key1_val)
+        self.get_auto(key1, key1_val)
+
+        self.set_meta_auto(key1, prop_name_1, "")
+        
+        self.get_all_meta_auto(key1, [(key1, prop_name_1, "")])
+
+    def test_meta_posi_set_mult_meta_value_empty_string(self):
+    
+        """test_meta_posi_set_mult_meta_value_empty_string"""
+        
+        #call SetMultipleMeta, property's value is an empty string
+        
+        self.set_bus_type(bus_type_any)
+        self.set_imsi(imsi_any)
+        self.reset()
+
+        self.set_auto(key1, key1_val)
+        self.get_auto(key1, key1_val)
+
+        self.set_mult_meta_auto([(key1, prop_name_1, "")])
+        
+        self.get_all_meta_auto(key1, [(key1, prop_name_1, "")])
+
+    def test_meta_posi_set_meta_value_empty_string(self):
+    
+        """test_meta_posi_set_meta_value_empty_string"""
+        
+        #call SetMeta, property's value is an empty string
+        
+        self.set_bus_type(bus_type_any)
+        self.set_imsi(imsi_any)
+        self.reset()
+
+        self.set_auto(key1, key1_val)
+        self.get_auto(key1, key1_val)
+
+        self.set_meta_auto(key1, prop_name_1, "")
+        
+        self.get_meta_auto(key1, prop_name_1, "")
+
+    def test_meta_posi_meta_data_deleted_when_key_deleted(self):
+    
+        """test_meta_posi_meta_data_deleted_when_key_deleted"""
+        
+        #meta data is deleted when key is deleted
+        
+        self.set_bus_type(bus_type_any)
+        self.set_imsi(imsi_any)
+        self.reset()
+
+        self.set_auto(key1, key1_val)
+        self.get_auto(key1, key1_val)
+
+        self.set_meta_auto(key1, prop_name_1, prop_val_1)
+        self.get_meta_auto(key1, prop_name_1, prop_val_1)
+
+        self.delete_auto(key1)
+        
+        #testing key was deleted
+        self.get_auto(key1, "", PROVMAN_EXCEPT_NOT_FOUND)
+
+        #testing meta data was deleted
+        self.get_meta_auto(key1, prop_name_1, "", PROVMAN_EXCEPT_NOT_FOUND)
+
+    def test_meta_posi_set_meta_several_props_to_key(self):
+    
+        """test_meta_posi_set_meta_several_props_to_key"""
+        
+        #call SetMeta, set several properties to a key (SetMeta called 
+        #multiple times)
+        
+        self.set_bus_type(bus_type_any)
+        self.set_imsi(imsi_any)
+        self.reset()
+
+        self.set_auto(key1, key1_val)
+        self.get_auto(key1, key1_val)
+
+        self.set_meta_auto(key1, prop_name_1, prop_val_1)
+        self.set_meta_auto(key1, prop_name_2, prop_val_2)
+        self.set_meta_auto(key1, prop_name_3, prop_val_3)
+
+        self.get_meta_auto(key1, prop_name_1, prop_val_1)
+        self.get_meta_auto(key1, prop_name_2, prop_val_2)
+        self.get_meta_auto(key1, prop_name_3, prop_val_3)
+
+    def test_meta_posi_get_all_meta_props_in_subdirs(self):
+    
+        """test_meta_posi_get_all_meta_props_in_subdirs"""
+        
+        #call GetAllMeta, properties of keys located in subdirectories of 
+        #multiple levels are returned
+        
+        self.set_bus_type(bus_type_any)
+        self.set_imsi(imsi_any)
+        self.reset()
+
+        self.set_auto(key_dir_same, key_dir_same_val)
+        self.get_auto(key_dir_same, key_dir_same_val)
+
+        #setting meta data for 1 dir, 1 subdir, 1 setting located in subdir
+        self.set_meta_auto(dir_same_name_begin, prop_name_1, prop_val_1)
+        self.set_meta_auto(dir_same, prop_name_2, prop_val_2)
+        self.set_meta_auto(key_dir_same, prop_name_3, prop_val_3)
+
+        self.get_meta_auto(dir_same_name_begin, prop_name_1, prop_val_1)
+        self.get_meta_auto(dir_same, prop_name_2, prop_val_2)
+        self.get_meta_auto(key_dir_same, prop_name_3, prop_val_3)
+
+        self.get_all_meta_auto(dir_same_name_begin, 
+                [(dir_same_name_begin.rstrip("/"), prop_name_1, prop_val_1), 
+                 (dir_same.rstrip("/"), prop_name_2, prop_val_2), 
+                 (key_dir_same, prop_name_3, prop_val_3)])
+
+    def test_meta_posi_get_all_meta_no_props(self):
+    
+        """test_meta_posi_get_all_meta_no_props"""
+        
+        #call GetAllMeta, all keys do not have any property associated -> 
+        #returns an empty array
+        
+        self.set_bus_type(bus_type_any)
+        self.set_imsi(imsi_any)
+        self.reset()
+
+        self.set_auto(key_dir_same, key_dir_same_val)
+        self.get_auto(key_dir_same, key_dir_same_val)
+
+        self.get_all_meta_auto(dir_same_name_begin, [])
+
+    def test_meta_posi_get_all_meta_root_dirs(self):
+    
+        """test_meta_posi_get_all_meta_root_dirs"""
+        
+        #call GetAllMeta, key points to root directories ("/", etc.)
+        
+        self.set_bus_type(bus_type_any)
+        self.set_imsi(imsi_any)
+        self.reset()
+
+        self.set_auto(key1, key1_val)
+        self.get_auto(key1, key1_val)
+
+        self.set_meta_auto(key1, prop_name_1, prop_val_1)
+
+        self.get_all_meta_auto(root0, [(key1, prop_name_1, prop_val_1)])
+        self.get_all_meta_auto(root1, [(key1, prop_name_1, prop_val_1)])
+        self.get_all_meta_auto(root2, [(key1, prop_name_1, prop_val_1)])
+        self.get_all_meta_auto(root_all, [(key1, prop_name_1, prop_val_1)])
+
+    def test_meta_posi_overwrite_setting_meta_no_change(self):
+    
+        """test_meta_posi_overwrite_setting_meta_no_change"""
+        
+        #Overwrite value of setting, meta data of setting should be unchanged
+        #identical
+        
+        self.set_bus_type(bus_type_any)
+        self.set_imsi(imsi_any)
+        self.reset()
+
+        self.set_auto(key1, key1_val)
+        self.get_auto(key1, key1_val)
+
+        self.set_meta_auto(key1, prop_name_1, prop_val_1)
+        self.get_meta_auto(key1, prop_name_1, prop_val_1)
+
+        self.set_auto(key1, "value overwritten")
+
+        #property should be unchanged
+        self.get_meta_auto(key1, prop_name_1, prop_val_1)
 
 
+        
 #-------------------------------------------------------------------
 
 #global variables
@@ -1150,7 +1674,7 @@ bus_type_any       = BUS_TYPE_SESSION
 
 
 #data tree used in test cases
-#root/                           <-- root of plug-in
+#root_all/                       <-- root of plug-in
 #    subdir/                     <-- subdir
 #        key1                    <-- key
 #        key2                    <-- key
@@ -1181,37 +1705,40 @@ bus_type_any       = BUS_TYPE_SESSION
 #            key_dir_same_suffix2 <-- key
 #        key_same_suffix         <-- key, name starts as 'dir_same'
 
-root                    = "/applications/test_plugin/test/"
-subdir                  = root + "subdir/"
+root0                   = "/"
+root1                   = root0 + "applications/"
+root2                   = root1 + "test_plugin/"
+root_all                = root2 + "test/"
+subdir                  = root_all + "subdir/"
 key1                    = subdir + "key1"
 key1_val                = "value of key1"
 key2                    = subdir + "key2"
 key2_val                = "value of key2"
 key3                    = subdir + "key3"
 key3_val                = "value of key3"
-dir_del                 = root + "subdir_deletable/"
+dir_del                 = root_all + "subdir_deletable/"
 key_dir_del             = dir_del + "string_deletable"
 key_dir_del_val         = "key_dir_del"
-dir_undel               = root + "subdir_undeletable/"
+dir_undel               = root_all + "subdir_undeletable/"
 key_dir_undel           = dir_undel + "string_deletable"
 key_dir_undel_val       = "value of key_dir_undel"
-dir_key_del_undel       = root + "subdir_deletable/"
+dir_key_del_undel       = root_all + "subdir_deletable/"
 key_del                 = dir_key_del_undel + "string_deletable"
 key_del_val             = "value of key_del"
 key_undel               = dir_key_del_undel + "string_undeletable"
 key_undel_val           = "value of key_undel"
-dir_key_type            = root + "subdir_undeletable/"
+dir_key_type            = root_all + "subdir_undeletable/"
 key_string              = dir_key_type + "string_deletable"
 key_string_val          = "value of key_string"
 key_enum                = dir_key_type + "enum_deletable"
 key_enum_val            = "value of key_enum"
 key_int                 = dir_key_type + "int_deletable"
 key_int_val             = "value of key_int"
-dir_many_levels         = root + "subdir_many_levels/" + "subdir/" * 19
+dir_many_levels         = root_all + "subdir_many_levels/" + "subdir/" * 19
 key_dir_many_levels     = dir_many_levels + "key"
 key_dir_many_levels_val = "value of key_dir_many_levels_val"
-dir_many_keys           = root + "subdir_many_keys/"
-dir_same_name_begin     = root + "subdir_same_name_begin/"
+dir_many_keys           = root_all + "subdir_many_keys/"
+dir_same_name_begin     = root_all + "subdir_same_name_begin/"
 dir_same                = dir_same_name_begin + "subdir/"
 key_dir_same            = dir_same + "key"
 key_dir_same_val        = "value of key_dir_same"
@@ -1223,10 +1750,34 @@ key_dir_same_suffix2_val= "value of key_dir_same_suffix2"
 key_same_suffix         = dir_same[:-1] + "_suffix_but_i_am_a_key"
 key_same_suffix_val     = "value of key_same_suffix"
 
-keys                = {key1 : key1_val, key2: key2_val, key3: key3_val}
-keys_subdir         = subdir
+subdir_no_slash         = subdir.rstrip("/")
 
-many_keys           = many_keys(dir_many_keys)
+keys                    = {key1 : key1_val, key2: key2_val, key3: key3_val}
+keys_subdir             = subdir
+
+many_keys               = many_keys(dir_many_keys)
+
+prop_name_1             = "property name 1"
+prop_name_2             = "property name 2"
+prop_name_3             = "property name 3"
+prop_val_1              = "property value 1"
+prop_val_2              = "property value 2"
+prop_val_3              = "property value 3"
+
+#properties should be associated to "keys1"
+key1_props              = [(key1, prop_name_1), (key1, prop_name_2)]
+
+#properties should be associated to "keys1"
+key1_props_vals         = [(key1, prop_name_1, prop_val_1),
+                           (key1, prop_name_2, prop_val_2)]
+
+#properties should be associated to "subdir"
+subdir_props            = [(subdir_no_slash, prop_name_1), 
+                           (subdir_no_slash, prop_name_2)]
+
+#properties should be associated to "subdir"
+subdir_props_vals       = [(subdir_no_slash, prop_name_1, prop_val_1),
+                           (subdir_no_slash, prop_name_2, prop_val_2)]
 
 
 #-------------------------------------------------------------------
