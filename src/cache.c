@@ -229,21 +229,30 @@ int provman_cache_set(provman_cache_t *cache, const gchar *key,
 	gchar *node_name = NULL;
 	provman_cache_key_t cache_key;
 
-	prv_provman_cache_key_init(&cache_key, key);	
-	err = prv_create_and_add_node(cache, cache_key.key, &node, &node_name);
-	if (err != PROVMAN_ERR_NONE)
-		goto on_error;
+	prv_provman_cache_key_init(&cache_key, key);
 
-	child = g_slice_new0(provman_cache_t);
-	child->parent = node;
-	child->value = g_strdup(value);
+	err = prv_find_node(cache, cache_key.key, &node);
+	if (err == PROVMAN_ERR_NOT_FOUND) {
+		err = prv_create_and_add_node(cache, cache_key.key,
+					      &node, &node_name);
+		if (err != PROVMAN_ERR_NONE)
+			goto on_error;
+
+		child = g_slice_new0(provman_cache_t);
+		child->parent = node;
+		child->value = g_strdup(value);
 	
-	if (!node->children)
-		node->children = 
-			g_hash_table_new_full(g_str_hash, g_str_equal,
-					      g_free, prv_del_node);
-	
-	g_hash_table_insert(node->children, node_name, child);
+		if (!node->children)
+			node->children = 
+				g_hash_table_new_full(g_str_hash, g_str_equal,
+						      g_free, prv_del_node);
+		
+		g_hash_table_insert(node->children, node_name, child);
+	} else if (err == PROVMAN_ERR_NONE) {
+		if (node->value)
+			g_free(node->value);
+		node->value = g_strdup(value);
+	}	
 
 on_error:
 
