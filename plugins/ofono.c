@@ -1099,6 +1099,22 @@ static void prv_ofono_plugin_anaylse(ofono_plugin_t *plugin_instance,
 		}
 	}
 
+	/* Delete any settings that no longer exist.  We can't
+	 actually delete individual oFono properties so we will have to
+	 set their values to "". */
+
+	g_hash_table_iter_init(&iter, modem->settings);
+	while (g_hash_table_iter_next(&iter, &key, &value)) {
+		if (!g_hash_table_lookup(new_settings, key)) {
+			cmd = g_new0(ofono_plugin_cmd_t,1);
+			cmd->type = OFONO_PLUGIN_SET;
+			cmd->path = g_strdup(key);
+			cmd->value = g_strdup("");
+			g_ptr_array_add(plugin_instance->cmds, cmd);
+		}
+	}
+
+
 #ifdef PROVMAN_LOGGING
 	prv_dump_tasks(plugin_instance->cmds);
 #endif
