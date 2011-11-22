@@ -534,6 +534,18 @@ manager.End()
  *     used to access the access point.</td><td>A string</td></tr>
  * <tr><td>password</td><td>The password
  *     used to access the access point.</td><td>A string</td></tr>
+ * <tr><td>http_proxy</td><td>The address of an HTTP proxy</td><td>An IP address
+ *         or a domain name.  The port number, if specified, should be separated
+ *         from the proxy address with a ':', e.g., 192.168.0.1:8080
+ * </td></tr>
+ * <tr><td>https_proxy</td><td>The address of an HTTPS proxy</td><td>An IP address
+ *         or a domain name.  The port number, if specified, should be separated
+ *         from the proxy address with a ':', e.g., 192.168.0.1:8080
+ * </td></tr>
+ * <tr><td>ftp_proxy</td><td>The address of an FTP proxy</td><td>An IP address
+ *         or a domain name.  The port number, if specified, should be separated
+ *         from the proxy address with a ':', e.g., 192.168.0.1:8080
+ * </td></tr>
  * <tr><td colspan="3" align="center"><i>Settings for MMS context stored under
  *   /telephony/mms</i></td></tr>
  * <tr><td>name</td><td>The name of the MMS context</td><td>Any string</td></tr>
@@ -546,7 +558,7 @@ manager.End()
  * <tr><td>password</td><td>The password
  *     used to access the MMS access point.</td><td>A string</td></tr>
  * <tr><td>proxy</td><td>The address of the MMS proxy</td><td>An IP address
- *         or a domain name.  The port number if specified should be separated
+ *         or a domain name.  The port number, if specified, should be separated
  *         from the proxy address with a ':', e.g., 192.168.0.1:8080
  * </td></tr>
  * <tr><td colspan="3" align="center"><i>General telephony settings stored under
@@ -655,6 +667,76 @@ manager.End()
  *   which you are synchronising</td>
  *<td>A string</td></tr>
  * </table>
+ * 
+ * @subsection browser Browser Settings
+ * A single set of brower settings can be provisioned.  These consist of a start
+ * page and one or more bookmarks.
+ *
+ * The following settings are supported by the provman.
+ * <table>
+ * <tr><th>Key</th><th>Description</th><th>Permissable Values</th></tr>
+ * <tr><td colspan="3" align="center"><i>Settings for the browser startpage
+ * are stored under /applications/browser/startpage</i></td></tr>
+ * <tr><td>name</td><td>The friendly name of the startpage</td>
+ * <td>Any string</td></tr>
+ * <tr><td>url</td><td>The URL of the startpage.</td><td>A URL</td></tr>
+ * <tr><td colspan="3" align="center"><i>Settings for browser bookmarks
+ * are stored under /applications/browser/bookmarks/\<X\></i> where
+ * \<X\> should be an integer number >= 0.  The lower the number, the higher
+ * the bookmark will appear in the browser's bookmark list.</td></tr>
+ * <tr><td>name</td><td>The friendly name of the bookmark</td>
+ * <td>Any string</td></tr>
+ * <tr><td>url</td><td>The URL of the bookmark</td><td>A URL</td></tr>
+ * </table>
+ * 
+ * @subsection omadm Device Management Settings
+ * OMA Device Management accounts can be provisioned via provman.
+ *
+ * The following settings are supported by the provman.
+ * <table>
+ * <tr><th>Key</th><th>Description</th><th>Permissable Values</th></tr>
+ * <tr><td colspan="3" align="center"><i>Settings for OMA DM 
+ * accounts are all stored under /applications/omadm/\<X\>/</i></td></tr>
+ * <tr><td>name</td><td>The friendly name of the DM account</td>
+ *  <td>A string</td></tr>
+ * <tr><td>server_id</td><td>The DM server identifier</td>
+ *  <td>A string</td></tr>
+ * <tr><td>url</td><td>The URL of the DM server.  The port number, if specified,
+ * should be separated from the server address with a ':', e.g.,
+ * 192.168.0.1:8080 containing an optioanl port.</td><td>A URL</td></tr>
+ * <tr><td colspan="3" align="center"><i>Settings for OMA DM 
+ * server credentials are all stored under 
+ * /applications/omadm/\<X\>/server_creds</i></td></tr>
+ * <tr><td>username</td><td>The user name
+ *     the client should use to authenticate with the server.</td>
+ * <td>A string</td></tr>
+ * <tr><td>password</td><td>The password the client should use to 
+ *     to authenticate with the server.</td>
+ * <td>A string</td></tr>
+ * <tr><td>nonce</td><td>The nonce a client should use to authenticate
+ * with the server.</td><td>A base 64 encoded string</td></tr>
+ * <tr><td colspan="3" align="center"><i>Settings for OMA DM 
+ * client credentials are all stored under 
+ * /applications/omadm/\<X\>/client_creds</i></td></tr>
+ * <tr><td>username</td><td>The user name
+ *     the server should use to authenticate with the client.</td>
+ * <td>A string</td></tr>
+ * <tr><td>password</td><td>The password the server should use to 
+ *     to authenticate with the client.</td>
+ * <td>A string</td></tr>
+ * <tr><td>nonce</td><td>The nonce a server should use to authenticate
+ * with the client.</td>
+ * <td>A base 64 encoded string</td></tr>
+ * <tr><td colspan="3" align="center"><i>Settings for HTTP
+ * authentication are all stored under 
+ * /applications/omadm/\<X\>/http_creds</i></td></tr>
+ * <tr><td>username</td><td>The user name
+ *     used in http authentication.</td>
+ * <td>A string</td></tr>
+ * <tr><td>password</td><td>The password used in http authentication.</td>
+ * <td>A string</td></tr>
+ * </table>
+ *
  * 
  * @section development Developing for Provman
  * 
