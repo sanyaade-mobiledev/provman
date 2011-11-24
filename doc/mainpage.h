@@ -715,6 +715,9 @@ manager.End()
  * <td>A string</td></tr>
  * <tr><td>nonce</td><td>The nonce a client should use to authenticate
  * with the server.</td><td>A base 64 encoded string</td></tr>
+ * <tr><td>authtype</td><td>The authentication method to use.</td>
+ * <td>http-basic, http-digest, basic,digest, x509, secure-id, safeword,
+ * digipass</td></tr>
  * <tr><td colspan="3" align="center"><i>Settings for OMA DM 
  * client credentials are all stored under 
  * /applications/omadm/\<X\>/client_creds</i></td></tr>
@@ -727,6 +730,9 @@ manager.End()
  * <tr><td>nonce</td><td>The nonce a server should use to authenticate
  * with the client.</td>
  * <td>A base 64 encoded string</td></tr>
+ * <tr><td>authtype</td><td>The authentication method to use.</td>
+ * <td>http-basic, http-digest, basic,digest, x509, secure-id, safeword,
+ * digipass</td></tr>
  * <tr><td colspan="3" align="center"><i>Settings for HTTP
  * authentication are all stored under 
  * /applications/omadm/\<X\>/http_creds</i></td></tr>
@@ -735,6 +741,9 @@ manager.End()
  * <td>A string</td></tr>
  * <tr><td>password</td><td>The password used in http authentication.</td>
  * <td>A string</td></tr>
+ * <tr><td>authtype</td><td>The authentication method to use.</td>
+ * <td>http-basic, http-digest, basic,digest, x509, secure-id, safeword,
+ * digipass</td></tr>
  * </table>
  *
  * 
