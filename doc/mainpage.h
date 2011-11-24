@@ -594,8 +594,8 @@ manager.End()
  *   are stored under /applications/sync/\<X\>/contacts/</i></td></tr>
  * <tr><td>format</td><td>Type of the contacts data</td><td>A MIME type</td></tr>
  * <tr><td>sync</td><td>Type of synchronisation to be performed</td>
- *     <td>disabled, two-way, slow, one-way-from-client, refresh-from-client,
- *         refresh-from-server, restore-from-backup</td></tr>
+ *     <td>disabled, two-way, slow, one-way-from-local, refresh-from-local,
+ *         one-way-from-remote, refresh-from-remote</td></tr>
  * <tr><td>uri</td><td>Identifies the contacts database on the entity to
  *   which you are synchronising</td>
  *<td>A string</td></tr>
@@ -603,8 +603,8 @@ manager.End()
  *   entries are stored under /applications/sync/\<X\>/calendar/</i></td></tr>
  * <tr><td>format</td><td>Type of the calendar data</td><td>A MIME type</td></tr>
  * <tr><td>sync</td><td>Type of synchronisation to be performed</td>
- *     <td>disabled, two-way, slow, one-way-from-client, refresh-from-client,
- *         refresh-from-server, restore-from-backup</td></tr>
+ *     <td>disabled, two-way, slow, one-way-from-local, refresh-from-local,
+ *         one-way-from-remote, refresh-from-remote</td></tr>
  * <tr><td>uri</td><td>Identifies the calendar database on the entity to
  *   which you are synchronising</td>
  *<td>A string</td></tr>
@@ -612,8 +612,8 @@ manager.End()
  *   entries are stored under /applications/sync/\<X\>/todo/</i></td></tr>
  * <tr><td>format</td><td>Type of the todo data</td><td>A MIME type</td></tr>
  * <tr><td>sync</td><td>Type of synchronisation to be performed</td>
- *     <td>disabled, two-way, slow, one-way-from-client, refresh-from-client,
- *         refresh-from-server, restore-from-backup</td></tr>
+ *     <td>disabled, two-way, slow, one-way-from-local, refresh-from-local,
+ *         one-way-from-remote, refresh-from-remote</td></tr>
  * <tr><td>uri</td><td>Identifies the todo database on the entity to
  *   which you are synchronising</td>
  *<td>A string</td></tr>
@@ -621,8 +621,8 @@ manager.End()
  *   memos are stored under /applications/sync/\<X\>/memo/</i></td></tr>
  * <tr><td>format</td><td>Type of the memo data</td><td>A MIME type</td></tr>
  * <tr><td>sync</td><td>Type of synchronisation to be performed</td>
- *     <td>disabled, two-way, slow, one-way-from-client, refresh-from-client,
- *         refresh-from-server, restore-from-backup</td></tr>
+ *     <td>disabled, two-way, slow, one-way-from-local, refresh-from-local,
+ *         one-way-from-remote, refresh-from-remote</td></tr>
  * <tr><td>uri</td><td>Identifies the memo database on the entity to
  *   which you are synchronising</td>
  *<td>A string</td></tr>
@@ -631,8 +631,8 @@ manager.End()
  *   /applications/sync/\<X\>/eas-contacts/</i></td></tr>
  * <tr><td>format</td><td>Type of the contacts data</td><td>A MIME type</td></tr>
  * <tr><td>sync</td><td>Type of synchronisation to be performed</td>
- *     <td>disabled, two-way, slow, one-way-from-client, refresh-from-client,
- *         refresh-from-server, restore-from-backup</td></tr>
+ *     <td>disabled, two-way, slow, one-way-from-local, refresh-from-local,
+ *         one-way-from-remote, refresh-from-remote</td></tr>
  * <tr><td>uri</td><td>Identifies the contacts database on the entity to
  *   which you are synchronising</td>
  *<td>A string</td></tr>
@@ -641,8 +641,8 @@ manager.End()
  *   </i></td></tr>
  * <tr><td>format</td><td>Type of the calendar data</td><td>A MIME type</td></tr>
  * <tr><td>sync</td><td>Type of synchronisation to be performed</td>
- *     <td>disabled, two-way, slow, one-way-from-client, refresh-from-client,
- *         refresh-from-server, restore-from-backup</td></tr>
+ *     <td>disabled, two-way, slow, one-way-from-local, refresh-from-local,
+ *         one-way-from-remote, refresh-from-remote</td></tr>
  * <tr><td>uri</td><td>Identifies the calendar database on the entity to
  *   which you are synchronising</td>
  *<td>A string</td></tr>
@@ -651,8 +651,8 @@ manager.End()
  *   </i></td></tr>
  * <tr><td>format</td><td>Type of the todo data</td><td>A MIME type</td></tr>
  * <tr><td>sync</td><td>Type of synchronisation to be performed</td>
- *     <td>disabled, two-way, slow, one-way-from-client, refresh-from-client,
- *         refresh-from-server, restore-from-backup</td></tr>
+ *     <td>disabled, two-way, slow, one-way-from-local, refresh-from-local,
+ *         one-way-from-remote, refresh-from-remote</td></tr>
  * <tr><td>uri</td><td>Identifies the todo database on the entity to
  *   which you are synchronising</td>
  *<td>A string</td></tr>
@@ -661,8 +661,8 @@ manager.End()
  *   </i></td></tr>
  * <tr><td>format</td><td>Type of the memo data</td><td>A MIME type</td></tr>
  * <tr><td>sync</td><td>Type of synchronisation to be performed</td>
- *     <td>disabled, two-way, slow, one-way-from-client, refresh-from-client,
- *         refresh-from-server, restore-from-backup</td></tr>
+ *     <td>disabled, two-way, slow, one-way-from-local, refresh-from-local,
+ *         one-way-from-remote, refresh-from-remote</td></tr>
  * <tr><td>uri</td><td>Identifies the memo database on the entity to
  *   which you are synchronising</td>
  *<td>A string</td></tr>
