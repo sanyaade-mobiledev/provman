@@ -681,9 +681,7 @@ manager.End()
  * <td>Any string</td></tr>
  * <tr><td>url</td><td>The URL of the startpage.</td><td>A URL</td></tr>
  * <tr><td colspan="3" align="center"><i>Settings for browser bookmarks
- * are stored under /applications/browser/bookmarks/\<X\></i> where
- * \<X\> should be an integer number >= 0.  The lower the number, the higher
- * the bookmark will appear in the browser's bookmark list.</td></tr>
+ * are stored under /applications/browser/bookmarks/\<X\></i></td></tr>
  * <tr><td>name</td><td>The friendly name of the bookmark</td>
  * <td>Any string</td></tr>
  * <tr><td>url</td><td>The URL of the bookmark</td><td>A URL</td></tr>
