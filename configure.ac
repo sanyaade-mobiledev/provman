@@ -33,6 +33,9 @@ AC_ARG_ENABLE([docs], [  --enable-docs compiles doxygen documentation during bui
 AC_ARG_ENABLE([tests], [  --enable-test installs test cases],
 		       [ tests=${enableval} ], [ tests=no] )
 
+AC_ARG_ENABLE([werror], [  --enable-werror Warnings are treated as errors ],
+			[werror=${enableval}], [werror=yes])
+
 if test "x${telephony}" = xofono; then
 AC_DEFINE([PROVMAN_OFONO], 1, [ ofono plugin enabled ])
 fi
@@ -87,12 +90,16 @@ if test "x${CFLAGS}" = "x"; then
    CFLAGS="-O2"
 fi
 
-CFLAGS="$CFLAGS -Wall -Werror -Wextra"
+CFLAGS="$CFLAGS -Wall -Wextra"
 CFLAGS="$CFLAGS -Wno-unused-parameter"
 CFLAGS="$CFLAGS -Wno-missing-field-initializers"
 CFLAGS="$CFLAGS -Wdeclaration-after-statement"
 CFLAGS="$CFLAGS -Wredundant-decls"
 CFLAGS="$CFLAGS -Wcast-align"
+
+if test "x${werror}" = xyes; then
+   CFLAGS="$CFLAGS -Werror"
+fi
 
 AC_ARG_ENABLE([logging], [  --enable-logging enables logging],
 			 [logging=${enableval}], [logging=no])
@@ -163,6 +170,7 @@ Package features:
 	enable-docs: ${docs}
 	enable-tests: ${tests}
 	enable-logging: ${logging}
+	enable-werror: ${werror}
 	with-telephony: ${telephony}
 	with-sync: ${sync}
 	with-email: ${email}
