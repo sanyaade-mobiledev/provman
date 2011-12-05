@@ -172,6 +172,7 @@
  * \par
  * <table>
  * <tr><th>Method</th><th>Description</th></tr>
+ * <tr><td>#GetVersion</td><td>\copybrief GetVersion</td></tr>
  * <tr><td>#Start</td><td>\copybrief Start</td></tr>
  * <tr><td>#Set</td><td>\copybrief Set</td></tr>
  * <tr><td>#SetMultiple</td><td>\copybrief SetMultiple</td></tr>

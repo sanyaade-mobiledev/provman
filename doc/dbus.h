@@ -459,3 +459,16 @@ array SetMultipleMeta(array meta);
 */
 
 array GetAllMeta(string key);
+
+/*!
+ * \brief Returns the version number of Provman
+ *
+ * This function can be called outside a management session.
+ *
+ * @return Returns the current version number as a string.
+ *
+ * \exception com.intel.provman.Error.Died Provman was killed before
+ *   the #GetVersion command could be executed.
+*/
+
+string GetVersion();

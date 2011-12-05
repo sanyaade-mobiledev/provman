@@ -53,7 +53,8 @@ enum provman_task_type_ {
 	PROVMAN_TASK_GET_CHILDREN_TYPE_INFO,
 	PROVMAN_TASK_GET_TYPE_INFO,
 	PROVMAN_TASK_SET_META,
-	PROVMAN_TASK_GET_META
+	PROVMAN_TASK_GET_META,
+	PROVMAN_TASK_GET_VERSION
 };
 
 typedef enum provman_task_type_ provman_task_type;
@@ -106,6 +107,7 @@ void provman_task_get_type_info(plugin_manager_t *manager,
 				provman_task *task);
 void provman_task_set_meta(plugin_manager_t *manager, provman_task *task);
 void provman_task_get_meta(plugin_manager_t *manager, provman_task *task);
+void provman_task_get_version(plugin_manager_t *manager, provman_task *task);
 
 
 #endif

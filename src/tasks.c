@@ -507,3 +507,13 @@ void provman_task_get_meta(plugin_manager_t *manager, provman_task *task)
 	task->invocation = NULL;
 }
 
+void provman_task_get_version(plugin_manager_t *manager, provman_task *task)
+{
+	PROVMAN_LOGF("Retrieving Provman Version %s", PACKAGE_VERSION);
+
+	g_dbus_method_invocation_return_value(task->invocation,
+					      g_variant_new("(s)",
+							    PACKAGE_VERSION));
+	task->invocation = NULL;
+}
+

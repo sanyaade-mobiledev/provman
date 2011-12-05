@@ -47,6 +47,7 @@
 #include "utils.h"
 #include "plugin-manager.h"
 
+#define PROVMAN_INTERFACE_GET_VERSION "GetVersion"
 #define PROVMAN_INTERFACE_START "Start"
 #define PROVMAN_INTERFACE_SET "Set"
 #define PROVMAN_INTERFACE_SET_MULTIPLE "SetMultiple"
@@ -71,6 +72,7 @@
 #define PROVMAN_INTERFACE_SET_MULTIPLE_META "SetMultipleMeta"
 #define PROVMAN_INTERFACE_GET_META "GetMeta"
 #define PROVMAN_INTERFACE_GET_ALL_META "GetAllMeta"
+#define PROVMAN_INTERFACE_VERSION "version"
 
 #define PROVMAN_TIMEOUT 30*1000
 
@@ -97,6 +99,10 @@ struct provman_context_ {
 static const gchar g_provman_introspection[] =
 	"<node>"
 	"  <interface name='"PROVMAN_INTERFACE"'>"
+	"    <method name='"PROVMAN_INTERFACE_GET_VERSION"'>"
+	"      <arg type='s' name='"PROVMAN_INTERFACE_VERSION"'"
+	"           direction='out'/>"
+	"    </method>"
 	"    <method name='"PROVMAN_INTERFACE_START"'>"
 	"      <arg type='s' name='"PROVMAN_INTERFACE_IMSI"'"
 	"           direction='in'/>"
@@ -304,6 +310,9 @@ static gboolean prv_process_task(gpointer user_data)
 			break;
 		case PROVMAN_TASK_GET_META:
 			provman_task_get_meta(context->plugin_manager, task);
+			break;
+		case PROVMAN_TASK_GET_VERSION:
+			provman_task_get_version(context->plugin_manager, task);
 			break;
 		default:
 			break;
@@ -662,6 +671,17 @@ static void prv_add_set_meta_task(provman_context *context,
 	prv_add_task(context, task);
 }
 
+static void prv_add_get_version_task(provman_context *context,
+				     GDBusMethodInvocation *invocation)
+{
+	provman_task *task;
+
+	PROVMAN_LOG("Add Task Get Version");
+
+	provman_task_new(PROVMAN_TASK_GET_VERSION, invocation, &task);
+	prv_add_task(context, task);
+}
+
 static void prv_lost_client(GDBusConnection *connection, const gchar *name,
 			    gpointer user_data);
 
@@ -806,6 +826,9 @@ static void prv_provman_method_call(GDBusConnection *connection,
 	} else if (!g_strcmp0(method_name, PROVMAN_INTERFACE_GET_TYPE_INFO)) {
 		prv_reset_startup_timer(context);
 		prv_add_get_type_info_task(context, invocation, parameters);
+	} else if (!g_strcmp0(method_name, PROVMAN_INTERFACE_GET_VERSION)) {
+		prv_reset_startup_timer(context);
+		prv_add_get_version_task(context, invocation);
 	} else {
 		if (g_strcmp0(context->holder,
 			      g_dbus_method_invocation_get_sender(
