@@ -63,32 +63,33 @@ static provman_schema_t *prv_provman_schema_dir_new(const gchar *name,
 	dir->name = g_strdup(name);
 	dir->type = PROVMAN_SCHEMA_TYPE_DIR;
 	dir->can_delete = can_delete;
-	dir->dir.children = 
+	dir->dir.children =
 		g_hash_table_new_full(g_str_hash, g_str_equal, g_free,
 				      prv_provman_schema_delete);
 
 	return dir;
 }
 
-static provman_schema_t *prv_provman_schema_key_new(const gchar *name,
-						    gboolean can_delete,
-						    gboolean can_write,
-						    provman_schema_value_type_t
-						    type,
-						    const gchar *allowed_values_str)
+static provman_schema_t *prv_provman_schema_key_new(
+	const gchar *name,
+	gboolean can_delete,
+	gboolean can_write,
+	provman_schema_value_type_t
+	type,
+	const gchar *allowed_values_str)
 {
 	provman_schema_t *key = g_slice_new0(provman_schema_t);
 	gchar **allowed_values;
 	unsigned int i;
-	
+
 	key->name = g_strdup(name);
 	key->type = PROVMAN_SCHEMA_TYPE_KEY;
 	key->can_delete = can_delete;
 	key->key.type = type;
 	key->key.can_write = can_write;
-	
+
 	if ((type == PROVMAN_SCHEMA_VALUE_TYPE_ENUM) && allowed_values_str) {
-		key->key.allowed_values = 
+		key->key.allowed_values =
 			g_hash_table_new_full(g_str_hash, g_str_equal,
 					      g_free, NULL);
 		allowed_values = g_strsplit(allowed_values_str, ",", 0);
@@ -111,9 +112,9 @@ static void prv_parse_schema(const gchar *element_name,
 	schema_context_t *context = user_data;
 	const gchar *root;
 	unsigned int root_len;
-	
+
 	if (context->root) {
-		g_set_error(error, PROVMAN_SCHEMA_ERROR, 0, 
+		g_set_error(error, PROVMAN_SCHEMA_ERROR, 0,
 			    "Schema tag must be root");
 		goto on_error;
 	}
@@ -127,9 +128,9 @@ static void prv_parse_schema(const gchar *element_name,
 
 	root_len = strlen(root);
 
-	if ((root_len == 0) || !strcmp(root, "/") || 
+	if ((root_len == 0) || !strcmp(root, "/") ||
 	    root[root_len - 1] != '/') {
-		g_set_error(error, PROVMAN_SCHEMA_ERROR, 0, 
+		g_set_error(error, PROVMAN_SCHEMA_ERROR, 0,
 			    "Invalid plugin root: %s", root);
 		goto on_error;
 	}
@@ -149,16 +150,16 @@ static gboolean prv_parse_bool_att(const gchar *value, gboolean default_val,
 	gboolean retval = TRUE;
 
 	if (value) {
-	       	if (!strcmp(value, "yes")) {
+		if (!strcmp(value, "yes")) {
 			flag = TRUE;
 		} else if (!strcmp(value, "no")) {
 			flag = FALSE;
-		} else {			
+		} else {
 			retval = FALSE;
-			g_set_error(error, PROVMAN_SCHEMA_ERROR, 0, 
+			g_set_error(error, PROVMAN_SCHEMA_ERROR, 0,
 				    "Unrecognised value %s", value);
 			goto on_error;
-		}					   			   
+		}
 	}
 
 	*outval = flag;
@@ -168,7 +169,7 @@ on_error:
 	return retval;
 }
 
-static gboolean prv_parse_type_att(const gchar *value, 
+static gboolean prv_parse_type_att(const gchar *value,
 				   provman_schema_value_type_t *type,
 				   GError **error)
 {
@@ -182,8 +183,8 @@ static gboolean prv_parse_type_att(const gchar *value,
 		*type = PROVMAN_SCHEMA_VALUE_TYPE_ENUM;
 	} else {
 		retval = FALSE;
-		g_set_error(error, PROVMAN_SCHEMA_ERROR, 0, 
-			    "Unrecognised type %s", value);		
+		g_set_error(error, PROVMAN_SCHEMA_ERROR, 0,
+			    "Unrecognised type %s", value);
 	}
 
 	return retval;
@@ -203,7 +204,7 @@ static void prv_parse_dir(const gchar *element_name,
 	provman_schema_t *schema;
 	provman_schema_t *parent;
 	GHashTable *children;
-	
+
 	if (!g_markup_collect_attributes(element_name, attribute_names,
 					 attribute_values, error,
 					 G_MARKUP_COLLECT_STRING |
@@ -226,21 +227,21 @@ static void prv_parse_dir(const gchar *element_name,
 		name = "";
 
 	if (!name[0] && g_hash_table_size(children) > 0) {
-		g_set_error(error, PROVMAN_SCHEMA_ERROR, 0, 
+		g_set_error(error, PROVMAN_SCHEMA_ERROR, 0,
 			    "Unnamed directories must be only children");
-		goto on_error;			
+		goto on_error;
 	}
 
 	if (g_hash_table_lookup_extended(children, name, NULL, NULL)) {
-		g_set_error(error, PROVMAN_SCHEMA_ERROR, 0, 
+		g_set_error(error, PROVMAN_SCHEMA_ERROR, 0,
 			    "Entry %s already exists", name[0] ? name : "<X>");
-		goto on_error;			
+		goto on_error;
 	}
 
-	schema = prv_provman_schema_dir_new(name, can_delete);	
+	schema = prv_provman_schema_dir_new(name, can_delete);
 	g_hash_table_insert(children, g_strdup(name), schema);
 	g_ptr_array_add(context->stack, schema);
-	
+
 on_error:
 
 	return;
@@ -264,7 +265,7 @@ static void prv_parse_key(const gchar *element_name,
 	provman_schema_t *schema;
 	provman_schema_t *parent;
 	GHashTable *children;
-	
+
 	if (!g_markup_collect_attributes(element_name, attribute_names,
 					 attribute_values, error,
 					 G_MARKUP_COLLECT_STRING,
@@ -282,7 +283,7 @@ static void prv_parse_key(const gchar *element_name,
 					 "values", &values,
 					 G_MARKUP_COLLECT_INVALID))
 		goto on_error;
-	
+
 	if (!prv_parse_type_att(type, &value_type, error))
 		goto on_error;
 
@@ -296,16 +297,16 @@ static void prv_parse_key(const gchar *element_name,
 	children = parent->dir.children;
 
 	if (g_hash_table_lookup(children, name)) {
-		g_set_error(error, PROVMAN_SCHEMA_ERROR, 0, 
+		g_set_error(error, PROVMAN_SCHEMA_ERROR, 0,
 			    "Entry %s already exists", name ? name : "<X>");
-		goto on_error;			
+		goto on_error;
 	}
 
 	schema = prv_provman_schema_key_new(name, can_delete, can_write,
 					    value_type, values);
 
 	g_hash_table_insert(children, g_strdup(name), schema);
-	
+
 on_error:
 
 	return;
@@ -328,12 +329,12 @@ static void prv_start_element(GMarkupParseContext *pcontext,
 				 attribute_values, user_data, error);
 	else {
 		if (!context->root) {
-			g_set_error(error, PROVMAN_SCHEMA_ERROR, 0, 
+			g_set_error(error, PROVMAN_SCHEMA_ERROR, 0,
 				    "Schema must be the first tag");
 			goto on_error;
 		}
-		
-		parent = g_ptr_array_index(context->stack, 
+
+		parent = g_ptr_array_index(context->stack,
 					   context->stack->len - 1);
 		children = parent->dir.children;
 		if (g_hash_table_lookup_extended(children, "", NULL, NULL)) {
@@ -341,7 +342,7 @@ static void prv_start_element(GMarkupParseContext *pcontext,
 				    "Unnamed directory exists at "
 				    "this level");
 			goto on_error;
-		}		
+		}
 
 		if (!strcmp(element_name, "dir"))
 			prv_parse_dir(element_name, attribute_names,
@@ -350,12 +351,12 @@ static void prv_start_element(GMarkupParseContext *pcontext,
 			prv_parse_key(element_name, attribute_names,
 				      attribute_values, user_data, error);
 		else
-			g_set_error(error, PROVMAN_SCHEMA_ERROR, 0, 
+			g_set_error(error, PROVMAN_SCHEMA_ERROR, 0,
 				    "Unrecognised tag %s", element_name);
 	}
 
 on_error:
-	
+
 	return;
 }
 
@@ -368,7 +369,7 @@ static void prv_end_element(GMarkupParseContext *pcontext,
 
 	if (!strcmp(element_name, "schema")) {
 		if (context->stack->len != 1) {
-			g_set_error(error, PROVMAN_SCHEMA_ERROR, 0, 
+			g_set_error(error, PROVMAN_SCHEMA_ERROR, 0,
 				    "Unexpected </schema> tag");
 			goto on_error;
 		}
@@ -376,20 +377,20 @@ static void prv_end_element(GMarkupParseContext *pcontext,
 						context->stack->len - 1);
 	} else if (!strcmp(element_name, "dir")) {
 		if (context->stack->len < 2) {
-			g_set_error(error, PROVMAN_SCHEMA_ERROR, 0, 
+			g_set_error(error, PROVMAN_SCHEMA_ERROR, 0,
 				    "Unexpected </dir> tag");
 			goto on_error;
 		}
 		(void) g_ptr_array_remove_index(context->stack,
 						context->stack->len - 1);
 	} else if (strcmp(element_name, "key")) {
-		g_set_error(error, PROVMAN_SCHEMA_ERROR, 0, 
+		g_set_error(error, PROVMAN_SCHEMA_ERROR, 0,
 			    "Unknown end tag %s", element_name);
 		goto on_error;
 	}
 
 on_error:
-	
+
 	return;
 }
 
@@ -409,14 +410,15 @@ int provman_schema_new(const gchar *schema_xml, guint schema_xml_len,
 	context.stack = g_ptr_array_new();
 	context.root = NULL;
 
-	parse_context = g_markup_parse_context_new(&parser, 
-						   G_MARKUP_PREFIX_ERROR_POSITION,
-						   &context, NULL);
+	parse_context = g_markup_parse_context_new(
+		&parser,
+		G_MARKUP_PREFIX_ERROR_POSITION,
+		&context, NULL);
 
 	if (!g_markup_parse_context_parse(parse_context, schema_xml,
 					  schema_xml_len,
 					  &error)) {
-		PROVMAN_LOGF("Unable to parse schema: %s ", 
+		PROVMAN_LOGF("Unable to parse schema: %s ",
 			     error ? error->message : "Unknown");
 		if (error)
 			g_error_free(error);
@@ -425,25 +427,25 @@ int provman_schema_new(const gchar *schema_xml, guint schema_xml_len,
 		goto on_error;
 	}
 
-	if (context.stack->len != 0) {		
+	if (context.stack->len != 0) {
 		PROVMAN_LOG("Unbalanced Schema");
 		err = PROVMAN_ERR_CORRUPT;
 		goto on_error;
 	}
-	
+
 #ifdef PROVMAN_LOGGING
 	provman_schema_dump(context.root);
 #endif
 
 	*schema = context.root;
-	context.root = NULL;      
+	context.root = NULL;
 
 on_error:
 	g_markup_parse_context_free(parse_context);
-	provman_schema_delete(context.root);	    
+	provman_schema_delete(context.root);
 	g_ptr_array_free(context.stack, TRUE);
-	
-	return err;	
+
+	return err;
 }
 
 void provman_schema_delete(provman_schema_t *schema)
@@ -491,12 +493,12 @@ static int provman_find_schema(provman_schema_t *parent, const gchar *path,
 		if (err != PROVMAN_ERR_NONE)
 			goto on_error;
 	}
-	
+
 on_error:
 
 	g_free(name_cpy);
-	
-	return err;	
+
+	return err;
 }
 
 int provman_schema_locate(provman_schema_t *root, const gchar *path,
@@ -506,7 +508,7 @@ int provman_schema_locate(provman_schema_t *root, const gchar *path,
 	unsigned int path_len = strlen(path);
 	unsigned int root_len = strlen(root->name) - 1;
 	unsigned int i;
-	
+
 	if (path_len < root_len) {
 		err = PROVMAN_ERR_NOT_FOUND;
 		goto on_error;
@@ -514,15 +516,15 @@ int provman_schema_locate(provman_schema_t *root, const gchar *path,
 
 	if (strncmp(path, root->name, root_len)) {
 		err = PROVMAN_ERR_NOT_FOUND;
-		goto on_error;		
+		goto on_error;
 	}
-	
+
 	i = root_len;
 
 	if (i < path_len) {
 		if (path[i] != '/') {
 			err = PROVMAN_ERR_NOT_FOUND;
-			goto on_error;			
+			goto on_error;
 		}
 
 		++i;
@@ -536,7 +538,7 @@ int provman_schema_locate(provman_schema_t *root, const gchar *path,
 		}
 	} else {
 		*schema = root;
-	}	       	
+	}
 
 on_error:
 
@@ -565,19 +567,19 @@ int provman_schema_check_value(provman_schema_t *schema, const gchar *value)
 		if (num == 0 && (!*stripped_val || *endptr)) {
 			err = PROVMAN_ERR_BAD_ARGS;
 			goto on_error;
-		}		
+		}
 	} else if (vt == PROVMAN_SCHEMA_VALUE_TYPE_ENUM) {
 		if (!g_hash_table_lookup_extended(schema->key.allowed_values,
 						  value, NULL, NULL))
 		{
 			err = PROVMAN_ERR_BAD_ARGS;
 			goto on_error;
-		}	
+		}
 	}
 
 on_error:
 
-	g_free(stripped_val);			
+	g_free(stripped_val);
 
 	return err;
 }
@@ -613,11 +615,12 @@ static void prv_provman_dump_schema(provman_schema_t *schema,
 		else
 			type = "enum";
 
-		PROVMAN_LOGUF("%skey name='%s' delete='%s' write='%s' type='%s'", 
-			      indent, schema->name, 
-			      schema->can_delete ? "yes" : "no",
-			      schema->key.can_write ? "yes" : "no",
-			      type);
+		PROVMAN_LOGUF(
+			"%skey name='%s' delete='%s' write='%s' type='%s'",
+			indent, schema->name,
+			schema->can_delete ? "yes" : "no",
+			schema->key.can_write ? "yes" : "no",
+			type);
 		if (schema->key.type == PROVMAN_SCHEMA_VALUE_TYPE_ENUM) {
 			enum_values = g_string_new("");
 			allowed_values = schema->key.allowed_values;
@@ -637,7 +640,7 @@ static void prv_provman_dump_schema(provman_schema_t *schema,
 			g_string_free(enum_values, TRUE);
 		}
 	}
-	
+
 	g_free(indent);
 }
 

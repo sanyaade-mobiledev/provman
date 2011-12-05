@@ -35,7 +35,7 @@
 
 #include "provman.h"
 
-int main(int argc, char *argv[])     
+int main(int argc, char *argv[])
 {
 	int retval;
 	const char *log_name = NULL;

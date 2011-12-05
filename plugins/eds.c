@@ -153,7 +153,7 @@ struct eds_plugin_t_ {
 	provman_map_file_t *map_file;
 	provman_plugin_sync_in_cb sync_in_cb;
 	void *sync_in_user_data;
-	provman_plugin_sync_out_cb sync_out_cb; 
+	provman_plugin_sync_out_cb sync_out_cb;
 	void *sync_out_user_data;
 	int err;
 };
@@ -199,24 +199,24 @@ int eds_plugin_new(provman_plugin_instance *instance, bool system)
 
 	eds_plugin_t *plugin_instance = g_new0(eds_plugin_t, 1);
 	gchar *map_file_path = NULL;
-	
+
 	err = provman_utils_make_file_path(EDS_MAP_FILE_NAME, system,
 					   &map_file_path);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
-	
+
 	plugin_instance->gconf = gconf_client_get_default();
 	if (!plugin_instance->gconf) {
 		err = PROVMAN_ERR_SUBSYSTEM;
 		goto on_error;
 	}
 
-	plugin_instance->settings = 
+	plugin_instance->settings =
 		g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 	provman_map_file_new(map_file_path, &plugin_instance->map_file);
 	g_free(map_file_path);
 
-	plugin_instance->cached_accounts = 
+	plugin_instance->cached_accounts =
 		g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 
 	*instance = plugin_instance;
@@ -229,7 +229,7 @@ on_error:
 		g_free(map_file_path);
 
 	eds_plugin_delete(plugin_instance);
-	
+
 	return err;
 }
 
@@ -258,7 +258,7 @@ static void prv_add_param(eds_plugin_t *plugin_instance,
 			  const gchar *prop_name, const gchar *value)
 {
 	GString *key = g_string_new(LOCAL_KEY_EMAIL_ROOT);
-	
+
 	g_string_append(key, id);
 	g_string_append(key, "/");
 	if (type) {
@@ -267,27 +267,27 @@ static void prv_add_param(eds_plugin_t *plugin_instance,
 	}
 	g_string_append(key, prop_name);
 	g_hash_table_insert(plugin_instance->settings,
-			    g_string_free(key, FALSE), g_strdup(value));	
+			    g_string_free(key, FALSE), g_strdup(value));
 }
 
-static void prv_add_use_ssl_type(eds_plugin_t *plugin_instance, 
+static void prv_add_use_ssl_type(eds_plugin_t *plugin_instance,
 				 const gchar *id, const gchar *type,
 				 CamelURL *uri)
 {
 	const gchar *value;
 
-	if (uri->params && 
-	    (value = g_datalist_get_data(&uri->params, EDS_PROP_EMAIL_USESSL))) {	
+	if (uri->params && (value = g_datalist_get_data(
+				    &uri->params, EDS_PROP_EMAIL_USESSL))) {
 		value = prv_find_type(value, g_use_ssl_values,
 				      sizeof(g_use_ssl_values) /
 				      sizeof(const gchar *));
-		if (value)			
-			prv_add_param(plugin_instance, id, type, 
+		if (value)
+			prv_add_param(plugin_instance, id, type,
 				      LOCAL_PROP_EMAIL_USESSL, value);
 	}
 }
 
-static void prv_add_url_gen_params(eds_plugin_t *plugin_instance, 
+static void prv_add_url_gen_params(eds_plugin_t *plugin_instance,
 				   const gchar *id, const gchar *type,
 				   CamelURL *uri)
 {
@@ -304,17 +304,17 @@ static void prv_add_url_gen_params(eds_plugin_t *plugin_instance,
 	}
 
 	if (uri->user)
-		prv_add_param(plugin_instance, id, type, LOCAL_PROP_EMAIL_USERNAME,
-			      uri->user);
+		prv_add_param(plugin_instance, id, type,
+			      LOCAL_PROP_EMAIL_USERNAME, uri->user);
 
 	if (uri->passwd)
-		prv_add_param(plugin_instance, id, type, LOCAL_PROP_EMAIL_PASSWORD,
-			      uri->passwd);
+		prv_add_param(plugin_instance, id, type,
+			      LOCAL_PROP_EMAIL_PASSWORD, uri->passwd);
 
 	prv_add_use_ssl_type(plugin_instance, id, type, uri);
 }
 
-static void prv_add_url_incoming_params(eds_plugin_t *plugin_instance, 
+static void prv_add_url_incoming_params(eds_plugin_t *plugin_instance,
 					const gchar *id, const gchar *url)
 {
 	CamelURL* uri = NULL;
@@ -343,7 +343,7 @@ static void prv_add_url_incoming_params(eds_plugin_t *plugin_instance,
 			       uri);
 
 	if (uri->authmech) {
-		authtype = 
+		authtype =
 			prv_find_type(uri->authmech,
 				      g_incoming_auth_type_values,
 				      sizeof(g_incoming_auth_type_values) /
@@ -363,7 +363,7 @@ on_error:
 	return;
 }
 
-static void prv_add_url_outgoing_params(eds_plugin_t *plugin_instance, 
+static void prv_add_url_outgoing_params(eds_plugin_t *plugin_instance,
 					const gchar *id, const gchar *url)
 {
 	CamelURL* uri = NULL;
@@ -376,7 +376,7 @@ static void prv_add_url_outgoing_params(eds_plugin_t *plugin_instance,
 		goto on_error;
 	}
 
-	protocol = 
+	protocol =
 		prv_find_type(uri->protocol, g_outgoing_protocol_values,
 			      sizeof(g_outgoing_protocol_values) /
 			      sizeof(const gchar*));
@@ -392,7 +392,7 @@ static void prv_add_url_outgoing_params(eds_plugin_t *plugin_instance,
 			       uri);
 
 	if (uri->authmech) {
-		authtype = 
+		authtype =
 			prv_find_type(uri->authmech,
 				      g_outgoing_auth_type_values,
 				      sizeof(g_outgoing_auth_type_values) /
@@ -410,7 +410,7 @@ on_error:
 		camel_url_free(uri);
 
 	return;
-}			      
+}
 
 static int prv_get_account(eds_plugin_t *plugin_instance, EAccount *account)
 {
@@ -418,7 +418,7 @@ static int prv_get_account(eds_plugin_t *plugin_instance, EAccount *account)
 	const char *account_uid;
 	gchar *mapped_name = NULL;
 	gchar *address_with_name;
-	
+
 	if (!account->uid) {
 		err = PROVMAN_ERR_CORRUPT;
 		goto on_error;
@@ -427,7 +427,7 @@ static int prv_get_account(eds_plugin_t *plugin_instance, EAccount *account)
 	PROVMAN_LOGF("Found Account %s", account->uid);
 
 	mapped_name = provman_map_file_find_client_id(plugin_instance->map_file,
-						      EDS_MAP_FILE_CAT, 
+						      EDS_MAP_FILE_CAT,
 						      account->uid);
 	if (mapped_name) {
 		account_uid = mapped_name;
@@ -446,13 +446,13 @@ static int prv_get_account(eds_plugin_t *plugin_instance, EAccount *account)
 
 		g_hash_table_insert(plugin_instance->cached_accounts,
 				    g_strdup(account->uid), NULL);
-		
+
 		if (account->name)
 			prv_add_param(plugin_instance, account_uid, NULL,
 				      LOCAL_PROP_EMAIL_NAME, account->name);
-		
+
 		if (account->id && account->id->address) {
-			address_with_name = 
+			address_with_name =
 				camel_internet_address_format_address(
 					account->id->name,
 					account->id->address);
@@ -461,12 +461,12 @@ static int prv_get_account(eds_plugin_t *plugin_instance, EAccount *account)
 				      address_with_name);
 			g_free(address_with_name);
 		}
-		
+
 		if (account->source && account->source->url)
 			prv_add_url_incoming_params(plugin_instance,
 						    account_uid,
 						    account->source->url);
-		
+
 		if (account->transport && account->transport->url)
 			prv_add_url_outgoing_params(plugin_instance,
 						    account_uid,
@@ -503,7 +503,7 @@ static gboolean prv_complete_sync_in(gpointer user_data)
 static gboolean prv_complete_sync_out(gpointer user_data)
 {
 	eds_plugin_t *plugin_instance = user_data;
-		
+
 	g_object_unref(plugin_instance->account_list);
 	plugin_instance->account_list = NULL;
 
@@ -517,7 +517,7 @@ static void prv_remove_account(eds_plugin_t *plugin_instance, const gchar *uid)
 {
 	gchar *mapped_uid;
 	const EAccount *acc;
-	
+
 	mapped_uid = provman_map_file_find_plugin_id(plugin_instance->map_file,
 						     EDS_MAP_FILE_CAT, uid);
 	if (mapped_uid) {
@@ -574,9 +574,9 @@ static void prv_update_uri_settings(CamelURL *uri, const char* prop,
 		camel_url_set_port(uri, atoi(value));
 	else if (!strcmp(prop, LOCAL_PROP_EMAIL_USERNAME))
 		camel_url_set_user(uri, value);
-	 else if (!strcmp(prop, LOCAL_PROP_EMAIL_PASSWORD)) 
+	 else if (!strcmp(prop, LOCAL_PROP_EMAIL_PASSWORD))
 		 camel_url_set_passwd(uri, value);
-	else if (!strcmp(prop, LOCAL_PROP_EMAIL_USESSL)) 
+	else if (!strcmp(prop, LOCAL_PROP_EMAIL_USESSL))
 		camel_url_set_param(uri, EDS_PROP_EMAIL_USESSL, value);
 }
 
@@ -599,11 +599,13 @@ static void prv_update_setting(eds_account_t *acc_cache, const gchar *key,
 	if (!strcmp(prop, LOCAL_PROP_EMAIL_ADDRESS)) {
 		caddr = camel_internet_address_new();
 		if (camel_address_decode((CamelAddress *) caddr, value) > 0) {
-			if (camel_internet_address_get(caddr, 0, &name, &address)) {
+			if (camel_internet_address_get(caddr, 0, &name,
+						       &address)) {
 				if (address)
-					e_account_set_string(acc_cache->account,
-							     E_ACCOUNT_ID_ADDRESS,
-							     address);
+					e_account_set_string(
+						acc_cache->account,
+						E_ACCOUNT_ID_ADDRESS,
+						address);
 				if (name)
 					e_account_set_string(acc_cache->account,
 							     E_ACCOUNT_ID_NAME,
@@ -614,7 +616,7 @@ static void prv_update_setting(eds_account_t *acc_cache, const gchar *key,
 	} else if (!strcmp(prop, LOCAL_PROP_EMAIL_NAME)) {
 		e_account_set_string(acc_cache->account, E_ACCOUNT_NAME,
 				     value);
-	} else if (!strncmp(prop, LOCAL_KEY_EMAIL_INCOMING "/", 
+	} else if (!strncmp(prop, LOCAL_KEY_EMAIL_INCOMING "/",
 			    sizeof(LOCAL_KEY_EMAIL_INCOMING))) {
 		if (!acc_cache->source) {
 			if (acc_cache->account->source)
@@ -626,13 +628,13 @@ static void prv_update_setting(eds_account_t *acc_cache, const gchar *key,
 		if (acc_cache->source)
 			prv_update_uri_settings(
 				acc_cache->source, prop +
-				sizeof(LOCAL_KEY_EMAIL_INCOMING), 
+				sizeof(LOCAL_KEY_EMAIL_INCOMING),
 				value);
 		if (!strcmp(prop + sizeof(LOCAL_KEY_EMAIL_INCOMING),
 			    LOCAL_PROP_EMAIL_AUTHTYPE))
 			camel_url_set_authmech(acc_cache->source, value);
 
-	} else if (!strncmp(prop, LOCAL_KEY_EMAIL_OUTGOING "/", 
+	} else if (!strncmp(prop, LOCAL_KEY_EMAIL_OUTGOING "/",
 			    sizeof(LOCAL_KEY_EMAIL_OUTGOING))) {
 		if (!acc_cache->transport) {
 			if (acc_cache->account->transport)
@@ -644,13 +646,13 @@ static void prv_update_setting(eds_account_t *acc_cache, const gchar *key,
 		if (acc_cache->transport)
 			prv_update_uri_settings(
 				acc_cache->transport, prop +
-				sizeof(LOCAL_KEY_EMAIL_OUTGOING), 
+				sizeof(LOCAL_KEY_EMAIL_OUTGOING),
 				value);
 	}
 
 err:
 
-	return;	
+	return;
 }
 
 static void prv_update_account(eds_plugin_t *plugin_instance, const gchar *key,
@@ -680,7 +682,7 @@ static void prv_update_account(eds_plugin_t *plugin_instance, const gchar *key,
 			E_ACCOUNT_FIND_UID, mapped_uid);
 		if (!acc)
 			goto err;
-		
+
 		syslog(LOG_INFO,"eds Plugin: Updating account %s",acc->uid);
 
 		acc_cache = g_new0(eds_account_t, 1);
@@ -688,13 +690,13 @@ static void prv_update_account(eds_plugin_t *plugin_instance, const gchar *key,
 		g_hash_table_insert(accounts, mapped_uid, acc_cache);
 		mapped_uid = NULL;
 	}
-	
+
 	prv_update_setting(acc_cache, key, value);
 err:
 
 	if (account_uid)
 		g_free(account_uid);
-	
+
 	if (mapped_uid)
 		g_free(mapped_uid);
 }
@@ -714,20 +716,21 @@ static void prv_eds_plugin_analyse(eds_plugin_t *plugin_instance,
 	gchar *local_key;
 
 	accounts = g_hash_table_new_full(g_str_hash, g_str_equal, g_free,
-					 prv_eds_account_free);	
+					 prv_eds_account_free);
 
-	in_contexts = 
+	in_contexts =
 		provman_utils_get_contexts(plugin_instance->settings,
 					     LOCAL_KEY_EMAIL_ROOT,
 					     sizeof(LOCAL_KEY_EMAIL_ROOT) - 1);
-	out_contexts = 
+	out_contexts =
 		provman_utils_get_contexts(new_settings,
 					     LOCAL_KEY_EMAIL_ROOT,
 					     sizeof(LOCAL_KEY_EMAIL_ROOT) - 1);
 
 	g_hash_table_iter_init(&iter, in_contexts);
 	while (g_hash_table_iter_next(&iter, &key, NULL))
-		if (!g_hash_table_lookup_extended(out_contexts, key, NULL, NULL)) {
+		if (!g_hash_table_lookup_extended(out_contexts, key, NULL,
+						  NULL)) {
 			PROVMAN_LOGF("Removing Account %s", key);
 			prv_remove_account(plugin_instance, key);
 		}
@@ -735,7 +738,8 @@ static void prv_eds_plugin_analyse(eds_plugin_t *plugin_instance,
 
 	g_hash_table_iter_init(&iter, out_contexts);
 	while (g_hash_table_iter_next(&iter, &key, NULL))
-		if (!g_hash_table_lookup_extended(in_contexts, key, NULL, NULL)) {
+		if (!g_hash_table_lookup_extended(in_contexts, key, NULL,
+						  NULL)) {
 			PROVMAN_LOGF("Adding Account %s", key);
 			prv_add_account(plugin_instance, key, accounts);
 		}
@@ -757,7 +761,7 @@ static void prv_eds_plugin_analyse(eds_plugin_t *plugin_instance,
 				acc_cache->account, E_ACCOUNT_SOURCE_URL, url);
 			g_free(url);
 		}
-		
+
 		if (acc_cache->transport) {
 			url = camel_url_to_string(acc_cache->transport, 0);
 			e_account_set_string(
@@ -765,7 +769,7 @@ static void prv_eds_plugin_analyse(eds_plugin_t *plugin_instance,
 				url);
 			g_free(url);
 		}
-		
+
 		/* Remove accounts that have been updated or added.  This forces
 		   plugin to re-read them on the next sync in.  This way we
 		   guarantee that the settings are up to date. */
@@ -794,8 +798,8 @@ static void prv_eds_plugin_analyse(eds_plugin_t *plugin_instance,
 }
 
 int eds_plugin_sync_in(provman_plugin_instance instance,
-		       const char* imsi, 
-		       provman_plugin_sync_in_cb callback, 
+		       const char* imsi,
+		       provman_plugin_sync_in_cb callback,
 		       void *user_data)
 {
 	int err = PROVMAN_ERR_NONE;
@@ -803,7 +807,7 @@ int eds_plugin_sync_in(provman_plugin_instance instance,
 	EAccountList *list = NULL;
 	EIterator *iter = NULL;
 	EAccount *account;
-	
+
 	PROVMAN_LOG("EDS Sync In");
 
 	plugin_instance->err = PROVMAN_ERR_NONE;
@@ -813,13 +817,13 @@ int eds_plugin_sync_in(provman_plugin_instance instance,
 		err = PROVMAN_ERR_SUBSYSTEM;
 		goto on_error;
 	}
-	
+
 	iter = e_list_get_iterator((EList*) list);
 	if (!iter) {
 		err = PROVMAN_ERR_SUBSYSTEM;
 		goto on_error;
 	}
-	
+
 	while (e_iterator_is_valid(iter)) {
 		account = (EAccount*) e_iterator_get(iter);
 		if (account)
@@ -827,7 +831,7 @@ int eds_plugin_sync_in(provman_plugin_instance instance,
 		(void) e_iterator_next(iter);
 	}
 	g_object_unref(iter);
-	
+
 	plugin_instance->account_list = list;
 	list = NULL;
 	provman_map_file_remove_unused(plugin_instance->map_file,
@@ -837,9 +841,9 @@ int eds_plugin_sync_in(provman_plugin_instance instance,
 	plugin_instance->sync_in_cb = callback;
 	plugin_instance->sync_in_user_data = user_data;
 	(void) g_idle_add(prv_complete_sync_in, plugin_instance);
-	
+
 on_error:
-		
+
 	if (list)
 		g_object_unref(list);
 
@@ -853,9 +857,9 @@ void eds_plugin_sync_in_cancel(provman_plugin_instance instance)
 	plugin_instance->err = PROVMAN_ERR_CANCELLED;
 }
 
-int eds_plugin_sync_out(provman_plugin_instance instance, 
-			GHashTable* settings, 
-			provman_plugin_sync_out_cb callback, 
+int eds_plugin_sync_out(provman_plugin_instance instance,
+			GHashTable* settings,
+			provman_plugin_sync_out_cb callback,
 			void *user_data)
 {
 	eds_plugin_t *plugin_instance = instance;
@@ -866,7 +870,7 @@ int eds_plugin_sync_out(provman_plugin_instance instance,
 	provman_utils_dump_hash_table(settings);
 #endif
 
-	prv_eds_plugin_analyse(plugin_instance, settings);		
+	prv_eds_plugin_analyse(plugin_instance, settings);
 
 	plugin_instance->sync_out_cb = callback;
 	plugin_instance->sync_out_user_data = user_data;

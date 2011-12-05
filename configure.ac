@@ -12,19 +12,19 @@ AC_PROG_CC
 AM_PROG_CC_C_O
 
 AC_ARG_WITH([telephony],
-	[  --with-telephony indicates which telephony subsystem to use (ofono or none) ], 
+	[  --with-telephony indicates which telephony subsystem to use(ofono or none) ],
 	[ telephony=${withval} ], [ telephony=ofono ] )
 
 AC_ARG_WITH([sync],
-	[  --with-sync indicates which synchronisation subsystem to use (syncevolution or none) ], 
+	[  --with-sync indicates which synchronisation subsystem to use (syncevolution or none) ],
 	[ sync=${withval} ], [ sync=syncevolution ] )
 
 AC_ARG_WITH([email],
-	[  --with-email indicates which email subsystem to use (evolution or none) ], 
+	[  --with-email indicates which email subsystem to use (evolution or none) ],
 	[ email=${withval} ], [ email=evolution ] )
 
 AC_ARG_WITH([test],
-	[  --with-test indicates which test plugin to use (test or none) ], 
+	[  --with-test indicates which test plugin to use (test or none) ],
 	[ test_plugin=${withval} ], [ test_plugin=none ] )
 
 AC_ARG_ENABLE([docs], [  --enable-docs compiles doxygen documentation during build ],
@@ -94,14 +94,17 @@ CFLAGS="$CFLAGS -Wdeclaration-after-statement"
 CFLAGS="$CFLAGS -Wredundant-decls"
 CFLAGS="$CFLAGS -Wcast-align"
 
-AC_ARG_ENABLE([logging], [  --enable-logging enables logging], [logging=${enableval}], [logging=no])
+AC_ARG_ENABLE([logging], [  --enable-logging enables logging],
+			 [logging=${enableval}], [logging=no])
 
 if test "x${logging}" = xyes; then
    AC_DEFINE([PROVMAN_LOGGING], 1, [logging enabled])
 fi
 
-AC_DEFINE([PROVMAN_SESSION_LOG], "/tmp/provman-session-", [Start of path to session log file])
-AC_DEFINE([PROVMAN_SYSTEM_LOG], "/tmp/provman-system.log", [Path to system log file])
+AC_DEFINE([PROVMAN_SESSION_LOG], "/tmp/provman-session-",
+				 [Start of path to session log file])
+AC_DEFINE([PROVMAN_SYSTEM_LOG], "/tmp/provman-system.log",
+				[Path to system log file])
 
 DBUS_SESSION_DIR=`$PKG_CONFIG --variable=session_bus_services_dir dbus-1`
 AC_SUBST(DBUS_SESSION_DIR)
@@ -112,10 +115,15 @@ AC_SUBST(DBUS_SYSTEM_DIR)
 DBUS_CONF_DIR=`$PKG_CONFIG --variable=sysconfdir dbus-1`/dbus-1/system.d
 AC_SUBST(DBUS_CONF_DIR)
 
-AC_DEFINE([PROVMAN_SERVICE], "com.intel.provman", [Prefixed used for dbus names])
-AC_DEFINE([PROVMAN_OBJECT], "/com/intel/provman", [Name of object exposed by provman])
-AC_DEFINE([PROVMAN_SESSION_DB_PATH], ".config/provman", [Path to provman-session data files, relative to home directory])
-AC_DEFINE([PROVMAN_SYSTEM_DB_PATH], "/var/lib/provman", [Path to provman-system data files])
+AC_DEFINE([PROVMAN_SERVICE], "com.intel.provman",
+			     [Prefixed used for dbus names])
+AC_DEFINE([PROVMAN_OBJECT], "/com/intel/provman",
+			    [Name of object exposed by provman])
+AC_DEFINE([PROVMAN_SESSION_DB_PATH],
+	  ".config/provman",
+	  [Path to provman-session data files, relative to home directory])
+AC_DEFINE([PROVMAN_SYSTEM_DB_PATH], "/var/lib/provman",
+				    [Path to provman-system data files])
 
 PROVMAN_SERVER_NAME=com.intel.provman.server
 AC_SUBST(PROVMAN_SERVER_NAME)
@@ -143,18 +151,18 @@ AM_COND_IF([HAVE_DOXYGEN], [AC_CONFIG_FILES([doc/doxygen/doxyfile
 AC_OUTPUT
 
 echo \
-"------------------------------------------------- 
+"-------------------------------------------------
 
-${PACKAGE_NAME} Version ${PACKAGE_VERSION} 
+${PACKAGE_NAME} Version ${PACKAGE_VERSION}
 
-Prefix: '${prefix}'. 
+Prefix: '${prefix}'.
 Compiler: '${CC} ${CFLAGS} ${CPPFLAGS}'
-Doxygen: ${DOXYGEN:-NONE} 
+Doxygen: ${DOXYGEN:-NONE}
 
-Package features: 
+Package features:
 	enable-docs: ${docs}
 	enable-tests: ${tests}
-	enable-logging: ${logging} 
+	enable-logging: ${logging}
 	with-telephony: ${telephony}
 	with-sync: ${sync}
 	with-email: ${email}

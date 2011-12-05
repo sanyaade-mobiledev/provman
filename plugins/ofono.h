@@ -37,14 +37,14 @@
 int ofono_plugin_new(provman_plugin_instance *instance, bool system);
 void ofono_plugin_delete(provman_plugin_instance instance);
 
-int ofono_plugin_sync_in(provman_plugin_instance instance, 
-			 const char* imsi, 
-			 provman_plugin_sync_in_cb callback, 
+int ofono_plugin_sync_in(provman_plugin_instance instance,
+			 const char* imsi,
+			 provman_plugin_sync_in_cb callback,
 			 void *user_data);
 void ofono_plugin_sync_in_cancel(provman_plugin_instance instance);
-int ofono_plugin_sync_out(provman_plugin_instance instance, 
-			  GHashTable* settings, 
-			  provman_plugin_sync_out_cb callback, 
+int ofono_plugin_sync_out(provman_plugin_instance instance,
+			  GHashTable* settings,
+			  provman_plugin_sync_out_cb callback,
 			  void *user_data);
 void ofono_plugin_sync_out_cancel(provman_plugin_instance instance);
 

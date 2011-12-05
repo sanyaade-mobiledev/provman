@@ -25,7 +25,7 @@
 /*!
  * @file utils.c
  *
- * @brief contains general utility functions 
+ * @brief contains general utility functions
  *
  *****************************************************************************/
 #include "config.h"
@@ -54,9 +54,9 @@ int provman_utils_validate_key(const char *key)
 		err = PROVMAN_ERR_BAD_ARGS;
 		goto on_error;
 	}
-	
+
 	start = end = key + 1;
-	while (*start) {	
+	while (*start) {
 		while (*end && *end != '/') {
 			if (!g_ascii_isprint(*end) || g_ascii_isspace(*end)) {
 				err = PROVMAN_ERR_BAD_ARGS;
@@ -64,12 +64,12 @@ int provman_utils_validate_key(const char *key)
 			}
 			++end;
 		}
-		
+
 		if (start == end) {
 			err = PROVMAN_ERR_BAD_ARGS;
-			goto on_error;		
+			goto on_error;
 		}
-		
+
 		if (*end)
 			++end;
 		start = end;
@@ -95,7 +95,7 @@ int provman_utils_make_file_path(const char* fname, bool system, gchar **path)
 		}
 		db_path = g_string_new(home_dir);
 		db_path = g_string_append(db_path,"/");
-		db_path = g_string_append(db_path, PROVMAN_SESSION_DB_PATH);		
+		db_path = g_string_append(db_path, PROVMAN_SESSION_DB_PATH);
 	} else {
 		db_path = g_string_new(PROVMAN_SYSTEM_DB_PATH);
 	}
@@ -119,13 +119,13 @@ gchar *provman_utils_get_context_from_key(const gchar *key, const char *root,
 	gchar *ptr;
 
 	if (!strncmp(root, key, root_len)) {
-		context = g_strdup(key + root_len); 
+		context = g_strdup(key + root_len);
 		ptr = strchr(context, '/');
 		if (ptr)
 			*ptr = 0;
 	}
-	
-	return context;		
+
+	return context;
 }
 
 GHashTable *provman_utils_get_contexts(GHashTable *settings, const char *root,
@@ -134,7 +134,7 @@ GHashTable *provman_utils_get_contexts(GHashTable *settings, const char *root,
 	gpointer key;
 	gchar *context;
 	GHashTableIter iter;
-	GHashTable *contexts = 
+	GHashTable *contexts =
 		g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 
 	g_hash_table_iter_init(&iter, settings);
@@ -144,7 +144,7 @@ GHashTable *provman_utils_get_contexts(GHashTable *settings, const char *root,
 		if (context)
 			g_hash_table_insert(contexts, context, NULL);
 	}
-	
+
 	return contexts;
 }
 
@@ -154,8 +154,8 @@ static gboolean prv_can_remove_settings(gpointer key, gpointer value,
 	GString *account_key = user_data;
 
 	return ((strlen((const char*) key) > account_key->len) &&
-		!strncmp(account_key->str, (const char*) key, 
-			 account_key->len));		
+		!strncmp(account_key->str, (const char*) key,
+			 account_key->len));
 }
 
 void provman_utils_remove_account(GHashTable *settings, const gchar *root,
@@ -169,7 +169,7 @@ void provman_utils_remove_account(GHashTable *settings, const gchar *root,
 	g_hash_table_foreach_remove(settings, prv_can_remove_settings,
 				    account_key);
 	(void) g_string_free(account_key, TRUE);
-}				  
+}
 
 #ifdef PROVMAN_LOGGING
 void provman_utils_dump_hash_table(GHashTable* hash_table)

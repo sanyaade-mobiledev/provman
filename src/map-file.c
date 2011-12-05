@@ -26,9 +26,9 @@
  * @file map-file.c
  *
  * @brief Main file the map_file.  Contains methods to manipulate map files.
- *        Map files are a way to persistently store mappings between user account
- *        ids, e.g., test, and middleware assigned account ids or plugin ids,
- *        e.g., 122121@comdev.
+ *        Map files are a way to persistently store mappings between user
+ *        account ids, e.g., test, and middleware assigned account ids or plugin
+ *        ids, e.g., 122121@comdev.
  *
  ******************************************************************************/
 
@@ -58,7 +58,7 @@ void provman_map_file_new(const char *fname, provman_map_file_t **map_file)
 {
 	provman_map_file_t *mf = g_new0(provman_map_file_t, 1);
 	mf->key_file = g_key_file_new();
-	(void) g_key_file_load_from_file(mf->key_file, fname, 
+	(void) g_key_file_load_from_file(mf->key_file, fname,
 					 G_KEY_FILE_NONE, NULL);
 	mf->fname = g_strdup(fname);
 	mf->reverse_maps = g_hash_table_new_full(g_str_hash, g_str_equal,
@@ -71,7 +71,7 @@ void provman_map_file_delete(provman_map_file_t *map_file)
 	if (map_file) {
 		g_hash_table_unref(map_file->reverse_maps);
 		g_free(map_file->fname);
-		g_key_file_free(map_file->key_file);		
+		g_key_file_free(map_file->key_file);
 		g_free(map_file);
 	}
 }
@@ -89,7 +89,7 @@ static GHashTable* prv_provman_map_file_get_reverse_map(
 	if (!map) {
 		map = g_hash_table_new_full(g_str_hash, g_str_equal,
 					    g_free, g_free);
-		
+
 		keys = g_key_file_get_keys(map_file->key_file, imsi, &len,
 					   NULL);
 		if (keys)
@@ -99,7 +99,7 @@ static GHashTable* prv_provman_map_file_get_reverse_map(
 					map_file, imsi, keys[i]);
 				g_hash_table_insert(map, value, keys[i]);
 			}
-			
+
 			/* Ownership of keys has been transfered to the
 			   hash table.  Just need to free array */
 
@@ -117,7 +117,7 @@ void provman_map_file_store_map(provman_map_file_t *map_file, const gchar *imsi,
 				const gchar *client_id, const gchar *plugin_id)
 {
 	GHashTable *reverse_map;
-	
+
 	reverse_map = prv_provman_map_file_get_reverse_map(map_file, imsi);
 	g_hash_table_insert(reverse_map, g_strdup(plugin_id),
 			    g_strdup(client_id));
@@ -131,7 +131,7 @@ int provman_map_file_delete_map(provman_map_file_t *map_file, const gchar *imsi,
 	int err = PROVMAN_ERR_NONE;
 	GHashTable *reverse_map;
 	gchar *plugin_id;
-	
+
 	reverse_map = prv_provman_map_file_get_reverse_map(map_file, imsi);
 	plugin_id =  provman_map_file_find_plugin_id(map_file, imsi, client_id);
 
@@ -172,7 +172,7 @@ void provman_map_file_save(provman_map_file_t *map_file)
 
 	if (map_file->dirty) {
 		data = g_key_file_to_data(map_file->key_file, &length, NULL);
-		
+
 		if (data) {
 			if (g_file_set_contents(map_file->fname, data,
 						length, NULL))
@@ -215,21 +215,18 @@ void provman_map_file_remove_unused(provman_map_file_t *map_file,
 			if (!g_hash_table_lookup_extended(used_plugin_ids,
 							  plugin_id, NULL,
 							  NULL)) {
-				
-				PROVMAN_LOGF("Removing unused context %s->%s", 
+
+				PROVMAN_LOGF("Removing unused context %s->%s",
 					     keys[i], plugin_id);
-				
+
 				(void) provman_map_file_delete_map(map_file,
 								   imsi,
 								   keys[i]);
 			}
 			g_free(plugin_id);
 		}
-		
+
 		g_strfreev(keys);
 	}
 }
-
-
-
 

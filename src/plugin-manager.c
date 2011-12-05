@@ -105,10 +105,10 @@ int plugin_manager_new(plugin_manager_t **manager, bool system)
 	retval->plugin_instances = g_new0(provman_plugin_instance, count);
 	retval->plugin_schemas = g_new0(provman_schema_t*, count);
 	retval->plugin_meta_data = g_new0(GHashTable*, count);
-	
+
 	for (i = 0; i < count; ++i) {
 		plugin = provman_plugin_get(i);
-		
+
 		err = provman_schema_new(plugin->schema, strlen(plugin->schema),
 					 &retval->plugin_schemas[i]);
 		if (err != PROVMAN_ERR_NONE) {
@@ -124,7 +124,7 @@ int plugin_manager_new(plugin_manager_t **manager, bool system)
 			goto on_error;
 		}
 
-		retval->plugin_meta_data[i] = 
+		retval->plugin_meta_data[i] =
 			g_hash_table_new_full(g_str_hash, g_str_equal, g_free,
 					      prv_free_meta_data);
 	}
@@ -148,8 +148,8 @@ static void prv_clear_cache(plugin_manager_t *manager)
 {
 	unsigned int i;
 	unsigned int count = provman_plugin_get_count();
-	
-	for (i = 0; i < count; ++i) 
+
+	for (i = 0; i < count; ++i)
 		manager->plugin_synced[i] = false;
 
 	(void) provman_cache_remove(manager->cache, "/");
@@ -196,8 +196,8 @@ static void prv_schedule_completion(plugin_manager_t *manager, int err)
 {
 	manager->err = err;
 
-	if (!manager->completion_source) 
-		manager->completion_source = 
+	if (!manager->completion_source)
+		manager->completion_source =
 			g_idle_add(prv_complete_callback, manager);
 	g_free(manager->imsi);
 	manager->imsi = NULL;
@@ -212,9 +212,9 @@ static provman_meta_data_t* prv_get_plugin_md(plugin_manager_t *manager)
 	gchar *meta_data_path = NULL;
 	GString *fname = NULL;
 	GHashTable *ht = manager->plugin_meta_data[manager->synced];
-	
+
 	plugin = provman_plugin_get(manager->synced);
-	imsi = plugin->sim_id_fn ? 
+	imsi = plugin->sim_id_fn ?
 		plugin->sim_id_fn(manager->plugin_instances[manager->synced]) :
 		"";
 	md = g_hash_table_lookup(ht, imsi);
@@ -227,7 +227,7 @@ static provman_meta_data_t* prv_get_plugin_md(plugin_manager_t *manager)
 		g_string_append_c(fname, '-');
 		g_string_append(fname, PROVMAN_META_DATA_NAME);
 		if (provman_utils_make_file_path(fname->str, manager->system,
-						 &meta_data_path) != 
+						 &meta_data_path) !=
 		    PROVMAN_ERR_NONE)
 			goto on_error;
 
@@ -238,11 +238,11 @@ static provman_meta_data_t* prv_get_plugin_md(plugin_manager_t *manager)
 	}
 
 on_error:
-	
+
 	if (fname)
 		g_string_free(fname, TRUE);
 	g_free(meta_data_path);
-	
+
 	return md;
 }
 
@@ -262,7 +262,7 @@ static void prv_plugin_sync_in_cb(int err, GHashTable *settings,
 	} else {
 		if (err == PROVMAN_ERR_NONE) {
 			provman_cache_add_settings(manager->cache, settings);
-			
+
 			md = prv_get_plugin_md(manager);
 			if (md) {
 				ht = provman_meta_data_get_all(md);
@@ -272,7 +272,7 @@ static void prv_plugin_sync_in_cb(int err, GHashTable *settings,
 			manager->plugin_synced[manager->synced] = true;
 		}
 		++manager->synced;
-		prv_sync_in_next_plugin(manager);       
+		prv_sync_in_next_plugin(manager);
 	}
 }
 
@@ -287,7 +287,7 @@ static void prv_sync_in_next_plugin(plugin_manager_t *manager)
 		plugin = provman_plugin_get(manager->synced);
 		imsi = (const char*) manager->imsi;
 		err = plugin->sync_in_fn(
-			manager->plugin_instances[manager->synced], imsi, 
+			manager->plugin_instances[manager->synced], imsi,
 			prv_plugin_sync_in_cb, manager);
 		if (err == PROVMAN_ERR_NONE)
 			break;
@@ -316,17 +316,17 @@ int plugin_manager_sync_in(plugin_manager_t *manager, const char *imsi,
 		err = PROVMAN_ERR_DENIED;
 		goto on_error;
 	}
-	
+
 	manager->synced = 0;
 	manager->state = PLUGIN_MANAGER_STATE_SYNC_IN;
 	manager->err = PROVMAN_ERR_NONE;
 	manager->imsi = g_strdup(imsi);
-	
+
 	manager->callback = callback;
 	manager->user_data = user_data;
-	
+
 	prv_sync_in_next_plugin(manager);
-	
+
 on_error:
 
 	PROVMAN_LOGF("%s exit with err %d", __FUNCTION__, err);
@@ -344,7 +344,7 @@ static void prv_sync_in_cancel(plugin_manager_t *manager)
 	count = provman_plugin_get_count();
 	if (manager->synced < count) {
 		plugin = provman_plugin_get(manager->synced);
-		PROVMAN_LOGF("Cancelling %s ", plugin->root);	
+		PROVMAN_LOGF("Cancelling %s ", plugin->root);
 		plugin->sync_in_cancel_fn(
 			manager->plugin_instances[manager->synced]);
 	}
@@ -363,11 +363,11 @@ static void prv_plugin_sync_out_cb(int err, void *user_data)
 		   need to send another end command before
 		   it releases its lock on the provisioning process. */
 
-		prv_clear_cache(manager);				
+		prv_clear_cache(manager);
 		prv_schedule_completion(manager, err);
 	} else {
 		++manager->synced;
-		prv_sync_out_next_plugin(manager);       
+		prv_sync_out_next_plugin(manager);
 	}
 }
 
@@ -386,7 +386,7 @@ static void prv_sync_out_next_plugin(plugin_manager_t *manager)
 			settings = provman_cache_get_settings(manager->cache,
 							      plugin->root);
 			err = plugin->sync_out_fn(
-				manager->plugin_instances[manager->synced], 
+				manager->plugin_instances[manager->synced],
 				settings, prv_plugin_sync_out_cb,
 				manager);
 			md = prv_get_plugin_md(manager);
@@ -397,7 +397,7 @@ static void prv_sync_out_next_plugin(plugin_manager_t *manager)
 				g_hash_table_unref(ht);
 			}
 			g_hash_table_unref(settings);
-			
+
 			if (err == PROVMAN_ERR_NONE)
 				break;
 		}
@@ -411,14 +411,14 @@ static void prv_sync_out_next_plugin(plugin_manager_t *manager)
 
 		/* TODO: We may want to re-schedule fail sync out
 		   attempts */
-		
+
 		prv_clear_cache(manager);
 		prv_schedule_completion(manager, PROVMAN_ERR_NONE);
 	}
 }
 
 
-int plugin_manager_sync_out(plugin_manager_t *manager, 
+int plugin_manager_sync_out(plugin_manager_t *manager,
 			    plugin_manager_cb_t callback, void *user_data)
 {
 	int err = PROVMAN_ERR_NONE;
@@ -429,16 +429,16 @@ int plugin_manager_sync_out(plugin_manager_t *manager,
 		err = PROVMAN_ERR_DENIED;
 		goto on_error;
 	}
-	
+
 	manager->synced = 0;
 	manager->state = PLUGIN_MANAGER_STATE_SYNC_OUT;
 	manager->err = PROVMAN_ERR_NONE;
-	
+
 	manager->callback = callback;
 	manager->user_data = user_data;
-	
+
 	prv_sync_out_next_plugin(manager);
-	
+
 on_error:
 
 	PROVMAN_LOGF("%s exit with err %d", __FUNCTION__, err);
@@ -456,7 +456,7 @@ static void prv_sync_out_cancel(plugin_manager_t *manager)
 	count = provman_plugin_get_count();
 	if (manager->synced < count) {
 		plugin = provman_plugin_get(manager->synced);
-		PROVMAN_LOGF("Cancelling %s ", plugin->root);	
+		PROVMAN_LOGF("Cancelling %s ", plugin->root);
 		plugin->sync_out_cancel_fn(
 			manager->plugin_instances[manager->synced]);
 	}
@@ -475,7 +475,7 @@ bool plugin_manager_cancel(plugin_manager_t *manager)
 		} else if (manager->state == PLUGIN_MANAGER_STATE_SYNC_OUT) {
 			prv_sync_out_cancel(manager);
 			retval = true;
-		}		
+		}
 	} else {
 		retval = true;
 	}
@@ -503,14 +503,14 @@ static int prv_get_common(plugin_manager_t* manager, const gchar* key,
 	err = provman_utils_validate_key(key);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
-	
+
 	err = provman_plugin_find_index(key, &index);
-	if ((err == PROVMAN_ERR_NONE) && 
+	if ((err == PROVMAN_ERR_NONE) &&
 	    (!manager->plugin_synced[index])) {
 		err = PROVMAN_ERR_CORRUPT;
 		goto on_error;
 	}
-		
+
 	err = provman_cache_get(manager->cache, key, value);
 
 on_error:
@@ -566,7 +566,7 @@ int plugin_manager_get_multiple(plugin_manager_t* manager, GVariant* keys,
 			g_variant_builder_add(&vb, "{ss}", key, value);
 			PROVMAN_LOGF("Retrieved %s = %s", key, value);
 			g_free(value);
-		}				
+		}
 #ifdef PROVMAN_LOGGING
 		else {
 			PROVMAN_LOGF("Unable to retrieve %s", key);
@@ -577,7 +577,7 @@ int plugin_manager_get_multiple(plugin_manager_t* manager, GVariant* keys,
 	g_variant_iter_free(iter);
 
 	*settings = g_variant_builder_end(&vb);
-	
+
 on_error:
 
 	PROVMAN_LOGF("%s exit with err %d", __FUNCTION__, err);
@@ -606,7 +606,7 @@ int plugin_manager_get_all(plugin_manager_t* manager, const gchar* search_key,
 on_error:
 
 	PROVMAN_LOGF("%s exit with err %d", __FUNCTION__, err);
-       
+
 	return err;
 }
 
@@ -631,7 +631,7 @@ int plugin_manager_get_all_meta(plugin_manager_t* manager,
 on_error:
 
 	PROVMAN_LOGF("%s exit with err %d", __FUNCTION__, err);
-       
+
 	return err;
 }
 
@@ -671,7 +671,7 @@ static int prv_set_common(plugin_manager_t* manager, const gchar* key,
 	err = provman_utils_validate_key(key);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
-	
+
 	err = provman_plugin_find_index(key, &index);
 	if (err != PROVMAN_ERR_NONE) {
 		err = PROVMAN_ERR_BAD_ARGS;
@@ -690,7 +690,7 @@ static int prv_set_common(plugin_manager_t* manager, const gchar* key,
 		goto on_error;
 
 	err = provman_cache_set(manager->cache, key, value);
-	
+
 on_error:
 
 	return err;
@@ -767,12 +767,12 @@ int plugin_manager_set_multiple(plugin_manager_t* manager, GVariant* settings,
 
 	iter = g_variant_iter_new(settings);
 	while (g_variant_iter_next(iter,"{s&s}", &key, &value)) {
-		g_strstrip(key);			
+		g_strstrip(key);
 		err2 = prv_set_common(manager, key, value);
 		if (err2 != PROVMAN_ERR_NONE) {
-			g_variant_builder_add(&vb, "s", key);			
+			g_variant_builder_add(&vb, "s", key);
 			PROVMAN_LOGF("Unable to set %s = %s", key, value);
-		}				
+		}
 #ifdef PROVMAN_LOGGING
 		else {
 			PROVMAN_LOGF("Set %s = %s", key, value);
@@ -783,7 +783,7 @@ int plugin_manager_set_multiple(plugin_manager_t* manager, GVariant* settings,
 	g_variant_iter_free(iter);
 
 	*errors = g_variant_builder_end(&vb);
-	
+
 on_error:
 
 	PROVMAN_LOGF("%s exit with err %d", __FUNCTION__, err);
@@ -814,13 +814,13 @@ int plugin_manager_set_multiple_meta(plugin_manager_t* manager,
 
 	iter = g_variant_iter_new(settings);
 	while (g_variant_iter_next(iter,"(s&s&s)", &key, &prop, &value)) {
-		g_strstrip(key);			
+		g_strstrip(key);
 		err2 = prv_set_meta_common(manager, key, prop, value);
 		if (err2 != PROVMAN_ERR_NONE) {
-			g_variant_builder_add(&vb, "(ss)", key, prop);			
+			g_variant_builder_add(&vb, "(ss)", key, prop);
 			PROVMAN_LOGF("Unable to set %s?%s = %s", key, prop,
 				     value);
-		}				
+		}
 #ifdef PROVMAN_LOGGING
 		else {
 			PROVMAN_LOGF("Set %s?%s = %s", key, prop, value);
@@ -831,7 +831,7 @@ int plugin_manager_set_multiple_meta(plugin_manager_t* manager,
 	g_variant_iter_free(iter);
 
 	*errors = g_variant_builder_end(&vb);
-		
+
 on_error:
 
 	PROVMAN_LOGF("%s called", __FUNCTION__);
@@ -875,9 +875,9 @@ static int prv_remove_common(plugin_manager_t* manager, const gchar* key)
 			err = PROVMAN_ERR_CORRUPT;
 			goto on_error;
 		}
-		
+
 		schema = manager->plugin_schemas[index];
-		
+
 		err = prv_validate_del(schema, key);
 		if (err != PROVMAN_ERR_NONE)
 			goto on_error;
@@ -930,12 +930,12 @@ int plugin_manager_remove_multiple(plugin_manager_t* manager, GVariant* keys,
 
 	iter = g_variant_iter_new(keys);
 	while (g_variant_iter_next(iter,"s", &key)) {
-		g_strstrip(key);			
+		g_strstrip(key);
 		err2 = prv_remove_common(manager, key);
 		if (err2 != PROVMAN_ERR_NONE) {
-			g_variant_builder_add(&vb, "s", key);			
+			g_variant_builder_add(&vb, "s", key);
 			PROVMAN_LOGF("Unable to remove %s", key);
-		}				
+		}
 #ifdef PROVMAN_LOGGING
 		else {
 			PROVMAN_LOGF("Removed %s", key);
@@ -946,7 +946,7 @@ int plugin_manager_remove_multiple(plugin_manager_t* manager, GVariant* keys,
 	g_variant_iter_free(iter);
 
 	*errors = g_variant_builder_end(&vb);
-	
+
 on_error:
 
 	PROVMAN_LOGF("%s returned with err %d", __FUNCTION__, err);
@@ -968,7 +968,7 @@ int plugin_manager_abort(plugin_manager_t *manager)
 		err = PROVMAN_ERR_DENIED;
 		goto on_error;
 	}
-	
+
 	for (i = 0; i < count; ++i) {
 		plugin = provman_plugin_get(i);
 
@@ -1001,7 +1001,7 @@ static gchar *prv_get_schema_type(provman_schema_t *schema)
 		g_string_append(str, ": ");
 		g_hash_table_iter_init(&iter, schema->key.allowed_values);
 		enum_count = g_hash_table_size(schema->key.allowed_values);
-		while ((i < enum_count - 1) && 
+		while ((i < enum_count - 1) &&
 		       g_hash_table_iter_next(&iter, &key, NULL)) {
 			g_string_append(str, (gchar*) key);
 			g_string_append(str, ", ");
@@ -1012,7 +1012,7 @@ static gchar *prv_get_schema_type(provman_schema_t *schema)
 			g_string_append(str, (gchar*) key);
 
 		retval = g_string_free(str, FALSE);
-	} else {		
+	} else {
 		if (schema->type == PROVMAN_SCHEMA_TYPE_DIR)
 			type = PLUGIN_MANAGER_TYPE_DIR;
 		else if (schema->key.type == PROVMAN_SCHEMA_VALUE_TYPE_STRING)
@@ -1042,33 +1042,33 @@ static int prv_get_schema_dir_type_info(plugin_manager_t *manager,
 	gchar *key_name;
 
 	root = manager->plugin_schemas[index];
-		
+
 	err = provman_schema_locate(root, search_key, &parent);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
-	
+
 	if (parent->type != PROVMAN_SCHEMA_TYPE_DIR) {
 		err = PROVMAN_ERR_BAD_ARGS;
 		goto on_error;
 	}
-	
+
 	g_hash_table_iter_init(&iter, parent->dir.children);
 	while (g_hash_table_iter_next(&iter, &key, &value)) {
 		child = value;
 		type = prv_get_schema_type(child);
 		if (type) {
-			key_name = key;							
+			key_name = key;
 			if (!key_name[0])
 				key_name = PLUGIN_MANAGER_UNNAMED_DIR;
-			
+
 			g_variant_builder_add(vb, "{ss}", key_name, type);
-			PROVMAN_LOGF("Get Supported %s=%u", key_name, type);			
+			PROVMAN_LOGF("Get Supported %s=%u", key_name, type);
 			g_free(type);
 		}
 	}
-	
+
 on_error:
-	
+
 	return err;
 }
 
@@ -1095,13 +1095,13 @@ int plugin_manager_get_children_type_info(plugin_manager_t* manager,
 		goto on_error;
 
 	vb = g_variant_builder_new(G_VARIANT_TYPE("a{ss}"));
-	
+
 	err = provman_plugin_find_index(search_key, &index);
 	if (err == PROVMAN_ERR_NONE) {
 		err = prv_get_schema_dir_type_info(manager, search_key, index,
 						   vb);
 		if (err != PROVMAN_ERR_NONE)
-			goto on_error;		
+			goto on_error;
 	} else {
 		children = provman_plugin_find_direct_children(search_key);
 		if (children->len == 0) {
@@ -1114,7 +1114,7 @@ int plugin_manager_get_children_type_info(plugin_manager_t* manager,
 			root = g_ptr_array_index(children, i);
 			g_variant_builder_add(vb, "{ss}", root,
 				PLUGIN_MANAGER_TYPE_DIR);
-		}			
+		}
 	}
 
 	*values = g_variant_builder_end(vb);
@@ -1123,13 +1123,13 @@ on_error:
 
 	if (children)
 		g_ptr_array_unref(children);
-	
+
 	if (vb)
 		g_variant_builder_unref(vb);
 
 	PROVMAN_LOGF("Get Children Type Info of %s returned with %d",
 		     search_key, err);
-	
+
 	return err;
 }
 
@@ -1156,11 +1156,11 @@ int plugin_manager_get_type_info(plugin_manager_t* manager,
 	err = provman_plugin_find_index(search_key, &index);
 	if (err == PROVMAN_ERR_NONE) {
 		schema_root = manager->plugin_schemas[index];
-		
+
 		err = provman_schema_locate(schema_root, search_key, &schema);
 		if (err != PROVMAN_ERR_NONE)
 			goto on_error;
-		
+
 		type = prv_get_schema_type(schema);
 		if (!type) {
 			err = PROVMAN_ERR_CORRUPT;
@@ -1177,9 +1177,9 @@ int plugin_manager_get_type_info(plugin_manager_t* manager,
 	}
 
 on_error:
-	
+
 	PROVMAN_LOGF("Get Type Info of %s returned with %d", search_key, err);
-	
+
 	return err;
 }
 
@@ -1199,7 +1199,7 @@ int plugin_manager_get_meta(plugin_manager_t* manager, const gchar* key,
 	err = provman_utils_validate_key(key);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
-	
+
 	err = provman_plugin_find_index(key, &index);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
@@ -1208,7 +1208,7 @@ int plugin_manager_get_meta(plugin_manager_t* manager, const gchar* key,
 		err = PROVMAN_ERR_CORRUPT;
 		goto on_error;
 	}
-	
+
 	err = provman_cache_get_meta(manager->cache, key, prop, value);
 
 on_error:

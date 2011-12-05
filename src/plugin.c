@@ -70,7 +70,7 @@ int provman_plugin_check()
 			g_provman_plugins[i].root);
 		if (err != PROVMAN_ERR_NONE)
 			goto on_error;
-		
+
 		for (j = i + 1; j < g_provman_plugins_count; ++j) {
 			err = prv_check_relationship(
 				g_provman_plugins[i].root,
@@ -92,7 +92,7 @@ unsigned int provman_plugin_get_count()
 
 const provman_plugin *provman_plugin_get(unsigned int i)
 {
-	return (i < g_provman_plugins_count) ? 
+	return (i < g_provman_plugins_count) ?
 		&g_provman_plugins[i] : NULL;
 }
 
@@ -117,7 +117,7 @@ int provman_plugin_find_index(const char *uri, unsigned int *index)
 		}
 	}
 
-	return i < g_provman_plugins_count ? PROVMAN_ERR_NONE : 
+	return i < g_provman_plugins_count ? PROVMAN_ERR_NONE :
 		PROVMAN_ERR_NOT_FOUND;
 }
 
@@ -143,7 +143,7 @@ int provman_plugin_find_index(const char *uri, unsigned int *index)
 
    Passing an undefined uri or a uri that is owned by a plugin will
    result in an empty array being returned.
-*/   
+*/
 
 GPtrArray *provman_plugin_find_children(const char *uri)
 {
@@ -156,15 +156,15 @@ GPtrArray *provman_plugin_find_children(const char *uri)
 	for (i = 0; i < g_provman_plugins_count; ++i) {
 		plugin = &g_provman_plugins[i];
 		plugin_uri_len = strlen(plugin->root);
-		
+
 		if (uri_len >  plugin_uri_len)
 			continue;
-		
+
 		if (!strncmp(plugin->root, uri, uri_len))
 			if ((uri_len == plugin_uri_len) ||
 			    (uri[uri_len - 1] == '/') ||
 			    (plugin->root[uri_len] == '/'))
-				g_ptr_array_add(children, 
+				g_ptr_array_add(children,
 						(gpointer) plugin->root);
 	}
 
@@ -177,7 +177,7 @@ GPtrArray *provman_plugin_find_children(const char *uri)
 
    Passing an undefined uri or a uri that is owned by a plugin will
    result in an empty array being returned.
-*/   
+*/
 
 GPtrArray *provman_plugin_find_direct_children(const char *uri)
 {
@@ -194,10 +194,10 @@ GPtrArray *provman_plugin_find_direct_children(const char *uri)
 	for (i = 0; i < g_provman_plugins_count; ++i) {
 		plugin = &g_provman_plugins[i];
 		plugin_uri_len = strlen(plugin->root);
-		
+
 		if (uri_len >  plugin_uri_len)
 			continue;
-		
+
 		if (!strncmp(plugin->root, uri, uri_len) &&
 		    ((uri_len == plugin_uri_len) || (uri[uri_len - 1] == '/') ||
 		     (plugin->root[uri_len] == '/'))) {
@@ -213,7 +213,7 @@ GPtrArray *provman_plugin_find_direct_children(const char *uri)
 			    for (j = 0; j < children->len &&
 					 strcmp(g_ptr_array_index(children, j),
 						name); ++j);
-			    if (j == children->len)				
+			    if (j == children->len)
 				    g_ptr_array_add(children, name);
 			    else
 				    g_free(name);
@@ -228,7 +228,7 @@ GPtrArray *provman_plugin_find_direct_children(const char *uri)
    may exist but is owned by a plugin and so passing this uri will cause
    provman_plugin_uri_exists to return false. '/unreal', probably does not
    exists and will cause this function to return false.
-*/   
+*/
 
 bool provman_plugin_uri_exists(const char *uri)
 {
@@ -240,7 +240,7 @@ bool provman_plugin_uri_exists(const char *uri)
 	for (i = 0; i < g_provman_plugins_count; ++i) {
 		plugin = &g_provman_plugins[i];
 		plugin_uri_len = strlen(plugin->root);
-		
+
 		if (uri_len >  plugin_uri_len)
 			continue;
 

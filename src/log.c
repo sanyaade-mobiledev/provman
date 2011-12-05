@@ -68,7 +68,7 @@ void provman_log_close()
 
 #ifdef PROVMAN_LOGGING
 
-void provman_log_printf(unsigned int line_number, const char *file_name, 
+void provman_log_printf(unsigned int line_number, const char *file_name,
 				const char *message, ...)
 {
 	va_list args;

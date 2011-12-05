@@ -128,7 +128,7 @@ struct synce_plugin_t_ {
 	GHashTable *settings;
 	provman_plugin_sync_in_cb sync_in_cb;
 	void *sync_in_user_data;
-	provman_plugin_sync_out_cb sync_out_cb; 
+	provman_plugin_sync_out_cb sync_out_cb;
 	void *sync_out_user_data;
 	guint completion_source;
 	GCancellable *cancellable;
@@ -159,7 +159,7 @@ struct synce_source_pair_t_ {
 
 static synce_source_pair_t g_synce_source_map[] = {
 	{ PLUGIN_PROP_SYNCE_ADDRESSBOOK, PLUGIN_KEY_ADDRESSBOOK_ROOT,
-	  LOCAL_KEY_CONTACTS_ROOT }, 
+	  LOCAL_KEY_CONTACTS_ROOT },
 	{ PLUGIN_PROP_SYNCE_CALENDAR, PLUGIN_KEY_CALENDAR_ROOT,
 	  LOCAL_KEY_CALENDAR_ROOT },
 	{ PLUGIN_PROP_SYNCE_MEMOS, PLUGIN_KEY_MEMO_ROOT,
@@ -170,13 +170,13 @@ static synce_source_pair_t g_synce_source_map[] = {
 	  LOCAL_KEY_EAS_CONTACTS_ROOT },
 	{ PLUGIN_PROP_SYNCE_EAS_CALENDAR, PLUGIN_KEY_CALENDAR_ROOT,
 	  LOCAL_KEY_EAS_CALENDAR_ROOT },
-	{ PLUGIN_PROP_SYNCE_EAS_MEMOS, PLUGIN_KEY_MEMO_ROOT, 
+	{ PLUGIN_PROP_SYNCE_EAS_MEMOS, PLUGIN_KEY_MEMO_ROOT,
 	  LOCAL_KEY_EAS_MEMO_ROOT },
 	{ PLUGIN_PROP_SYNCE_EAS_TODOS, PLUGIN_KEY_TODO_ROOT,
 	  LOCAL_KEY_EAS_TODO_ROOT }
 };
 
-static const size_t g_synce_source_map_len = 
+static const size_t g_synce_source_map_len =
 	sizeof(g_synce_source_map) / sizeof(synce_source_pair_t);
 
 
@@ -200,7 +200,7 @@ int synce_plugin_new(provman_plugin_instance *instance, bool system)
 {
 	synce_plugin_t *plugin_instance = g_new0(synce_plugin_t, 1);
 
-	plugin_instance->settings = 
+	plugin_instance->settings =
 		g_hash_table_new_full(g_str_hash, g_str_equal, g_free, g_free);
 
 	*instance = plugin_instance;
@@ -239,7 +239,7 @@ static gboolean prv_complete_sync_in(gpointer user_data)
 	if (plugin_instance->cb_err == PROVMAN_ERR_NONE) {
 #ifdef PROVMAN_LOGGING
 		provman_utils_dump_hash_table(plugin_instance->settings);
-#endif	
+#endif
 		settings = plugin_instance->settings;
 	}
 
@@ -257,7 +257,8 @@ static gboolean prv_complete_sync_in(gpointer user_data)
 
 static int prv_complete_results_call(synce_plugin_t *plugin_instance,
 				     GDBusProxy *proxy, GAsyncResult *result,
-				     GSourceFunc quit_callback, GVariant **retvals)
+				     GSourceFunc quit_callback,
+				     GVariant **retvals)
 {
 	int err = PROVMAN_ERR_NONE;
 	GVariant *res;
@@ -282,10 +283,10 @@ on_error:
 
 	if (res)
 		g_variant_unref(res);
-	
+
 	if (err == PROVMAN_ERR_CANCELLED) {
 		plugin_instance->cb_err = err;
-		plugin_instance->completion_source = 
+		plugin_instance->completion_source =
 			g_idle_add(quit_callback, plugin_instance);
 	}
 
@@ -309,7 +310,7 @@ static int prv_complete_proxy_call(synce_plugin_t *plugin_instance,
 		PROVMAN_LOG("Operation Cancelled");
 		err = PROVMAN_ERR_CANCELLED;
 		plugin_instance->cb_err = err;
-		plugin_instance->completion_source = 
+		plugin_instance->completion_source =
 			g_idle_add(quit_callback, plugin_instance);
 		goto on_error;
 	} else if (!res) {
@@ -325,7 +326,7 @@ on_error:
 
 	if (res)
 		g_object_unref(res);
-	
+
 	return err;
 }
 
@@ -334,12 +335,12 @@ static void prv_add_general_param(synce_plugin_t *plugin_instance,
 				  const gchar *value)
 {
 	GString *key = g_string_new(LOCAL_KEY_SYNC_ROOT);
-	
+
 	g_string_append(key, id);
 	g_string_append(key, "/");
 	g_string_append(key, prop_name);
 	g_hash_table_insert(plugin_instance->settings,
-			    g_string_free(key, FALSE), g_strdup(value));	
+			    g_string_free(key, FALSE), g_strdup(value));
 }
 
 static void prv_add_source_param(synce_plugin_t *plugin_instance,
@@ -347,17 +348,17 @@ static void prv_add_source_param(synce_plugin_t *plugin_instance,
 				 const gchar *prop_name, const gchar *value)
 {
 	GString *key = g_string_new(LOCAL_KEY_SYNC_ROOT);
-	
+
 	g_string_append(key, id);
 	g_string_append(key, "/");
 	g_string_append(key, source);
 	g_string_append(key, "/");
 	g_string_append(key, prop_name);
 	g_hash_table_insert(plugin_instance->settings,
-			    g_string_free(key, FALSE), g_strdup(value));	
+			    g_string_free(key, FALSE), g_strdup(value));
 }
 
-static void prv_map_source_settings(synce_plugin_t *plugin_instance, 
+static void prv_map_source_settings(synce_plugin_t *plugin_instance,
 				    const gchar *account_uid,
 				    const gchar *source_id,
 				    GVariant *settings)
@@ -372,13 +373,13 @@ static void prv_map_source_settings(synce_plugin_t *plugin_instance,
 	iter = g_variant_iter_new(settings);
 	while (g_variant_iter_next(iter,"{&s&s}", &key, &value) && !backend)
 		if (!strcmp(key, PLUGIN_PROP_SYNCE_BACKEND))
-			backend = value;			
+			backend = value;
 	g_variant_iter_free(iter);
 
 	if (!backend) {
 		PROVMAN_LOGF("backend not defined for source_id %s", source_id);
 		goto on_error;
-	}	
+	}
 
 	for (i = 0; i < g_synce_source_map_len; ++i)
 		if (!strcmp(source_id, g_synce_source_map[i].plugin_source) &&
@@ -400,7 +401,7 @@ static void prv_map_source_settings(synce_plugin_t *plugin_instance,
 					     source, LOCAL_PROP_SYNCE_URI,
 					     value);
 		else if (!strcmp(key, PLUGIN_PROP_SYNCE_SYNC))
-			prv_add_source_param(plugin_instance, account_uid, 
+			prv_add_source_param(plugin_instance, account_uid,
 					     source, LOCAL_PROP_SYNCE_SYNC,
 					     value);
 		else if (!strcmp(key, PLUGIN_PROP_SYNCE_SYNCFORMAT))
@@ -417,7 +418,7 @@ on_error:
 }
 
 
-static void prv_map_general_settings(synce_plugin_t *plugin_instance, 
+static void prv_map_general_settings(synce_plugin_t *plugin_instance,
 				     const gchar *account_uid,
 				     GVariant *settings)
 {
@@ -428,29 +429,29 @@ static void prv_map_general_settings(synce_plugin_t *plugin_instance,
 	iter = g_variant_iter_new(settings);
 	while (g_variant_iter_next(iter,"{&s&s}", &key, &value)) {
 		if (!strcmp(key, PLUGIN_PROP_SYNCE_USERNAME))
-		    prv_add_general_param(plugin_instance, account_uid, 
+		    prv_add_general_param(plugin_instance, account_uid,
 					  LOCAL_PROP_SYNCE_USERNAME, value);
 		else if (!strcmp(key, PLUGIN_PROP_SYNCE_PASSWORD))
-		    prv_add_general_param(plugin_instance, account_uid, 
+		    prv_add_general_param(plugin_instance, account_uid,
 					  LOCAL_PROP_SYNCE_PASSWORD, value);
 		else if (!strcmp(key, PLUGIN_PROP_SYNCE_SYNCURL))
-		    prv_add_general_param(plugin_instance, account_uid, 
+		    prv_add_general_param(plugin_instance, account_uid,
 					  LOCAL_PROP_SYNCE_URL, value);
 		else if (!strcmp(key, PLUGIN_PROP_SYNCE_PEERNAME))
-		    prv_add_general_param(plugin_instance, account_uid, 
+		    prv_add_general_param(plugin_instance, account_uid,
 					  LOCAL_PROP_SYNCE_NAME, value);
 		else if (!strcmp(key, PLUGIN_PROP_SYNCE_WEBURL))
-		    prv_add_general_param(plugin_instance, account_uid, 
+		    prv_add_general_param(plugin_instance, account_uid,
 					  LOCAL_PROP_SYNCE_URL, value);
 		else if (!strcmp(key, PLUGIN_PROP_SYNCE_PEER_IS_CLIENT))
-		    prv_add_general_param(plugin_instance, account_uid, 
+		    prv_add_general_param(plugin_instance, account_uid,
 					  LOCAL_PROP_SYNCE_CLIENT, value);
 
 #ifdef PROVMAN_LOGGING
 		else
 			PROVMAN_LOGF("Unknown prop name %s", key);
 #endif
-	}	
+	}
 
 	g_variant_iter_free(iter);
 }
@@ -473,7 +474,7 @@ static void prv_get_account(synce_plugin_t *plugin_instance,
 		else
 			prv_map_source_settings(plugin_instance, account_uid,
 						name, settings);
-		g_variant_unref(settings);				
+		g_variant_unref(settings);
 	}
 	g_variant_iter_free(iter);
 }
@@ -487,7 +488,7 @@ static void prv_get_config_cb(GObject *source_object, GAsyncResult *result,
 	GVariant *dictionary;
 	gpointer *current_account;
 
-	err = prv_complete_results_call(plugin_instance, 
+	err = prv_complete_results_call(plugin_instance,
 					plugin_instance->server_proxy,
 					result, prv_complete_sync_in, &retvals);
 	if (err == PROVMAN_ERR_NONE) {
@@ -500,7 +501,7 @@ static void prv_get_config_cb(GObject *source_object, GAsyncResult *result,
 		++plugin_instance->updated;
 		dictionary = g_variant_get_child_value(retvals, 0);
 		prv_get_account(plugin_instance, dictionary);
-		g_variant_unref(dictionary);		
+		g_variant_unref(dictionary);
 		g_variant_unref(retvals);
 	}
 
@@ -512,21 +513,21 @@ static void prv_get_config(synce_plugin_t *plugin_instance)
 {
 	if (plugin_instance->updated < plugin_instance->new_accounts->len) {
 		plugin_instance->current_account =
-			g_ptr_array_index(plugin_instance->new_accounts, 
+			g_ptr_array_index(plugin_instance->new_accounts,
 					  plugin_instance->updated);
 		g_cancellable_reset(plugin_instance->cancellable);
 		g_dbus_proxy_call(plugin_instance->server_proxy,
 				  SYNCE_SERVER_GET_CONFIG,
 				  g_variant_new(
-					  "(sb)", 
+					  "(sb)",
 					  plugin_instance->current_account,
 					  FALSE),
 				  G_DBUS_CALL_FLAGS_NONE,
 				  -1, plugin_instance->cancellable,
-				  prv_get_config_cb, plugin_instance);		
+				  prv_get_config_cb, plugin_instance);
 	} else {
 		plugin_instance->cb_err = PROVMAN_ERR_NONE;
-		plugin_instance->completion_source = 
+		plugin_instance->completion_source =
 			g_idle_add(prv_complete_sync_in, plugin_instance);
 	}
 }
@@ -578,20 +579,20 @@ static void prv_get_configs_cb(GObject *source_object, GAsyncResult *result,
 
 	if (res)
 		g_variant_unref(res);
-	
+
 	return;
 
 on_error:
 
 	if (res)
 		g_variant_unref(res);
-	
+
 	plugin_instance->cb_err = err;
-	plugin_instance->completion_source = 
+	plugin_instance->completion_source =
 		g_idle_add(prv_complete_sync_in, plugin_instance);
 }
 
-static void prv_server_proxy_created(GObject *source_object, 
+static void prv_server_proxy_created(GObject *source_object,
 				     GAsyncResult *result,
 				     gpointer user_data)
 {
@@ -622,51 +623,51 @@ static void prv_server_proxy_created(GObject *source_object,
 			  G_DBUS_CALL_FLAGS_NONE,
 			  -1, plugin_instance->cancellable,
 			  prv_get_configs_cb, plugin_instance);
-		
+
 	return;
 
 on_error:
-	
+
 	if (proxy)
 		g_object_unref(proxy);
 
 	plugin_instance->cb_err = err;
-	plugin_instance->completion_source = 
-		g_idle_add(prv_complete_sync_in, plugin_instance);	
-	
+	plugin_instance->completion_source =
+		g_idle_add(prv_complete_sync_in, plugin_instance);
+
 	return;
 }
 
 int synce_plugin_sync_in(provman_plugin_instance instance,
-			 const char* imsi, 
-			 provman_plugin_sync_in_cb callback, 
+			 const char* imsi,
+			 provman_plugin_sync_in_cb callback,
 			 void *user_data)
 {
 	synce_plugin_t *plugin_instance = instance;
-	
+
 	PROVMAN_LOG("Synce Sync In");
 
 	plugin_instance->sync_in_cb = callback;
 	plugin_instance->sync_in_user_data = user_data;
 
 	if (!plugin_instance->accounts)
-		plugin_instance->accounts = 
+		plugin_instance->accounts =
 			g_hash_table_new_full(g_str_hash, g_str_equal, g_free,
 					      prv_g_object_unref);
-	
+
 	plugin_instance->cancellable = g_cancellable_new();
-		
-	g_dbus_proxy_new_for_bus(G_BUS_TYPE_SESSION, 
+
+	g_dbus_proxy_new_for_bus(G_BUS_TYPE_SESSION,
 				 G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
-				 NULL, 
-				 SYNCE_SERVER_NAME, 
+				 NULL,
+				 SYNCE_SERVER_NAME,
 				 SYNCE_SERVER_OBJECT,
 				 SYNCE_SERVER_INTERFACE,
 				 plugin_instance->cancellable,
 				 prv_server_proxy_created,
 				 plugin_instance);
 
-		
+
 	return PROVMAN_ERR_NONE;
 }
 
@@ -699,7 +700,7 @@ static gboolean prv_complete_sync_out(gpointer user_data)
 
 	g_ptr_array_free(plugin_instance->to_remove, TRUE);
 	plugin_instance->to_remove = NULL;
-	
+
 	return FALSE;
 }
 
@@ -726,26 +727,26 @@ on_error:
 	return;
 }
 
-static void prv_insert_updated_setting(GHashTable *ht, gchar *context, 
+static void prv_insert_updated_setting(GHashTable *ht, gchar *context,
 				       const gchar* key, const gchar* value)
 {
 	GHashTable *account_settings;
 
-	account_settings = g_hash_table_lookup(ht, context); 
+	account_settings = g_hash_table_lookup(ht, context);
 	if (!account_settings) {
-		account_settings = 
+		account_settings =
 			g_hash_table_new_full(g_str_hash, g_str_equal,
 					      g_free, g_free);
-		
+
 		g_hash_table_insert(ht, context, account_settings);
 		context = NULL;
 	}
-	
+
 	g_hash_table_insert(account_settings, g_strdup(key), g_strdup(value));
-	g_free(context);	
+	g_free(context);
 }
 
-static void prv_add_update_changed(synce_plugin_t *plugin_instance, 
+static void prv_add_update_changed(synce_plugin_t *plugin_instance,
 				   GHashTable *added, GHashTable *changed,
 				   const gchar* key, const gchar* value)
 {
@@ -757,8 +758,8 @@ static void prv_add_update_changed(synce_plugin_t *plugin_instance,
 						     - 1);
 	if (!context)
 		goto on_error;
-	
-	if (g_hash_table_lookup_extended(added, context, NULL, NULL)) 
+
+	if (g_hash_table_lookup_extended(added, context, NULL, NULL))
 		prv_insert_updated_setting(plugin_instance->to_add, context,
 					   key, value);
 	else if (g_hash_table_lookup_extended(changed, context, NULL, NULL))
@@ -766,13 +767,14 @@ static void prv_add_update_changed(synce_plugin_t *plugin_instance,
 					   key, value);
 	else
 		g_free(context);
-		
+
 on_error:
 
 	return;
 }
 
-static void prv_analyse(synce_plugin_t *plugin_instance, GHashTable* new_settings)
+static void prv_analyse(synce_plugin_t *plugin_instance,
+			GHashTable* new_settings)
 {
 	GHashTable *in_contexts;
 	GHashTable *out_contexts;
@@ -786,10 +788,10 @@ static void prv_analyse(synce_plugin_t *plugin_instance, GHashTable* new_setting
 	changed = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	added = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL);
 	plugin_instance->to_remove = g_ptr_array_new_with_free_func(g_free);
-	plugin_instance->to_update = 
+	plugin_instance->to_update =
 		g_hash_table_new_full(g_str_hash, g_str_equal,
 				      g_free, prv_g_hash_table_unref);
-	plugin_instance->to_add = 
+	plugin_instance->to_add =
 		g_hash_table_new_full(g_str_hash, g_str_equal,
 				      g_free, prv_g_hash_table_unref);
 
@@ -804,15 +806,16 @@ static void prv_analyse(synce_plugin_t *plugin_instance, GHashTable* new_setting
 
 	g_hash_table_iter_init(&iter, in_contexts);
 	while (g_hash_table_iter_next(&iter, &key, NULL))
-		if (!g_hash_table_lookup_extended(out_contexts, key, NULL, 
+		if (!g_hash_table_lookup_extended(out_contexts, key, NULL,
 						  NULL)) {
-			g_ptr_array_add(plugin_instance->to_remove, g_strdup(key));			
+			g_ptr_array_add(plugin_instance->to_remove,
+					g_strdup(key));
 			PROVMAN_LOGF("Removing Account %s", key);
 		}
 
 	g_hash_table_iter_init(&iter, out_contexts);
 	while (g_hash_table_iter_next(&iter, &key, NULL))
-		if (!g_hash_table_lookup_extended(in_contexts, key, NULL, 
+		if (!g_hash_table_lookup_extended(in_contexts, key, NULL,
 						  NULL))
 			if (!g_hash_table_lookup_extended(added, key, NULL,
 							  NULL)) {
@@ -837,7 +840,7 @@ static void prv_analyse(synce_plugin_t *plugin_instance, GHashTable* new_setting
 	g_hash_table_unref(changed);
 	g_hash_table_unref(in_contexts);
 	g_hash_table_unref(out_contexts);
-	
+
 	plugin_instance->so_state = SYNCE_PLUGIN_REMOVE;
 	plugin_instance->removed = -1;
 }
@@ -848,7 +851,7 @@ static void prv_session_command_cleanup(synce_plugin_t *plugin_instance)
 	plugin_instance->current_context = NULL;
 	g_object_unref(plugin_instance->session_proxy);
 	plugin_instance->session_proxy = NULL;
-	plugin_instance->session_command = NULL;		
+	plugin_instance->session_command = NULL;
 }
 
 static const gchar *prv_client_to_plugin_prop(const gchar *prop)
@@ -885,12 +888,12 @@ static const gchar *prv_client_to_plugin_source(const gchar *source,
 	for (i = 0; i < g_synce_source_map_len; ++i)
 		if (!strcmp(source, g_synce_source_map[i].client_source))
 			break;
-	
+
 	if (i < g_synce_source_map_len) {
 		retval = g_synce_source_map[i].plugin_source;
 		*backend = g_synce_source_map[i].backend;
 	}
-	
+
 	return retval;
 }
 
@@ -903,12 +906,12 @@ static void prv_map_prop(const gchar *prop_start, const gchar* value,
 	GHashTable *source;
 	const gchar *plugin_source_name;
 	const gchar *backend;
-	
+
 	source_end = strchr(prop_start, '/');
 	if (!source_end) {
 		plugin_prop = prv_client_to_plugin_prop(prop_start);
 		if (plugin_prop)
-			g_hash_table_insert(general_settings, 
+			g_hash_table_insert(general_settings,
 					    (gpointer) plugin_prop,
 					    (gpointer) value);
 	} else {
@@ -932,7 +935,7 @@ static void prv_map_prop(const gchar *prop_start, const gchar* value,
 					    plugin_source_name,
 					    source);
 			if (backend)
-				g_hash_table_insert(source, 
+				g_hash_table_insert(source,
 						    PLUGIN_PROP_SYNCE_BACKEND,
 						    (gpointer) backend);
 		}
@@ -941,7 +944,7 @@ static void prv_map_prop(const gchar *prop_start, const gchar* value,
 	}
 
 on_error:
-	
+
 	return;
 }
 
@@ -953,13 +956,13 @@ static GVariant* prv_create_prop_ht(GHashTable *ht)
 	GVariant **settings = g_new0(GVariant *, g_hash_table_size(ht));
 	GVariant *retval;
 	unsigned int i = 0;
-	
+
 	g_hash_table_iter_init(&iter, ht);
 	while (g_hash_table_iter_next(&iter, &key, &value))
 		settings[i++] = g_variant_new_dict_entry(
 			g_variant_new_string(key),
 			g_variant_new_string(value));
-	retval = g_variant_new_array(G_VARIANT_TYPE("{ss}"), settings, i);						    
+	retval = g_variant_new_array(G_VARIANT_TYPE("{ss}"), settings, i);
 	g_free(settings);
 
 	return retval;
@@ -992,12 +995,12 @@ static GVariant *prv_make_set_context_params(GHashTable *general_settings,
 	dictionary = g_variant_new_array(G_VARIANT_TYPE("{sa{ss}}"), settings,
 					 i);
 	g_free(settings);
-	
+
 	settings = g_new0(GVariant *, 3);
 	settings[0] = g_variant_new_boolean(update);
 	settings[1] = g_variant_new_boolean(false);
 	settings[2] = dictionary;
-	
+
 	retval = g_variant_new_tuple(settings, 3);
 	g_free(settings);
 
@@ -1012,7 +1015,7 @@ static void prv_make_context(synce_plugin_t *plugin_instance,
 	gpointer key;
 	gpointer value;
 	gchar *prop_start;
-	
+
 	g_hash_table_iter_init(&iter, plugin_instance->current_settings);
 
 	while (g_hash_table_iter_next(&iter, &key, &value)) {
@@ -1033,12 +1036,12 @@ static void prv_detach_cb(GObject *source_object, GAsyncResult *result,
 	int err;
 	GVariant *res;
 
-	err = prv_complete_results_call(plugin_instance, 
+	err = prv_complete_results_call(plugin_instance,
 					plugin_instance->session_proxy,
 					result, prv_complete_sync_out, &res);
 
 	prv_session_command_cleanup(plugin_instance);
-	
+
 	if (err != PROVMAN_ERR_CANCELLED) {
 		if (err == PROVMAN_ERR_NONE)
 			g_variant_unref(res);
@@ -1064,7 +1067,7 @@ static void prv_context_set_cb(GObject *source_object, GAsyncResult *result,
 	int err;
 	GVariant *res;
 
-	err = prv_complete_results_call(plugin_instance, 
+	err = prv_complete_results_call(plugin_instance,
 					plugin_instance->session_proxy,
 					result, prv_complete_sync_out, &res);
 
@@ -1103,10 +1106,10 @@ static void prv_set_context(synce_plugin_t *plugin_instance)
 
 	general_settings = g_hash_table_new_full(g_str_hash, g_str_equal,
 						 NULL, NULL);
-	
+
 	sources = g_hash_table_new_full(g_str_hash, g_str_equal,
 					NULL, prv_g_hash_table_unref);
-	
+
 	prv_make_context(plugin_instance, general_settings,
 			 sources);
 
@@ -1152,7 +1155,7 @@ static void prv_unpack_template(GVariant *template,
 						    name, source);
 			}
 		}
-			
+
 		settings_iter = g_variant_iter_new(settings);
 		while (g_variant_iter_next(settings_iter,"{&s&s}", &key,
 					   &value))
@@ -1171,9 +1174,9 @@ static void prv_merge_sources(GHashTable *sources, GHashTable *template_sources)
 	gpointer value;
 	GHashTable *template_source;
 	GHashTable *source;
-	
+
 	g_hash_table_iter_init(&iter, template_sources);
-	while (g_hash_table_iter_next(&iter, &key, &value)) {		
+	while (g_hash_table_iter_next(&iter, &key, &value)) {
 		source = g_hash_table_lookup(sources, key);
 		if (source) {
 			template_source = value;
@@ -1199,23 +1202,21 @@ static void prv_context_add_cb(GObject *source_object, GAsyncResult *result,
 	GVariant *params;
 	GVariant *dictionary;
 
-	err = prv_complete_results_call(plugin_instance, 
+	err = prv_complete_results_call(plugin_instance,
 					plugin_instance->session_proxy,
 					result, prv_complete_sync_out, &res);
 
 	PROVMAN_LOGF("Context added with err %d", err);
 
-	if (err == PROVMAN_ERR_NONE) {		
+	if (err == PROVMAN_ERR_NONE) {
 		general_settings = g_hash_table_new_full(g_str_hash,
 							 g_str_equal, NULL,
 							 NULL);
-	
+
 		sources = g_hash_table_new_full(g_str_hash, g_str_equal,
 						NULL, prv_g_hash_table_unref);
-		template_sources = g_hash_table_new_full(g_str_hash,
-							 g_str_equal,
-							 NULL, 
-							 prv_g_hash_table_unref);
+		template_sources = g_hash_table_new_full(
+			g_str_hash, g_str_equal, NULL, prv_g_hash_table_unref);
 		dictionary = g_variant_get_child_value(res, 0);
 		prv_unpack_template(dictionary, general_settings,
 				    template_sources);
@@ -1227,7 +1228,7 @@ static void prv_context_add_cb(GObject *source_object, GAsyncResult *result,
 
 		prv_make_context(plugin_instance, general_settings,
 				 sources);
-		
+
 		/* We don't want default source settings for local sync. */
 
 		if (strncmp(plugin_instance->current_context,
@@ -1250,7 +1251,7 @@ static void prv_context_add_cb(GObject *source_object, GAsyncResult *result,
 		g_hash_table_unref(sources);
 		g_hash_table_unref(general_settings);
 		g_variant_unref(dictionary);
-		g_variant_unref(res);		
+		g_variant_unref(res);
 	} else if (err != PROVMAN_ERR_CANCELLED) {
 		prv_session_detach(plugin_instance);
 	} else {
@@ -1278,7 +1279,7 @@ static void prv_context_removed_cb(GObject *source_object, GAsyncResult *result,
 	int err;
 	GVariant *res;
 
-	err = prv_complete_results_call(plugin_instance, 
+	err = prv_complete_results_call(plugin_instance,
 					plugin_instance->session_proxy,
 					result, prv_complete_sync_out, &res);
 
@@ -1296,7 +1297,7 @@ static void prv_context_removed_cb(GObject *source_object, GAsyncResult *result,
 					     LOCAL_KEY_SYNC_ROOT,
 					     plugin_instance->current_context);
 	}
-	
+
 	if (err != PROVMAN_ERR_CANCELLED)
 		prv_session_detach(plugin_instance);
 	else
@@ -1316,10 +1317,10 @@ static void prv_remove_context(synce_plugin_t *plugin_instance)
 			  params,
 			  G_DBUS_CALL_FLAGS_NONE,
 			  -1, plugin_instance->cancellable,
-			  prv_context_removed_cb, plugin_instance);	
+			  prv_context_removed_cb, plugin_instance);
 }
 
-static void prv_session_proxy_created_cb(GObject *source_object, 
+static void prv_session_proxy_created_cb(GObject *source_object,
 					 GAsyncResult *result,
 					 gpointer user_data)
 {
@@ -1327,14 +1328,14 @@ static void prv_session_proxy_created_cb(GObject *source_object,
 	synce_plugin_t *plugin_instance = user_data;
 	GDBusProxy *proxy = NULL;
 
-	err = prv_complete_proxy_call(plugin_instance, result, 
-				      prv_complete_sync_out, &proxy);	
+	err = prv_complete_proxy_call(plugin_instance, result,
+				      prv_complete_sync_out, &proxy);
 
 	PROVMAN_LOGF("Created new Session Proxy with err %d", err);
 
 	if (err == PROVMAN_ERR_NONE) {
 		plugin_instance->session_proxy = proxy;
-		plugin_instance->session_command(plugin_instance);		
+		plugin_instance->session_command(plugin_instance);
 	} else {
 		prv_session_command_cleanup(plugin_instance);
 		if (err != PROVMAN_ERR_CANCELLED)
@@ -1348,9 +1349,9 @@ static void prv_session_proxy_cb(GObject *source_object, GAsyncResult *result,
 	synce_plugin_t *plugin_instance = user_data;
 	int err;
 	GVariant *res;
-	const gchar *path;	
+	const gchar *path;
 
-	err = prv_complete_results_call(plugin_instance, 
+	err = prv_complete_results_call(plugin_instance,
 					plugin_instance->server_proxy,
 					result, prv_complete_sync_out, &res);
 
@@ -1361,10 +1362,10 @@ static void prv_session_proxy_cb(GObject *source_object, GAsyncResult *result,
 		PROVMAN_LOGF("Session object Path %s", path);
 		g_cancellable_reset(plugin_instance->cancellable);
 		g_dbus_proxy_new_for_bus(
-			G_BUS_TYPE_SESSION, 
+			G_BUS_TYPE_SESSION,
 			G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
-			NULL, 
-			SYNCE_SERVER_NAME, 
+			NULL,
+			SYNCE_SERVER_NAME,
 			path,
 			SYNCE_SESSION_INTERFACE,
 			plugin_instance->cancellable,
@@ -1372,7 +1373,7 @@ static void prv_session_proxy_cb(GObject *source_object, GAsyncResult *result,
 			plugin_instance);
 		g_variant_unref(res);
 	} else {
-		prv_session_command_cleanup(plugin_instance);		
+		prv_session_command_cleanup(plugin_instance);
 		if (err != PROVMAN_ERR_CANCELLED)
 			prv_step_sync_out(plugin_instance);
 	}
@@ -1383,9 +1384,9 @@ static void prv_create_session_proxy(synce_plugin_t *plugin_instance,
 				     session_command_t command)
 {
 	GVariant *params;
-	
+
 	plugin_instance->current_context = g_strdup(plugin_id);
-	
+
 	params = g_variant_new_parsed("(%s, ['no-sync'])", plugin_id);
 
 	g_cancellable_reset(plugin_instance->cancellable);
@@ -1407,9 +1408,9 @@ static void prv_step_remove(synce_plugin_t *plugin_instance)
 	if (plugin_instance->removed < to_remove) {
 		id = g_ptr_array_index(plugin_instance->to_remove,
 				       plugin_instance->removed);
-		
+
 		syslog(LOG_INFO, "synce Plugin: Removing account %s", id);
-		
+
 		prv_create_session_proxy(plugin_instance,  id,
 					 prv_remove_context);
 	} else {
@@ -1426,7 +1427,7 @@ static void prv_step_add(synce_plugin_t *plugin_instance)
 	gchar *plugin_id;
 
 	PROVMAN_LOG("prv_step_add");
-	
+
 	if (g_hash_table_iter_next(&plugin_instance->iter, &key, &value)) {
 		plugin_id = (gchar *) key;
 		PROVMAN_LOGF("Adding %s", plugin_id);
@@ -1438,7 +1439,7 @@ static void prv_step_add(synce_plugin_t *plugin_instance)
 		plugin_instance->so_state = SYNCE_PLUGIN_UPDATE;
 		g_hash_table_iter_init(&plugin_instance->iter,
 				       plugin_instance->to_update);
-	}		  
+	}
 }
 
 static void prv_step_update(synce_plugin_t *plugin_instance)
@@ -1450,7 +1451,7 @@ static void prv_step_update(synce_plugin_t *plugin_instance)
 				   &value)) {
 		syslog(LOG_INFO, "synce Plugin: Updating account %s",
 		       (char* ) key);
-		
+
 		prv_create_session_proxy(plugin_instance, key,
 					 prv_set_context);
 		plugin_instance->current_settings = value;
@@ -1463,20 +1464,20 @@ static void prv_step_sync_out(synce_plugin_t *plugin_instance)
 {
 	if (plugin_instance->so_state == SYNCE_PLUGIN_REMOVE)
 		prv_step_remove(plugin_instance);
-	
+
 	if (plugin_instance->so_state == SYNCE_PLUGIN_ADD)
 		prv_step_add(plugin_instance);
-	
+
 	if (plugin_instance->so_state == SYNCE_PLUGIN_UPDATE)
 		prv_step_update(plugin_instance);
-	
+
 	if (plugin_instance->so_state == SYNCE_PLUGIN_FINISHED)
 		(void) g_idle_add(prv_complete_sync_out, plugin_instance);
 }
 
-int synce_plugin_sync_out(provman_plugin_instance instance, 
-			  GHashTable* settings, 
-			  provman_plugin_sync_out_cb callback, 
+int synce_plugin_sync_out(provman_plugin_instance instance,
+			  GHashTable* settings,
+			  provman_plugin_sync_out_cb callback,
 			  void *user_data)
 {
 	synce_plugin_t *plugin_instance = instance;
@@ -1487,8 +1488,8 @@ int synce_plugin_sync_out(provman_plugin_instance instance,
 
 	plugin_instance->sync_out_cb = callback;
 	plugin_instance->sync_out_user_data = user_data;
-	
-	prv_analyse(plugin_instance, settings);	
+
+	prv_analyse(plugin_instance, settings);
 	plugin_instance->cancellable = g_cancellable_new();
 
 	prv_step_sync_out(plugin_instance);

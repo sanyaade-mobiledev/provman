@@ -64,4 +64,3 @@ MeeGo Login Plugin
 
 * Needs to be written.
 
-  

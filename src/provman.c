@@ -94,7 +94,7 @@ struct provman_context_ {
 	plugin_manager_t *plugin_manager;
 };
 
-static const gchar g_provman_introspection[] = 
+static const gchar g_provman_introspection[] =
 	"<node>"
 	"  <interface name='"PROVMAN_INTERFACE"'>"
 	"    <method name='"PROVMAN_INTERFACE_START"'>"
@@ -227,7 +227,7 @@ static gboolean prv_timeout(gpointer user_data)
 	g_main_loop_quit(context->main_loop);
 	context->timeout_id = 0;
 
-	PROVMAN_LOG("No requests received.  Exitting.");	
+	PROVMAN_LOG("No requests received.  Exitting.");
 
 	return FALSE;
 }
@@ -259,7 +259,8 @@ static gboolean prv_process_task(gpointer user_data)
 			provman_task_set(context->plugin_manager, task);
 			break;
 		case PROVMAN_TASK_SET_MULTIPLE:
-			provman_task_set_multiple(context->plugin_manager, task);
+			provman_task_set_multiple(context->plugin_manager,
+						  task);
 			break;
 		case PROVMAN_TASK_SET_MULTIPLE_META:
 			provman_task_set_multiple_meta(context->plugin_manager,
@@ -312,13 +313,13 @@ static gboolean prv_process_task(gpointer user_data)
 	}
 
 	if (!async_task) {
-		if (context->quitting || 
+		if (context->quitting ||
 		    ((context->tasks->len == 0) && !context->holder)) {
 			PROVMAN_LOGF("No tasks left to execute. Quitting in"
 				     " %u milli-seconds", PROVMAN_TIMEOUT);
 			context->timeout_id = g_timeout_add(PROVMAN_TIMEOUT,
 							    prv_timeout,
-							    context);			
+							    context);
 			context->idle_id = 0;
 			return FALSE;
 		} else if (context->holder) {
@@ -334,7 +335,7 @@ static gboolean prv_process_task(gpointer user_data)
 	}
 }
 
-static void prv_provman_method_call(GDBusConnection *connection, 
+static void prv_provman_method_call(GDBusConnection *connection,
 					 const gchar *sender,
 					 const gchar *object_path,
 					 const gchar *interface_name,
@@ -386,10 +387,10 @@ static void prv_provman_context_free(provman_context *context)
 	if (context->sig_id)
 		(void) g_source_remove(context->sig_id);
 
-	if (context->connection) 
+	if (context->connection)
 		if (context->prov_client_id)
 			g_dbus_connection_unregister_object(
-				context->connection, 
+				context->connection,
 				context->prov_client_id);
 
 	if (context->timeout_id)
@@ -412,7 +413,7 @@ static void prv_provman_context_free(provman_context *context)
 
 static void prv_add_task(provman_context *context, provman_task *task)
 {
-	g_ptr_array_add(context->tasks, task);	
+	g_ptr_array_add(context->tasks, task);
 
 	if (!context->idle_id && !prv_async_in_progress(context))
 		context->idle_id = g_idle_add(prv_process_task, context);
@@ -430,7 +431,7 @@ static void prv_add_sync_in_task(provman_context *context,
 
 	prv_add_task(context, task);
 }
-			 
+
 static void prv_add_sync_out_task(provman_context *context,
 				  GDBusMethodInvocation *invocation)
 {
@@ -575,7 +576,7 @@ static void prv_add_set_multiple_meta_task(provman_context *context,
 	GVariant *variant;
 
 	PROVMAN_LOG("Add Set Multiple Meta");
-	
+
 	variant = g_variant_get_child_value(parameters, 0);
 	provman_task_new(PROVMAN_TASK_SET_MULTIPLE_META, invocation, &task);
 	task->variant = g_variant_ref_sink(variant);
@@ -679,27 +680,28 @@ static void prv_session_finished(provman_context *context)
 	}
 
 	if (context->queued_clients) {
-		invocation = context->queued_clients->data;			
+		invocation = context->queued_clients->data;
 		context->holder = g_strdup(g_dbus_method_invocation_get_sender(
 						   invocation));
-		context->holder_watcher = 
+		context->holder_watcher =
 			g_bus_watch_name(context->bus,
-					 context->holder, 0, 
+					 context->holder, 0,
 					 NULL, prv_lost_client,
 					 context, NULL);
 
-		parameters = 
+		parameters =
 			g_dbus_method_invocation_get_parameters(invocation);
 
 		g_variant_get(parameters, "(&s)", &value);
 
-		PROVMAN_LOGF("start session with %s IMSI %s", context->holder, value);
-		
+		PROVMAN_LOGF("start session with %s IMSI %s", context->holder,
+			     value);
+
 		prv_add_sync_in_task(context, value);
 
 		g_dbus_method_invocation_return_value(invocation, NULL);
 
-		context->queued_clients = 
+		context->queued_clients =
 			g_slist_delete_link(context->queued_clients,
 					    context->queued_clients);
 	}
@@ -732,7 +734,7 @@ static bool prv_find_connection(provman_context *context,
 {
 	GDBusMethodInvocation *invocation;
 	GSList *ptr;
-	const gchar *bus_name = 
+	const gchar *bus_name =
 		g_dbus_method_invocation_get_sender(new_invocation);
 	bool found = !g_strcmp0(bus_name, context->holder);
 
@@ -740,7 +742,7 @@ static bool prv_find_connection(provman_context *context,
 
 	while (!found && ptr) {
 		invocation = ptr->data;
-		found = !g_strcmp0(bus_name, 
+		found = !g_strcmp0(bus_name,
 				   g_dbus_method_invocation_get_sender(
 					   invocation));
 		ptr = ptr->next;
@@ -757,7 +759,7 @@ static void prv_reset_startup_timer(provman_context *context)
 	}
 }
 
-static void prv_provman_method_call(GDBusConnection *connection, 
+static void prv_provman_method_call(GDBusConnection *connection,
 				    const gchar *sender,
 				    const gchar *object_path,
 				    const gchar *interface_name,
@@ -776,16 +778,16 @@ static void prv_provman_method_call(GDBusConnection *connection,
 			context->holder = g_strdup(
 				g_dbus_method_invocation_get_sender(
 					invocation));
-			context->holder_watcher = 
-				g_bus_watch_name(context->bus, 
+			context->holder_watcher =
+				g_bus_watch_name(context->bus,
 						 context->holder, 0, NULL,
-						 prv_lost_client, context, 
+						 prv_lost_client, context,
 						 NULL);
 
 			PROVMAN_LOGF("start session with %s", context->holder);
 
 			prv_add_sync_in_task(context, parameters);
-			g_dbus_method_invocation_return_value(invocation, NULL);			
+			g_dbus_method_invocation_return_value(invocation, NULL);
 		} else if (!prv_find_connection(context, invocation)) {
 			PROVMAN_LOG("Queuing start request");
 			context->queued_clients = g_slist_append(
@@ -805,54 +807,54 @@ static void prv_provman_method_call(GDBusConnection *connection,
 		prv_reset_startup_timer(context);
 		prv_add_get_type_info_task(context, invocation, parameters);
 	} else {
-		if (g_strcmp0(context->holder, 
+		if (g_strcmp0(context->holder,
 			      g_dbus_method_invocation_get_sender(
 				      invocation)) != 0) {
 			g_dbus_method_invocation_return_dbus_error(
 				invocation, PROVMAN_DBUS_ERR_UNEXPECTED,
 				"");
-			PROVMAN_LOGF("Client called %s before start", 
+			PROVMAN_LOGF("Client called %s before start",
 				      method_name);
 		}
 		else if (!g_strcmp0(method_name, PROVMAN_INTERFACE_END)) {
 			prv_add_sync_out_task(context, invocation);
 		} else if (!g_strcmp0(method_name, PROVMAN_INTERFACE_ABORT)) {
 			prv_add_abort_task(context, invocation);
-		} else if (!g_strcmp0(method_name, 
+		} else if (!g_strcmp0(method_name,
 				      PROVMAN_INTERFACE_SET)) {
 			prv_add_set_task(context, invocation, parameters);
-		} else if (!g_strcmp0(method_name, 
+		} else if (!g_strcmp0(method_name,
 				      PROVMAN_INTERFACE_SET_MULTIPLE)) {
 			prv_add_set_multiple_task(context, invocation,
 						  parameters);
-		} else if (!g_strcmp0(method_name, 
+		} else if (!g_strcmp0(method_name,
 				      PROVMAN_INTERFACE_SET_MULTIPLE_META)) {
 			prv_add_set_multiple_meta_task(context, invocation,
 						       parameters);
 		} else if (!g_strcmp0(method_name, PROVMAN_INTERFACE_GET)) {
 			prv_add_get_task(context, invocation, parameters);
-		} else if (!g_strcmp0(method_name, 
+		} else if (!g_strcmp0(method_name,
 				      PROVMAN_INTERFACE_GET_MULTIPLE)) {
 			prv_add_get_multiple_task(context, invocation,
 						  parameters);
-		} else if (!g_strcmp0(method_name, 
+		} else if (!g_strcmp0(method_name,
 				      PROVMAN_INTERFACE_GET_ALL)) {
 			prv_add_get_all_task(context, invocation, parameters);
-		} else if (!g_strcmp0(method_name, 
+		} else if (!g_strcmp0(method_name,
 				      PROVMAN_INTERFACE_GET_ALL_META)) {
 			prv_add_get_all_meta_task(context, invocation,
 						  parameters);
-		} else if (!g_strcmp0(method_name, 
+		} else if (!g_strcmp0(method_name,
 				      PROVMAN_INTERFACE_DELETE)) {
 			prv_add_delete_task(context, invocation, parameters);
-		} else if (!g_strcmp0(method_name, 
+		} else if (!g_strcmp0(method_name,
 				      PROVMAN_INTERFACE_DELETE_MULTIPLE)) {
 			prv_add_delete_multiple_task(context, invocation,
 						     parameters);
 		} else if (!g_strcmp0(method_name,
 				      PROVMAN_INTERFACE_SET_META)) {
 			prv_add_set_meta_task(context, invocation, parameters);
-		} else if (!g_strcmp0(method_name, 
+		} else if (!g_strcmp0(method_name,
 				      PROVMAN_INTERFACE_GET_META)) {
 			prv_add_get_meta_task(context, invocation, parameters);
 		}
@@ -868,8 +870,8 @@ static void prv_bus_acquired(GDBusConnection *connection, const gchar *name,
 
 	PROVMAN_LOG("D-Bus Connection Acquired");
 
-	context->prov_client_id = 
-		g_dbus_connection_register_object(connection, 
+	context->prov_client_id =
+		g_dbus_connection_register_object(connection,
 						  PROVMAN_OBJECT,
 						  context->node_info->
 						  interfaces[0],
@@ -905,7 +907,7 @@ static void prv_name_lost(GDBusConnection *connection, const gchar *name,
 	prv_quit(context);
 }
 
-static gboolean prv_quit_handler(GIOChannel *source, GIOCondition condition, 
+static gboolean prv_quit_handler(GIOChannel *source, GIOCondition condition,
 				 gpointer user_data)
 {
 	provman_context *context = user_data;
@@ -934,20 +936,20 @@ static int prv_init_signal_handler(sigset_t mask, provman_context *context)
 	channel = g_io_channel_unix_new(fd);
 	g_io_channel_set_close_on_unref(channel, TRUE);
 
-	if (g_io_channel_set_flags(channel, G_IO_FLAG_NONBLOCK, NULL) != 
+	if (g_io_channel_set_flags(channel, G_IO_FLAG_NONBLOCK, NULL) !=
 	    G_IO_STATUS_NORMAL) {
 		err = PROVMAN_ERR_IO;
 		goto on_error;
 	}
 
-	if (g_io_channel_set_encoding(channel, NULL, NULL) != 
+	if (g_io_channel_set_encoding(channel, NULL, NULL) !=
 	    G_IO_STATUS_NORMAL) {
 		err = PROVMAN_ERR_IO;
 		goto on_error;
 	}
 
-	context->sig_id = g_io_add_watch(channel, G_IO_IN | G_IO_PRI, 
-					 prv_quit_handler, 
+	context->sig_id = g_io_add_watch(channel, G_IO_IN | G_IO_PRI,
+					 prv_quit_handler,
 					 context);
 
 	g_io_channel_unref(channel);
@@ -959,7 +961,7 @@ on_error:
 	if (channel)
 		g_io_channel_unref(channel);
 
-	PROVMAN_LOG("Unable to set up signal handlers");       
+	PROVMAN_LOG("Unable to set up signal handlers");
 
 	return err;
 }
@@ -1000,10 +1002,12 @@ int provman_run(GBusType bus, const char *log_path)
 				 bus == G_BUS_TYPE_SYSTEM);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
-	
+
 	PROVMAN_LOG("Plugins OK");
 
-	context.node_info = g_dbus_node_info_new_for_xml(g_provman_introspection, NULL);
+	context.node_info =
+		g_dbus_node_info_new_for_xml(g_provman_introspection, NULL);
+
 	if (!context.node_info) {
 		PROVMAN_LOG("Unable to create introspection data!");
 		err = PROVMAN_ERR_UNKNOWN;
@@ -1038,7 +1042,7 @@ on_error:
 	PROVMAN_LOGF("============= provman exitting (%d)"
 		      " =============", err);
 
-#ifdef PROVMAN_LOGGING 
+#ifdef PROVMAN_LOGGING
 	provman_log_close();
 #endif
 

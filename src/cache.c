@@ -50,7 +50,8 @@ struct provman_cache_key_t_ {
 	gchar *key_copy;
 };
 
-typedef void (*provman_cache_visit_cb_t)(const gchar* path, provman_cache_t *node,
+typedef void (*provman_cache_visit_cb_t)(const gchar* path,
+					 provman_cache_t *node,
 					 gpointer user_data);
 
 typedef void (*visit_fn_t)(provman_cache_t *node, GString *path,
@@ -63,7 +64,7 @@ static void prv_unref_hash_table(gpointer ht)
 }
 
 static void prv_del_node(void *node)
-{	
+{
 	provman_cache_delete((provman_cache_t *) node);
 }
 
@@ -88,7 +89,7 @@ static int prv_find_node(provman_cache_t *cache, const gchar *key,
 		err = PROVMAN_ERR_BAD_ARGS;
 		goto on_error;
 	}
-	
+
 	if (!strcmp(key,"/")) {
 		*node = cache;
 	} else {
@@ -99,7 +100,7 @@ static int prv_find_node(provman_cache_t *cache, const gchar *key,
 			if (!children) {
 				err = PROVMAN_ERR_NOT_FOUND;
 				goto on_error;
-			}			
+			}
 
 			child = g_hash_table_lookup(children, child_names[i]);
 			if (!child) {
@@ -108,7 +109,7 @@ static int prv_find_node(provman_cache_t *cache, const gchar *key,
 			}
 			children = child->children;
 		}
-		
+
 		*node = child;
 	}
 
@@ -120,7 +121,7 @@ on_error:
 	return err;
 }
 
-			 
+
 int provman_cache_exists(provman_cache_t *cache, const gchar *key, bool *leaf)
 {
 	provman_cache_t *node;
@@ -130,7 +131,7 @@ int provman_cache_exists(provman_cache_t *cache, const gchar *key, bool *leaf)
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
 
-	*leaf = node->children == NULL;	
+	*leaf = node->children == NULL;
 
 on_error:
 
@@ -150,14 +151,14 @@ static int prv_create_and_add_node(provman_cache_t *cache, const gchar *key,
 		err = PROVMAN_ERR_BAD_ARGS;
 		goto on_error;
 	}
-	
+
 	child_names = g_strsplit(key + 1, "/", 0);
 
 	if (!child_names[0]) {
 		err = PROVMAN_ERR_BAD_ARGS;
 		goto on_error;
 	}
-	
+
 	/* Find deepest existing ancestor */
 
 	child = cache;
@@ -165,11 +166,11 @@ static int prv_create_and_add_node(provman_cache_t *cache, const gchar *key,
 	for (i = 0; child_names[i] && child_names[i + 1]; ++i) {
 		if (!child->children) {
 			err = PROVMAN_ERR_BAD_ARGS;
-			goto on_error;			
+			goto on_error;
 		}
 
 		next_child = g_hash_table_lookup(child->children,
-						 child_names[i]);			
+						 child_names[i]);
 		if (!next_child)
 			break;
 
@@ -180,7 +181,7 @@ static int prv_create_and_add_node(provman_cache_t *cache, const gchar *key,
 		next_child = g_slice_new0(provman_cache_t);
 		next_child->parent = child;
 		if (!child->children)
-			child->children = 
+			child->children =
 				g_hash_table_new_full(g_str_hash, g_str_equal,
 						      g_free, prv_del_node);
 		g_hash_table_insert(child->children, g_strdup(child_names[i]),
@@ -196,17 +197,17 @@ on_error:
 	if (child_names)
 		g_strfreev(child_names);
 
-	return err;       	
+	return err;
 }
 
-static void prv_provman_cache_key_init(provman_cache_key_t *cache_key, 
+static void prv_provman_cache_key_init(provman_cache_key_t *cache_key,
 				       const gchar *key)
 {
 	unsigned int key_len;
 
 	key_len = strlen(key) - 1;
 	if (key_len > 1 && key[key_len] == '/') {
-		cache_key->key_copy = g_strdup(key);	
+		cache_key->key_copy = g_strdup(key);
 		cache_key->key_copy[key_len] = 0;
 		cache_key->key = cache_key->key_copy;
 	} else {
@@ -220,7 +221,7 @@ static void prv_provman_cache_key_free(provman_cache_key_t *cache_key)
 	g_free(cache_key->key_copy);
 }
 
-int provman_cache_set(provman_cache_t *cache, const gchar *key, 
+int provman_cache_set(provman_cache_t *cache, const gchar *key,
 		      const gchar *value)
 {
 	int err;
@@ -241,27 +242,27 @@ int provman_cache_set(provman_cache_t *cache, const gchar *key,
 		child = g_slice_new0(provman_cache_t);
 		child->parent = node;
 		child->value = g_strdup(value);
-	
+
 		if (!node->children)
-			node->children = 
+			node->children =
 				g_hash_table_new_full(g_str_hash, g_str_equal,
 						      g_free, prv_del_node);
-		
+
 		g_hash_table_insert(node->children, node_name, child);
 	} else if (err == PROVMAN_ERR_NONE) {
 		if (node->value)
 			g_free(node->value);
 		node->value = g_strdup(value);
-	}	
+	}
 
 on_error:
 
 	prv_provman_cache_key_free(&cache_key);
-	
+
 	return err;
 }
 
-int provman_cache_set_meta(provman_cache_t *cache, const gchar *key, 
+int provman_cache_set_meta(provman_cache_t *cache, const gchar *key,
 			   const gchar *prop, const gchar *value)
 {
 	provman_cache_t *node;
@@ -269,7 +270,7 @@ int provman_cache_set_meta(provman_cache_t *cache, const gchar *key,
 	provman_cache_key_t cache_key;
 
 	prv_provman_cache_key_init(&cache_key, key);
-	
+
 	err = prv_find_node(cache, cache_key.key, &node);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
@@ -278,7 +279,7 @@ int provman_cache_set_meta(provman_cache_t *cache, const gchar *key,
 		node->meta_data = g_hash_table_new_full(g_str_hash, g_str_equal,
 							g_free, g_free);
 	g_hash_table_insert(node->meta_data, g_strdup(prop), g_strdup(value));
-	
+
 on_error:
 
 	prv_provman_cache_key_free(&cache_key);
@@ -321,7 +322,7 @@ int provman_cache_remove(provman_cache_t *cache, const gchar *key)
 				    strrchr(cache_key.key,'/') + 1);
 	} else {
 		g_hash_table_iter_init(&iter, parent->children);
-		while (g_hash_table_iter_next(&iter, &hash_key, &value) && 
+		while (g_hash_table_iter_next(&iter, &hash_key, &value) &&
 		       (value != node));
 		g_hash_table_remove(parent->children, hash_key);
 	}
@@ -333,7 +334,7 @@ on_error:
 	return err;
 }
 
-int provman_cache_get(provman_cache_t *cache, const gchar *key, 
+int provman_cache_get(provman_cache_t *cache, const gchar *key,
 		      gchar **value)
 {
 	provman_cache_t *node;
@@ -346,7 +347,7 @@ int provman_cache_get(provman_cache_t *cache, const gchar *key,
 	provman_cache_key_t cache_key;
 
 	prv_provman_cache_key_init(&cache_key, key);
-	
+
 	err = prv_find_node(cache, cache_key.key, &node);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
@@ -362,12 +363,12 @@ int provman_cache_get(provman_cache_t *cache, const gchar *key,
 			g_string_append(str, (const gchar*) child);
 			g_string_append(str, "/");
 		}
-		
+
 		if (g_hash_table_iter_next(&iter, &child, NULL))
 			g_string_append(str, (const gchar*) child);
 		*value = g_string_free(str, FALSE);
 	}
-	
+
 on_error:
 
 	prv_provman_cache_key_free(&cache_key);
@@ -384,7 +385,7 @@ int provman_cache_get_meta(provman_cache_t *cache, const gchar *key,
 	gchar *prop_value;
 
 	prv_provman_cache_key_init(&cache_key, key);
-	
+
 	err = prv_find_node(cache, cache_key.key, &node);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
@@ -401,7 +402,7 @@ int provman_cache_get_meta(provman_cache_t *cache, const gchar *key,
 	}
 
 	*value = g_strdup(prop_value);
-	
+
 on_error:
 
 	prv_provman_cache_key_free(&cache_key);
@@ -447,7 +448,7 @@ static void prv_visit_leaves_r(provman_cache_t *node, GString *path,
 	gpointer node_name;
 	gpointer value;
 	gsize path_len;
-	
+
 	if (node->children) {
 		g_hash_table_iter_init(&iter, node->children);
 		while (g_hash_table_iter_next(&iter, &node_name, &value)) {
@@ -456,7 +457,7 @@ static void prv_visit_leaves_r(provman_cache_t *node, GString *path,
 			g_string_append(path, node_name);
 			prv_visit_leaves_r(value, path, cb, user_data);
 			g_string_set_size(path, path_len);
-		}		
+		}
 	} else {
 		cb(path->str, node, user_data);
 	}
@@ -477,7 +478,7 @@ static int prv_visit(provman_cache_t *cache, const gchar *root,
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
 
-	path = g_string_new(!cache_key.key[1] ? "" : cache_key.key);	
+	path = g_string_new(!cache_key.key[1] ? "" : cache_key.key);
 	visit_fn(node, path, cb, user_data);
 	(void) g_string_free(path, TRUE);
 
@@ -502,7 +503,7 @@ static void prv_visit_nodes_r(provman_cache_t *node, GString *path,
 	gpointer value;
 	gsize path_len;
 
-	cb(path->str, node, user_data);	
+	cb(path->str, node, user_data);
 	if (node->children) {
 		g_hash_table_iter_init(&iter, node->children);
 		while (g_hash_table_iter_next(&iter, &node_name, &value)) {
@@ -511,7 +512,7 @@ static void prv_visit_nodes_r(provman_cache_t *node, GString *path,
 			g_string_append(path, node_name);
 			prv_visit_nodes_r(value, path, cb, user_data);
 			g_string_set_size(path, path_len);
-		}		
+		}
 	}
 }
 
@@ -533,7 +534,7 @@ int provman_cache_get_all(provman_cache_t *cache, const gchar *root,
 		goto on_error;
 
 	*variant = g_variant_builder_end(vb);
-		
+
 on_error:
 
 	g_variant_builder_unref(vb);
@@ -553,7 +554,7 @@ int provman_cache_get_all_meta(provman_cache_t *cache, const gchar *root,
 		goto on_error;
 
 	*variant = g_variant_builder_end(vb);
-		
+
 on_error:
 
 	g_variant_builder_unref(vb);
@@ -566,7 +567,7 @@ void provman_cache_delete(provman_cache_t *cache)
 	if (cache) {
 		if (cache->children)
 			g_hash_table_unref(cache->children);
-		else		
+		else
 			g_free(cache->value);
 		if (cache->meta_data)
 			g_hash_table_unref(cache->meta_data);
@@ -579,10 +580,10 @@ void provman_cache_add_settings(provman_cache_t *cache, GHashTable *settings)
 	GHashTableIter iter;
 	gpointer key;
 	gpointer value;
-		
+
 	g_hash_table_iter_init(&iter, settings);
 	while (g_hash_table_iter_next(&iter, &key, &value))
-		(void) provman_cache_set(cache, key, value); 
+		(void) provman_cache_set(cache, key, value);
 }
 
 void provman_cache_add_meta_data(provman_cache_t *cache, GHashTable *meta_data)
@@ -591,12 +592,12 @@ void provman_cache_add_meta_data(provman_cache_t *cache, GHashTable *meta_data)
 	gpointer key;
 	gpointer prop_values;
 	provman_cache_t *node;
-	provman_cache_key_t cache_key;	
-	
+	provman_cache_key_t cache_key;
+
 	g_hash_table_iter_init(&iter, meta_data);
 	while (g_hash_table_iter_next(&iter, &key, &prop_values)) {
 		prv_provman_cache_key_init(&cache_key, key);
-		if (prv_find_node(cache, cache_key.key, &node) 
+		if (prv_find_node(cache, cache_key.key, &node)
 		    == PROVMAN_ERR_NONE) {
 			node->meta_data = prop_values;
 			g_hash_table_ref(node->meta_data);
@@ -605,7 +606,8 @@ void provman_cache_add_meta_data(provman_cache_t *cache, GHashTable *meta_data)
 	}
 }
 
-GHashTable *provman_cache_get_settings(provman_cache_t *cache, const gchar *root)
+GHashTable *provman_cache_get_settings(provman_cache_t *cache,
+				       const gchar *root)
 {
 	GHashTable *settings;
 

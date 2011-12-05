@@ -66,7 +66,7 @@ const gchar* provman_err_to_dbus(int error)
 	case PROVMAN_ERR_UNKNOWN:
 	default:
 		err_str = PROVMAN_DBUS_ERR_UNKNOWN;
-		break;				
+		break;
 	}
 
 	return err_str;

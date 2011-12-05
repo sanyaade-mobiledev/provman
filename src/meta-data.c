@@ -54,7 +54,7 @@ void provman_meta_data_new(const gchar *fname, provman_meta_data_t **meta_data)
 {
 	provman_meta_data_t *md = g_new0(provman_meta_data_t, 1);
 	md->key_file = g_key_file_new();
-	(void) g_key_file_load_from_file(md->key_file, fname, 
+	(void) g_key_file_load_from_file(md->key_file, fname,
 					 G_KEY_FILE_NONE, NULL);
 	md->fname = g_strdup(fname);
 	*meta_data = md;
@@ -83,13 +83,13 @@ GHashTable *provman_meta_data_get_all(provman_meta_data_t *meta_data)
 					    prv_unref_ht);
 
 	groups = g_key_file_get_groups(meta_data->key_file, NULL);
-	
+
 	for (i = 0; groups[i]; ++i) {
 		keys = g_key_file_get_keys(meta_data->key_file, groups[i], NULL,
 					   NULL);
 		if (keys) {
-			props = g_hash_table_new_full(g_str_hash, g_str_equal, g_free,
-						      g_free);
+			props = g_hash_table_new_full(g_str_hash, g_str_equal,
+						      g_free, g_free);
 			for (j = 0; keys[j]; ++j) {
 				value = g_key_file_get_value(
 					meta_data->key_file, groups[i], keys[j],
@@ -101,18 +101,18 @@ GHashTable *provman_meta_data_get_all(provman_meta_data_t *meta_data)
 					g_free(keys[j]);
 			}
 			g_free(keys);
-			g_hash_table_insert(md_settings, groups[i], props); 
+			g_hash_table_insert(md_settings, groups[i], props);
 		} else {
 			g_free(groups[i]);
 		}
 	}
-	
+
 	g_free(groups);
-	
+
 	return md_settings;
 }
 
-static void prv_insert_new_group(provman_meta_data_t *meta_data, 
+static void prv_insert_new_group(provman_meta_data_t *meta_data,
 				 const gchar* group_name, GHashTable *props)
 {
 	GHashTableIter iter;
@@ -126,7 +126,7 @@ static void prv_insert_new_group(provman_meta_data_t *meta_data,
 	}
 }
 
-static bool prv_update_group(provman_meta_data_t *meta_data, 
+static bool prv_update_group(provman_meta_data_t *meta_data,
 			     const gchar* group_name, GHashTable *props)
 {
 	GHashTableIter iter;
@@ -166,12 +166,12 @@ void provman_meta_data_update(provman_meta_data_t *meta_data,
 #endif
 
 	groups = g_key_file_get_groups(meta_data->key_file, NULL);
-	
+
 	for (i = 0; groups[i]; ++i)
 		if (!g_hash_table_lookup(md_settings, groups[i]))
 			if (g_key_file_remove_group(meta_data->key_file,
 						    groups[i], NULL))
-				dirty = true;       		
+				dirty = true;
 	g_strfreev(groups);
 
 	g_hash_table_iter_init(&iter, md_settings);

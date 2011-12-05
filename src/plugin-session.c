@@ -56,11 +56,11 @@
   functions.
 */
 
-provman_plugin g_provman_plugins[] = { 
+provman_plugin g_provman_plugins[] = {
 #ifdef PROVMAN_EVOLUTION
 	{ "eds", "/applications/email/",
 	  g_provman_email_schema,
-	  eds_plugin_new, eds_plugin_delete, 
+	  eds_plugin_new, eds_plugin_delete,
 	  eds_plugin_sync_in, eds_plugin_sync_in_cancel,
 	  eds_plugin_sync_out, eds_plugin_sync_out_cancel,
 	  NULL, NULL
@@ -72,7 +72,7 @@ provman_plugin g_provman_plugins[] = {
 #endif
 	{ "sync-evolution", "/applications/sync/",
 	  g_provman_sync_schema,
-	  synce_plugin_new, synce_plugin_delete, 
+	  synce_plugin_new, synce_plugin_delete,
 	  synce_plugin_sync_in, synce_plugin_sync_in_cancel,
 	  synce_plugin_sync_out, synce_plugin_sync_out_cancel,
 	  NULL, NULL
@@ -84,7 +84,7 @@ provman_plugin g_provman_plugins[] = {
 #endif
 	{ "test", "/applications/test_plugin/",
 	  g_provman_test_schema,
-	  test_plugin_new, test_plugin_delete, 
+	  test_plugin_new, test_plugin_delete,
 	  test_plugin_sync_in, test_plugin_sync_in_cancel,
 	  test_plugin_sync_out, test_plugin_sync_out_cancel,
 	  test_plugin_abort, test_plugin_sim_id
@@ -94,6 +94,6 @@ provman_plugin g_provman_plugins[] = {
 
 /*! \cond */
 
-const unsigned int g_provman_plugins_count = 
+const unsigned int g_provman_plugins_count =
 	sizeof(g_provman_plugins) / sizeof(provman_plugin);
 /*! \endcond */

@@ -25,8 +25,8 @@
 /*!
  * @file utils.h
  *
- * @brief contains declarations for general utility functions 
- * 
+ * @brief contains declarations for general utility functions
+ *
  *****************************************************************************/
 
 #ifndef PROVMAN_UTILS_H
@@ -42,7 +42,7 @@
  * Keys are allowed to end with a '/'.
  *
  * @param key the key to validate
- * 
+ *
  * @return PROVMAN_ERR_NONE if the key is valid
  * @return PROVMAN_ERR_BAD_ARGS if the key is invalid
  */
@@ -54,14 +54,14 @@ int provman_utils_validate_key(const char *key);
  *
  * The file is stored under $HOME/$PROVMAN_DB_PATH
  *
- * @param fname the name of the file to create.  This should be a 
+ * @param fname the name of the file to create.  This should be a
  * relative file name and not a complete path, e.g., "map_file.txt"
  * @param system indicates whether the function has been called by the
  * system instance of provman.
- * @param path the allocated path is passed to the caller in this 
+ * @param path the allocated path is passed to the caller in this
  *  parameter.  The caller assumes ownership of this string and should
  *  free it when no longer needed by calling g_free.
- * 
+ *
  * @return PROVMAN_ERR_NONE if the path was created successfully.
  * @return PROVMAN_ERR_NOT_FOUND if the home directory cannot be determined
  */
@@ -71,27 +71,28 @@ int provman_utils_make_file_path(const char* fname, bool system, gchar **path);
 /*! @brief Extracts a client context identifier from a given key
  *
  * Let's assume that you have a key that identifies a telephony setting, e.g.,
- * /telephony/contexts/operator3G/apn.  This function can be called to 
+ * /telephony/contexts/operator3G/apn.  This function can be called to
  * extract the name of the context to which this key pertains, e.g.,
  * \a operator3G.
  *
- * @param key a key 
+ * @param key a key
  * @param root A string containing the part of the key that procees the context
- *             name, e.g., '/telephony/contexts/' 
+ *             name, e.g., '/telephony/contexts/'
  * @param root_len The length of the root
- * 
+ *
  * @return a pointer to the context name.  Ownership of this string is passed
- *    to the caller who should delete it with g_free when it is no longer needed.
+ *         to the caller who should delete it with g_free when it is no longer
+ *         needed.
  * @return NULL the key does not begin with the specified root.
  */
 
 gchar *provman_utils_get_context_from_key(const gchar *key, const char *root,
 					    unsigned int root_len);
 
-/*! @brief Retrieves a list of all the client identifiers from 
+/*! @brief Retrieves a list of all the client identifiers from
  *         a hash table of settings.
  *
- * For example let us assume that settings contains 
+ * For example let us assume that settings contains
  * <pre>
  * /telephony/contexts/operator3G/apn = "apn.net".
  * /telephony/contexts/operator3G/name = "apn1".
@@ -106,11 +107,11 @@ gchar *provman_utils_get_context_from_key(const gchar *key, const char *root,
  * the objects that exist at the end of the management session.  Any
  * new objects can be created, and old unused ones can be deleted.
  *
- * @param settings a hash table of settings to analyse 
+ * @param settings a hash table of settings to analyse
  * @param root A string containing the part of the key that procees the context
- *             name, e.g., '/telephony/contexts/' 
+ *             name, e.g., '/telephony/contexts/'
  * @param root_len The length of the root
- * 
+ *
  * @return a new hash table that contains only keys.  Each key corresponds
  *         to a client context identifier.  The caller assumes ownership of
  *         this hash table and must delete it when no longer required, by
@@ -130,7 +131,7 @@ GHashTable *provman_utils_get_contexts(GHashTable *settings, const char *root,
  * @param root A string containing the part of the key that procees the context
  *             name, e.g., '/telephony/contexts/'.  Must end in '/'
  * @param account The name of the account being removed.
- * 
+ *
  */
 
 void provman_utils_remove_account(GHashTable *settings, const gchar *root,
@@ -141,7 +142,7 @@ void provman_utils_remove_account(GHashTable *settings, const gchar *root,
 /*! @brief Dumps a set of settings to the log file
  *
  * @param hash_table a hash table of settings.
- * 
+ *
  */
 
 void provman_utils_dump_hash_table(GHashTable* hash_table);

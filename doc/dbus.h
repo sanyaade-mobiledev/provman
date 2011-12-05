@@ -5,21 +5,21 @@
  * @file dbus.h
  * \brief Documentation for the D-Bus interface exported by provman instances
  *
- * All the methods documented below are part of the 
- * \a com.intel.provman.Settings interface implemented by the 
+ * All the methods documented below are part of the
+ * \a com.intel.provman.Settings interface implemented by the
  * \a /com/intel/provman object
  */
 
 /*!
  * \brief Initiates a management session with the provman.
- * 
+ *
  * If a sesison
  * is already in progress with another management client this method will not
  * return until that management client has completed its session by calling
  * either #End or #Abort or has died unexepectedly.  This method must be called
  * before any other com.intel.provman.Settings methods can be invoked on a
  * given provman instance
- *	
+ *
  * @param imsi The IMSI number with which the settings should be associated.  If
  * the caller does not care or is not intending to provision any SIM specific
  * settings he can simply pass an empty string.  Provman will
@@ -49,9 +49,9 @@ void Start(string imsi);
  * means that the setting is supported by provman and will be
  * be passed to the relevant plugin for storage in the appropriate
  * application/middleware data store when the management session
- * completes.  It does not indicate that the setting has been 
+ * completes.  It does not indicate that the setting has been
  * provisioned.
- * 
+ *
  * @param key the key to create or whose value you wish to change.
  * @param value the value to assign to the key.
  *
@@ -104,10 +104,10 @@ array SetMultiple(dictionary dict);
  *
  * If the key represents a setting the value of that setting
  * is returned.  If, on the other hand, the key represents a
- * directory, a '/' separated list of the names of the key's 
+ * directory, a '/' separated list of the names of the key's
  * children is returned.  Calling #Get on /applications might
  * return "email/sync/browser", for example.
- * 
+ *
  * @param key the key whose value you wish to retrieve
  * @return the value associated with the specified key.
  *
@@ -198,12 +198,12 @@ void Delete(string key);
  *
  * As with delete, if the key to be deleted is a subdirectory, that
  * key and all its chilren (and their meta data) will be deleted.
- * 
+ *
  * The keys array should not contain any overlapping keys, e.g.,
  * '/applications', '/applications/email'.  If this occurs errors
  * may be raised as multiple attempts may be made to delete the same key,
  * depending on the order in which the keys are specified.
- * 
+ *
  * Failure to delete a key does not cause #DeleteMultiple to abort.  Rather
  * it attempts to delete the remaining keys and returns an array of the
  * keys that could not be deleted when it is finished.
@@ -267,7 +267,7 @@ void Abort();
  * It just needs to be supported by one of the plugins or be a parent
  * directory of one or more plugins.  So for example, we can use this
  * function to query the type of the port number setting for incoming
- * email accounts, even if no email accounts are currently defined 
+ * email accounts, even if no email accounts are currently defined
  * in the system.  As long as the provman instance contains an email
  * plugin this method should return the correct value.
  *
@@ -280,7 +280,7 @@ void Abort();
  * data from a user via a UI.  The UI might need to know which authentication
  * mechanisms are supported by the email application so it can display a list
  * of options to the user before it creates the setting.  It can find this
- * information by calling #GetTypeInfo with the key 
+ * information by calling #GetTypeInfo with the key
  * "/applications/email/<X>/incoming/authtype"
  *
  * @param key Should be a uri of the key in which you are interested. Any
@@ -294,9 +294,9 @@ void Abort();
  * \return "enum: val1 [,val2]*" the key is used to store an enumerated type.
  *   A comma separated list of permissable values is provided after the string,
  *   e.g., "enum: never, when-possible, always"
- *   
- * \exception com.intel.provman.Error.NotFound The key is not supported by provman
- *    or its plugins.
+ *
+ * \exception com.intel.provman.Error.NotFound The key is not supported by
+ * provman or its plugins.
  * \exception com.intel.provman.Error.BadArgs The key is not valid
  * \exception com.intel.provman.Error.Cancelled The call to #GetTypeInfo
  *   was begun but it failed because provman was killed.
@@ -328,7 +328,7 @@ string GetTypeInfo(string key);
  *
  * \return a dictionary that maps child names to their types.  The child names
  * are simply names and not complete uris.
- *   
+ *
  * \exception com.intel.provman.Error.NotFound The key is not supported by
  *    provman or its plugins.
  * \exception com.intel.provman.Error.BadArgs The key represents a setting and
@@ -408,10 +408,10 @@ string GetMeta(string key, string prop);
  * The failure to set an individual piece of meta data  does not cause the
  * entire #SetMultipleMeta command to fail.  It will continue to set the
  * remaining pieces of meta data.  Once the command has finished, an array of
- * structures, is returned.  Each structure in this list contains the key/  
+ * structures, is returned.  Each structure in this list contains the key/
  * a property name pair to which provman failed to assign meta data.
- * 
- * As with #SetMeta it is an error to attempt to associate meta data with a 
+ *
+ * As with #SetMeta it is an error to attempt to associate meta data with a
  * non-existent key.
  *
  * @param meta A dictionary of meta data structures, type \a a(sss).  Each
@@ -433,7 +433,7 @@ array SetMultipleMeta(array meta);
 
 /*!
  * \brief Retrieves all the meta data associated with a given key
- * 
+ *
  *
  * If #GetAllMeta is invoked on a directory, it returns all meta
  * data properties associated with that key and its descendants.

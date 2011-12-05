@@ -70,16 +70,16 @@ static void prv_utils_ofono_modems_context_free(
 	if (task_context) {
 		if (task_context->cancellable)
 			g_object_unref(task_context->cancellable);
-		
-		if (task_context->proxy) 
-			g_object_unref(task_context->proxy);		
-		
+
+		if (task_context->proxy)
+			g_object_unref(task_context->proxy);
+
 		if (task_context->modems)
 			g_hash_table_unref(task_context->modems);
 
 		if (task_context->modem_paths)
 			g_ptr_array_unref(task_context->modem_paths);
-				
+
 		g_free(task_context);
 	}
 }
@@ -96,7 +96,7 @@ static gboolean prv_imsi_task_finished(gpointer user_data)
 	const gchar *path;
 	gchar *default_imsi = NULL;
 	GHashTableIter iter;
-	
+
 
 	PROVMAN_LOGF("get_modems finished result %u", task_context->result);
 
@@ -117,8 +117,8 @@ static gboolean prv_imsi_task_finished(gpointer user_data)
 	}
 
 	PROVMAN_LOGF("Default IMSI %s", default_imsi);
-	
-	task_context->finished(task_context->result, user_data, 
+
+	task_context->finished(task_context->result, user_data,
 			       task_context->modems,
 			       default_imsi,
 			       task_context->finished_data);
@@ -127,7 +127,7 @@ static gboolean prv_imsi_task_finished(gpointer user_data)
 	   to the caller.  Otherwise we need to free the hash table
 	   ourselves. */
 
-	if (task_context->result == PROVMAN_ERR_NONE)		
+	if (task_context->result == PROVMAN_ERR_NONE)
 		task_context->modems = NULL;
 
 	prv_utils_ofono_modems_context_free(task_context);
@@ -141,13 +141,13 @@ static void prv_get_imsi_numbers(utils_ofono_modems_context *task_context)
 	PROVMAN_LOGF("current_modem %p", task_context->current_modem);
 
 	if (task_context->current_modem == task_context->modem_paths->len) {
-		task_context->result = PROVMAN_ERR_NONE;		
+		task_context->result = PROVMAN_ERR_NONE;
 		(void) g_idle_add(prv_imsi_task_finished, task_context);
 	} else
 		prv_get_sim_manager_proxy(task_context);
 }
 
-static void prv_get_sim_properties_cb(GObject *source_object, 
+static void prv_get_sim_properties_cb(GObject *source_object,
 				      GAsyncResult *result,
 				      gpointer user_data)
 {
@@ -169,7 +169,7 @@ static void prv_get_sim_properties_cb(GObject *source_object,
 		(void) g_idle_add(prv_imsi_task_finished, user_data);
 	} else if (!retvals) {
 		PROVMAN_LOG("Sim Property Get Failed");
-		
+
 		++task_context->current_modem;
 		prv_get_imsi_numbers(task_context);
 	} else {
@@ -183,7 +183,7 @@ static void prv_get_sim_properties_cb(GObject *source_object,
 		g_variant_iter_free(iter);
 
 		if (found && value) {
-			g_variant_get(value, "s", &imsi);			
+			g_variant_get(value, "s", &imsi);
 			PROVMAN_LOGF("Found IMSI: %s", imsi);
 			path = g_strdup(g_ptr_array_index(
 						task_context->modem_paths,
@@ -193,12 +193,12 @@ static void prv_get_sim_properties_cb(GObject *source_object,
 		}
 
 		++task_context->current_modem;
-		
+
 		prv_get_imsi_numbers(task_context);
 	}
 }
 
-static void prv_sim_manager_proxy_created(GObject *source_object, 
+static void prv_sim_manager_proxy_created(GObject *source_object,
 					  GAsyncResult *result,
 					  gpointer user_data)
 {
@@ -242,10 +242,10 @@ static void prv_get_sim_manager_proxy(utils_ofono_modems_context *task_context)
 	path = g_ptr_array_index(task_context->modem_paths,
 				 task_context->current_modem);
 
-	g_dbus_proxy_new_for_bus(G_BUS_TYPE_SYSTEM, 
+	g_dbus_proxy_new_for_bus(G_BUS_TYPE_SYSTEM,
 				 G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
 				 NULL, OFONO_SERVER_NAME, path,
-				 OFONO_SIM_MANAGER_INTERFACE, 
+				 OFONO_SIM_MANAGER_INTERFACE,
 				 task_context->cancellable,
 				 prv_sim_manager_proxy_created, task_context);
 }
@@ -284,10 +284,10 @@ static void prv_get_modems_cb(GObject *source_object, GAsyncResult *result,
 
 		g_variant_iter_free(iter);
 
-		PROVMAN_LOGF("Found %d modem(s)", 
+		PROVMAN_LOGF("Found %d modem(s)",
 			 g_hash_table_size(task_context->modems));
 
-		task_context->current_modem = 0;			 
+		task_context->current_modem = 0;
 		prv_get_imsi_numbers(task_context);
 	}
 }
@@ -308,7 +308,7 @@ static void prv_get_modems(utils_ofono_modems_context *task_context)
 			  task_context);
 }
 
-static void prv_ofono_proxy_created(GObject *source_object, 
+static void prv_ofono_proxy_created(GObject *source_object,
 				    GAsyncResult *result, gpointer user_data)
 {
 	utils_ofono_modems_context *task_context = user_data;
@@ -326,7 +326,7 @@ static void prv_ofono_proxy_created(GObject *source_object,
 		task_context->result = PROVMAN_ERR_IO;
 		(void) g_idle_add(prv_imsi_task_finished, user_data);
 	}
-	else 
+	else
 		prv_get_modems(task_context);
 }
 
@@ -351,10 +351,10 @@ int utils_ofono_get_modems(utils_ofono_get_modems_t finished,
 
 	task_context->modem_paths = g_ptr_array_new_with_free_func(g_free);
 
-	g_dbus_proxy_new_for_bus(G_BUS_TYPE_SYSTEM, 
+	g_dbus_proxy_new_for_bus(G_BUS_TYPE_SYSTEM,
 				 G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES,
-				 NULL, OFONO_SERVER_NAME, OFONO_OBJECT, 
-				 OFONO_MANAGER_INTERFACE, 
+				 NULL, OFONO_SERVER_NAME, OFONO_OBJECT,
+				 OFONO_MANAGER_INTERFACE,
 				 task_context->cancellable,
 				 prv_ofono_proxy_created, task_context);
 

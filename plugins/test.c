@@ -55,7 +55,7 @@ struct test_plugin_t_ {
 	GHashTable *settings;
 	provman_plugin_sync_in_cb sync_in_cb;
 	void *sync_in_user_data;
-	provman_plugin_sync_out_cb sync_out_cb; 
+	provman_plugin_sync_out_cb sync_out_cb;
 	void *sync_out_user_data;
 };
 
@@ -92,16 +92,16 @@ static gboolean prv_complete_sync_in(gpointer user_data)
 #endif
 	plugin_instance->sync_in_cb(PROVMAN_ERR_NONE, plugin_instance->settings,
 				    plugin_instance->sync_in_user_data);
-	
+
 	g_hash_table_unref(plugin_instance->settings);
 	plugin_instance->settings = NULL;
-	
+
 	return FALSE;
 }
 
-int test_plugin_sync_in(provman_plugin_instance instance, 
-			const char* imsi, 
-			provman_plugin_sync_in_cb callback, 
+int test_plugin_sync_in(provman_plugin_instance instance,
+			const char* imsi,
+			provman_plugin_sync_in_cb callback,
 			void *user_data)
 {
 	int err = PROVMAN_ERR_NONE;
@@ -112,7 +112,7 @@ int test_plugin_sync_in(provman_plugin_instance instance,
 	GHashTable *settings;
 	GString *fname = NULL;
 	GKeyFile *key_file;
-	gchar *test_imsi;		
+	gchar *test_imsi;
 
 	if (imsi[0])
 		test_imsi = g_strdup(imsi);
@@ -127,13 +127,13 @@ int test_plugin_sync_in(provman_plugin_instance instance,
 					   &plugin_instance->fname);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
-	
+
 	key_file = g_key_file_new();
 	(void) g_key_file_load_from_file(key_file, plugin_instance->fname,
 					 G_KEY_FILE_NONE, NULL);
 	settings = g_hash_table_new_full(g_str_hash, g_str_equal, g_free,
 					 g_free);
-	
+
 	keys = g_key_file_get_keys(key_file, TEST_GROUP_NAME,
 				   NULL, NULL);
 	if (keys)
@@ -156,7 +156,7 @@ int test_plugin_sync_in(provman_plugin_instance instance,
 	plugin_instance->sync_in_user_data = user_data;
 	(void) g_idle_add(prv_complete_sync_in, plugin_instance);
 
- 	g_free(keys);
+	g_free(keys);
 
 on_error:
 
@@ -177,19 +177,19 @@ static gboolean prv_complete_sync_out(gpointer user_data)
 
 	plugin_instance->sync_out_cb(PROVMAN_ERR_NONE,
 				     plugin_instance->sync_out_user_data);
-	
+
 	g_free(plugin_instance->imsi);
 	plugin_instance->imsi = NULL;
 	g_free(plugin_instance->fname);
 	plugin_instance->fname = NULL;
-	
+
 	return FALSE;
 }
 
 
-int test_plugin_sync_out(provman_plugin_instance instance, 
-			  GHashTable* settings, 
-			  provman_plugin_sync_out_cb callback, 
+int test_plugin_sync_out(provman_plugin_instance instance,
+			  GHashTable* settings,
+			  provman_plugin_sync_out_cb callback,
 			  void *user_data)
 {
 	int err = PROVMAN_ERR_NONE;
@@ -209,7 +209,7 @@ int test_plugin_sync_out(provman_plugin_instance instance,
 	}
 
 	data = g_key_file_to_data(key_file, &length, NULL);
-	
+
 	if (!data) {
 		err = PROVMAN_ERR_OOM;
 		goto on_error;
@@ -235,7 +235,7 @@ on_error:
 			     plugin_instance->fname);
 #endif
 
-	return err;	
+	return err;
 }
 
 void test_plugin_sync_out_cancel(provman_plugin_instance instance)

@@ -40,7 +40,7 @@ extern "C"
 #include <glib.h>
 
 typedef void * utils_ofono_handle_t;
-	
+
 typedef void (*utils_ofono_get_modems_t)(
 	int result, utils_ofono_handle_t, GHashTable *modem_imsi,
 	gchar *default_imsi, void *user_data);

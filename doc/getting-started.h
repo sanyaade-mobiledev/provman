@@ -5,9 +5,9 @@
  * @file getting-started.h
  *
  * @section introduction Introduction
- * 
+ *
  * This document describes the steps required to get provman running on
- * MeeGo netbook.  
+ * MeeGo netbook.
  *
  * <ol>
  * <li>Setup netbook</li>
@@ -16,7 +16,7 @@
  * <li>Compile and install code</li>
  * <li>Enable phonesim modem</li>
  * <li>Run some tests</li>
- * 
+ *
  * @section dependencies Install Dependencies:
  *
  * We're actually going to compile the provman code and some of the
@@ -34,7 +34,7 @@
  * \endcode
  *
  *
- * @section download Download the Code 
+ * @section download Download the Code
  * First let's download ofono and phonesim.  These packages are only
  * needed if you want to test the oFono telephony plugin.
  * They are both hosted on kernel.org.  Note that we are not
@@ -51,22 +51,22 @@
  * git clone git://git.kernel.org/pub/scm/network/ofono/phonesim.git
  * \endcode
  *
- * If you haven't done so already you now need to download provman. 
+ * If you haven't done so already you now need to download provman.
  * Provman is hosted on github.  To download type
- * 
+ *
  * \code
  * git://github.com/otcshare/provman.git
  * \endcode
- * 
+ *
  * @section compiling Compiling the Code
  *
- * Let's start with phonesim.  
+ * Let's start with phonesim.
  * \code
  * cd code/phonesim
  * ./bootstrap-configure
  * make
  * \endcode
- * 
+ *
  * I usually don't bother to install phonesim.  Instead, I just run it from
  * the source directory as explained in the HACKING file.
  *
@@ -84,15 +84,15 @@
  * are likely to be lots of bugs.  The log file is stored in /tmp/provman.log.
  *
  * @section phonesim Enabling Phonesim modem
- * 
+ *
  * If you do not want to test telephony settings or you have plugged a real
  * modem into the netbook, you can skip this section.  Otherwise, read on.
  * Edit the file /etc/ofono/phonesim.conf with your favourite editor, e.g.,
- * 
+ *
  * \code
  * sudo vi /etc/ofono/phonesim.conf
  * \endcode
- * 
+ *
  * This needs to be done as root.  Then uncomment all the phonesim
  * settings.  The main part of the file should look like this.
  *
@@ -107,7 +107,7 @@
  *
  * Start the terminal application and launch phonesim as recommended in the
  * phonesim HACKING document
- * 
+ *
  * \code
  * cd code/phonesim
  * ./src/phonesim -p 12345 -gui src/default.xml
@@ -126,8 +126,8 @@
  * If everything works okay the phonesim UI should appear.
  *
  * @section test Quick Test
- * 
- * As a quick test to see if everything is working cd to the 
+ *
+ * As a quick test to see if everything is working cd to the
  * ~code/provman/testcases directory and type
  * \code
  * ./get-all-system /

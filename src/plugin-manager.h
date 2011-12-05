@@ -65,7 +65,7 @@ int plugin_manager_remove_multiple(plugin_manager_t* manager, GVariant* keys,
 				   GVariant **errors);
 void plugin_manager_delete(plugin_manager_t *manager);
 int plugin_manager_abort(plugin_manager_t *manager);
-int plugin_manager_get_children_type_info(plugin_manager_t* manager, 
+int plugin_manager_get_children_type_info(plugin_manager_t* manager,
 					  const gchar* search_key,
 					  GVariant** values);
 int plugin_manager_get_type_info(plugin_manager_t* manager,
