@@ -551,7 +551,6 @@ int provman_schema_check_value(provman_schema_t *schema, const gchar *value)
 	provman_schema_value_type_t vt;
 	gchar *stripped_val = NULL;
 	char *endptr;
-	long int num;
 
 	if (schema->type != PROVMAN_SCHEMA_TYPE_KEY) {
 		err = PROVMAN_ERR_BAD_KEY;
@@ -563,8 +562,12 @@ int provman_schema_check_value(provman_schema_t *schema, const gchar *value)
 	if (vt == PROVMAN_SCHEMA_VALUE_TYPE_INT) {
 		stripped_val = g_strdup(value);
 		g_strstrip(stripped_val);
-		num = strtol(stripped_val, &endptr, 10);
-		if (num == 0 && (!*stripped_val || *endptr)) {
+		if (!*stripped_val) {
+			err = PROVMAN_ERR_BAD_ARGS;
+			goto on_error;
+		}
+		(void) strtol(stripped_val, &endptr, 10);
+		if (*endptr) {
 			err = PROVMAN_ERR_BAD_ARGS;
 			goto on_error;
 		}
