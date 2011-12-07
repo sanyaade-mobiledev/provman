@@ -4,14 +4,6 @@ TODOs:
 Provman:
 -------
 
-* Lazy invocation of sync_in
-
-  Investigate whether it would be possible to use lazy evaluations for plugins,
-  i.e., do not call sync in, until a client actually reads or modifies settings
-  maintained by the plugin.  This will be advantageous when we have many plugins
-  and the client only wishes to modify settings owned by a small number of these
-  plugins.
-
 * Binary plugins
 
   Replace hardcoded plugins with executables.  Doing so would mean that we have

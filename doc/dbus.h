@@ -30,8 +30,6 @@
  *   outstanding or has completed and a device management session is already
  *   in process with this client.  #Start cannot be called again on this client
  *   until #End has been called.
- * \exception com.intel.provman.Error.Cancelled The call to #Start
- *   was begun but it failed because provman was killed.
  * \exception com.intel.provman.Error.Died Provman was killed before
  *   the #Start command could be initiated.
 */
@@ -252,8 +250,6 @@ void End();
  *
  * \exception com.intel.provman.Error.Unexpected #Abort is invoked
  * before #Start.
- * \exception com.intel.provman.Error.Cancelled The call to #Abort
- *   was begun but it failed because provman was killed.
  * \exception com.intel.provman.Error.Died Provman was killed before
  *   the #Abort command could be initiated.
 */
@@ -298,8 +294,6 @@ void Abort();
  * \exception com.intel.provman.Error.NotFound The key is not supported by
  * provman or its plugins.
  * \exception com.intel.provman.Error.BadArgs The key is not valid
- * \exception com.intel.provman.Error.Cancelled The call to #GetTypeInfo
- *   was begun but it failed because provman was killed.
  * \exception com.intel.provman.Error.Died Provman was killed before
  *   the #GetTypeInfo command could be initiated.
 */
@@ -333,8 +327,6 @@ string GetTypeInfo(string key);
  *    provman or its plugins.
  * \exception com.intel.provman.Error.BadArgs The key represents a setting and
  *    not a directory.
- * \exception com.intel.provman.Error.Cancelled The call to #GetChildrenTypeInfo
- *   was begun but it failed because provman was killed.
  * \exception com.intel.provman.Error.Died Provman was killed before
  *   the #GetChildrenTypeInfo command could be initiated.
 */

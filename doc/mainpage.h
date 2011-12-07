@@ -299,13 +299,17 @@ manager.End()
  * Note the first grandchild of the schema.  This is an unnamed directory
  * that allows the clients to provide their own names for telephony contexts.
  *
- * In addition to the schema plugins must also implement a number of methods.
+ * In addition to the schema, plugins must also implement a number of methods.
  * The most important of these
  * are called #provman_plugin_sync_in and #provman_plugin_sync_out.
- * When a client initiates a new management session by calling the #Start method
- * provman iterates through all of the plugins invoking their
- * #provman_plugin_sync_in methods.  When a plugin's  #provman_plugin_sync_in
- * method is called it must create a set of settings (key/value pairs) that
+ * Provman calls a plugin's #provman_plugin_sync_in method when a client
+ * attempts to inspect or manipulate a key owned by that plugin.  Provman
+ * will only call a plugin's #provman_plugin_sync_in method a maximum of
+ * once per session.  If the client performs no operations on the key's owned
+ * by a given plugin during a management session, that plugin's
+ * #provman_plugin_sync_in method will not be invoked.
+ * When a plugin's  #provman_plugin_sync_in method is called the plugin must
+ * create a set of settings (key/value pairs) that
  * represent the current state of the data managed by the plugin.  For example,
  * if the plugin were responsible for managing telephony settings it might ask
  * the telephony sub-system for information about all of the 3G and MMS access
@@ -318,8 +322,11 @@ manager.End()
  * cache and are not propagated to the plugins.  It is not until
  * the client ends the session by calling #End that changes to the settings
  * are pushed to the plugins.  Provman does this by calling
- * each plugin's #provman_plugin_sync_out method.  During the call to
- * this method the plugin is passed an updated group of settings.  It must
+ * the plugins' #provman_plugin_sync_out methods.  Provman only invokes these
+ * methods for plugins whose settings were synced during the session, i.e.,
+ * whose #provman_plugin_sync_in methods were called.
+ * During the call to #provman_plugin_sync_out
+ * the plugin is passed an updated group of settings.  It must
  * compare this updated group of settings to the current state of the middleware
  * which it manages and identify what changes need to be made to the middleware,
  * to reflect the changes made by the client.  It makes the appropriate changes
@@ -381,13 +388,15 @@ manager.End()
  * try to manage the device via the same provman instance at the same
  * time.  The second client will block until the first client has finished. When
  * the first client calls the #End function, provman will call
- * #provman_plugin_sync_out for each plugin to complete the first session,
- * followed by #provman_plugin_sync_in on each client to begin the second
+ * #provman_plugin_sync_out for each synced plugin to complete the first
  * session.  Once all the calls to #provman_plugin_sync_out have completed,
- * the Start method invoked by the second client will complete.  Note that
- * the Start method currently completes before all the calls to
- * #provman_plugin_sync_in have returned.  If a call to #provman_plugin_sync_in
- * fails for some reason, the management session can continue but not settings
+ * the Start method invoked by the second client will complete.  Requests by
+ * second client
+ * to modify or inspect the keys owned by the plugins will cause further calls
+ * to their #provman_plugin_sync_in methods to be made.  Note that the Start
+ * method completes before any calls to #provman_plugin_sync_in have been made.
+ * If at a later stage a call to a plugin's #provman_plugin_sync_in method fails
+ * for some reason, the management session continues but no settings
  * for that plugin will be available.
  *
  * When provman invokes a plugin's #provman_plugin_sync_out

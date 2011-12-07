@@ -40,15 +40,10 @@
 #define PROV_ERROR_BAD_KEY PROVMAN_SERVICE".Error.BadKey"
 #define PROV_ERROR_UNKNOWN PROVMAN_SERVICE".Error.Unknown"
 
-typedef struct provman_sync_in_context_ provman_sync_in_context;
-struct provman_sync_in_context_ {
-	provman_task_sync_in_cb finished;
-	void *finished_data;
-};
 
-typedef struct provman_sync_out_context_ provman_sync_out_context;
-struct provman_sync_out_context_ {
-	provman_task_sync_out_cb finished;
+typedef struct provman_task_context_t_ provman_task_context_t;
+struct provman_task_context_t_ {
+	provman_task_sync_cb finished;
 	void *finished_data;
 	GDBusMethodInvocation *invocation;
 };
@@ -81,64 +76,115 @@ void provman_task_delete(provman_task *task)
 	}
 }
 
-static void prv_sync_in_task_finished(int result, void *user_data)
+static void prv_task_failed(int result, provman_task_context_t *task_context)
 {
-	provman_sync_in_context *task_context = user_data;
-
 	PROVMAN_LOGF("%s called with error %u", __FUNCTION__, result);
 
-	task_context->finished(result, task_context->finished_data);
+	if (task_context->invocation)
+		g_dbus_method_invocation_return_dbus_error(
+			task_context->invocation, provman_err_to_dbus(result),
+			"");
 
 	g_free(task_context);
 }
 
-static void prv_sync_out_task_finished(int result, void *user_data)
+static void prv_task_finished(int result, void *user_data)
 {
-	provman_sync_out_context *task_context = user_data;
+	provman_task_context_t *task_context = user_data;
 
 	PROVMAN_LOGF("%s called with error %u", __FUNCTION__, result);
 
-	task_context->finished(result, task_context->finished_data);
-
 	if (task_context->invocation) {
-		if (result == PROVMAN_ERR_NONE)
+		if (result == PROVMAN_ERR_NONE) {
 			g_dbus_method_invocation_return_value(
 				task_context->invocation, NULL);
-		else
+		} else {
 			g_dbus_method_invocation_return_dbus_error(
 				task_context->invocation,
 				provman_err_to_dbus(result), "");
+		}
 	}
+	task_context->finished(result, task_context->finished_data);
 
 	g_free(task_context);
 }
 
-bool provman_task_sync_in(plugin_manager_t *plugin_manager,
-			       provman_task *task,
-			       provman_task_sync_in_cb finished,
-			       void *finished_data)
+static void prv_value_task_finished(int result, gchar *value, void *user_data)
 {
-	int err = PROVMAN_ERR_NONE;
+	provman_task_context_t *task_context = user_data;
 
-	provman_sync_in_context *task_context =
-		g_new0(provman_sync_in_context, 1);
+	PROVMAN_LOGF("%s called with error %u", __FUNCTION__, result);
 
-	task_context->finished = finished;
-	task_context->finished_data = finished_data;
+	if (task_context->invocation) {
+		if (result == PROVMAN_ERR_NONE) {
+			g_dbus_method_invocation_return_value(
+				task_context->invocation,
+				g_variant_new("(s)", value));
+			g_free(value);
+		} else {
+			g_dbus_method_invocation_return_dbus_error(
+				task_context->invocation,
+				provman_err_to_dbus(result), "");
+		}
+	}
 
-	err = plugin_manager_sync_in(plugin_manager, task->imsi,
-				     prv_sync_in_task_finished,
-				     task_context);
-	if (err != PROVMAN_ERR_NONE)
-		goto on_error;
-
-	return true;
-
-on_error:
+	task_context->finished(result, task_context->finished_data);
 
 	g_free(task_context);
+}
 
-	return false;
+static void prv_variant_task_finished(const char * type, int result,
+				      GVariant *values, void *user_data)
+{
+	provman_task_context_t *task_context = user_data;
+
+	PROVMAN_LOGF("%s called with error %u", __FUNCTION__, result);
+
+	if (task_context->invocation) {
+		if (result == PROVMAN_ERR_NONE) {
+			g_dbus_method_invocation_return_value(
+				task_context->invocation,
+				g_variant_new(type, values));
+			g_variant_unref(values);
+		} else {
+			g_dbus_method_invocation_return_dbus_error(
+				task_context->invocation,
+				provman_err_to_dbus(result), "");
+		}
+	}
+
+	task_context->finished(result, task_context->finished_data);
+
+	g_free(task_context);
+}
+
+static void prv_variant_sss_task_finished(int result, GVariant *values,
+					  void *user_data)
+{
+	prv_variant_task_finished("(@a(sss))", result, values, user_data);
+}
+
+static void prv_variant_ss_task_finished(int result, GVariant *values,
+					 void *user_data)
+{
+	prv_variant_task_finished("(@a{ss})", result, values, user_data);
+}
+
+static void prv_variant_ass_task_finished(int result, GVariant *values,
+					  void *user_data)
+{
+	prv_variant_task_finished("(@a(ss))", result, values, user_data);
+}
+
+static void prv_variant_s_task_finished(int result, GVariant *values,
+					void *user_data)
+{
+	prv_variant_task_finished("(@as)", result, values, user_data);
+}
+
+void provman_task_sync_in(plugin_manager_t *plugin_manager, provman_task *task)
+{
+	(void) plugin_manager_sync_in(plugin_manager, task->imsi);
 }
 
 bool provman_task_async_cancel(plugin_manager_t *plugin_manager)
@@ -146,262 +192,298 @@ bool provman_task_async_cancel(plugin_manager_t *plugin_manager)
 	return plugin_manager_cancel(plugin_manager);
 }
 
-bool provman_task_sync_out(plugin_manager_t *plugin_manager,
-				provman_task *task,
-				provman_task_sync_out_cb finished,
-				void *finished_data)
+static void prv_provman_task_context_new(provman_task *task,
+					 provman_task_sync_out_cb finished,
+					 void *finished_data,
+					 provman_task_context_t **task_context)
 {
+	provman_task_context_t *tc = g_new0(provman_task_context_t, 1);
+	tc->finished = finished;
+	tc->finished_data = finished_data;
+	tc->invocation = task->invocation;
+	*task_context = tc;
+}
+
+bool provman_task_sync_out(plugin_manager_t *plugin_manager,
+			   provman_task *task,
+			   provman_task_sync_out_cb finished,
+			   void *finished_data)
+{
+	provman_task_context_t *task_context;
 	int err = PROVMAN_ERR_NONE;
-	provman_sync_out_context *task_context =
-		g_new0(provman_sync_out_context, 1);
 
-	task_context->finished = finished;
-	task_context->finished_data = finished_data;
-	task_context->invocation = task->invocation;
+	prv_provman_task_context_new(task, finished, finished_data,
+				     &task_context);
+	task->invocation = NULL;
 
-	err = plugin_manager_sync_out(plugin_manager,
-				      prv_sync_out_task_finished,
+	err = plugin_manager_sync_out(plugin_manager, prv_task_finished,
 				      task_context);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
-
-	task->invocation = NULL;
 
 	return true;
 
 on_error:
 
-	if (task->invocation) {
-		g_dbus_method_invocation_return_dbus_error(
-			task->invocation, provman_err_to_dbus(err), "");
-		task->invocation = NULL;
-	}
-
-	g_free(task_context);
+	prv_task_failed(err, task_context);
 
 	return false;
 }
 
-void provman_task_set(plugin_manager_t *manager, provman_task *task)
+bool provman_task_set(plugin_manager_t *manager, provman_task *task,
+		      provman_task_sync_cb finished, void *finished_data)
 {
-	int err = PROVMAN_ERR_NONE;
+	int err;
+	provman_task_context_t *task_context;
 
 	PROVMAN_LOGF("Processing Set task: %s=%s", task->key, task->value);
 
-	err = plugin_manager_set(manager, task->key, task->value);
+	prv_provman_task_context_new(task, finished, finished_data,
+				     &task_context);
+	task->invocation = NULL;
+
+	err = plugin_manager_set(manager, task->key, task->value,
+				 prv_task_finished, task_context);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
 
+	return true;
+
 on_error:
 
-	PROVMAN_LOGF("Set returns with error : %u", err);
+	prv_task_failed(err, task_context);
 
-	if (err == PROVMAN_ERR_NONE)
-		g_dbus_method_invocation_return_value(task->invocation, NULL);
-	else
-		g_dbus_method_invocation_return_dbus_error(
-			task->invocation, provman_err_to_dbus(err), "");
-
-	task->invocation = NULL;
+	return false;
 }
 
-void provman_task_set_multiple(plugin_manager_t *manager, provman_task *task)
+bool provman_task_set_multiple(plugin_manager_t *manager, provman_task *task,
+			       provman_task_sync_cb finished,
+			       void *finished_data)
 {
-	int err = PROVMAN_ERR_NONE;
-	GVariant *array;
+	int err;
+	provman_task_context_t *task_context;
 
 	PROVMAN_LOG("Processing Set Multiple task");
 
-	err = plugin_manager_set_multiple(manager, task->variant, &array);
+	prv_provman_task_context_new(task, finished, finished_data,
+				     &task_context);
+
+	task->invocation = NULL;
+
+	err = plugin_manager_set_multiple(manager, task->variant,
+					  prv_variant_s_task_finished,
+					  task_context);
+
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
 
-	g_dbus_method_invocation_return_value(task->invocation,
-					      g_variant_new("(@as)",array));
-
-	task->invocation = NULL;
-	return;
+	return true;
 
 on_error:
 
-	g_dbus_method_invocation_return_dbus_error(
-		task->invocation, provman_err_to_dbus(err), "");
+	prv_task_failed(err, task_context);
 
-	task->invocation = NULL;
+	return false;
 }
 
-void provman_task_set_multiple_meta(plugin_manager_t *manager,
-				    provman_task *task)
+bool provman_task_set_multiple_meta(plugin_manager_t *manager,
+				    provman_task *task,
+				    provman_task_sync_cb finished,
+				    void *finished_data)
 {
-	int err = PROVMAN_ERR_NONE;
-	GVariant *array;
+	int err;
+	provman_task_context_t *task_context;
 
-	PROVMAN_LOG("Processing Set Multiple Meta task");
+	PROVMAN_LOG("Processing Set Meta Multiple task");
 
-	err = plugin_manager_set_multiple_meta(manager, task->variant, &array);
+	prv_provman_task_context_new(task, finished, finished_data,
+				     &task_context);
+
+	task->invocation = NULL;
+
+	err = plugin_manager_set_multiple_meta(manager, task->variant,
+					       prv_variant_ass_task_finished,
+					       task_context);
+
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
 
-	g_dbus_method_invocation_return_value(task->invocation,
-					      g_variant_new("(@a(ss))",array));
-
-	task->invocation = NULL;
-	return;
+	return true;
 
 on_error:
 
-	g_dbus_method_invocation_return_dbus_error(
-		task->invocation, provman_err_to_dbus(err), "");
+	prv_task_failed(err, task_context);
 
-	task->invocation = NULL;
-
+	return false;
 }
 
-void provman_task_get(plugin_manager_t *manager, provman_task *task)
+bool provman_task_get(plugin_manager_t *manager, provman_task *task,
+		      provman_task_sync_cb finished, void *finished_data)
 {
-	int err = PROVMAN_ERR_NONE;
-	gchar *value = NULL;
+	int err;
+	provman_task_context_t *task_context;
 
 	PROVMAN_LOGF("Processing Get task: %s", task->key);
 
-	err = plugin_manager_get(manager, task->key, &value);
+	prv_provman_task_context_new(task, finished, finished_data,
+				     &task_context);
+	task->invocation = NULL;
+
+	err = plugin_manager_get(manager, task->key, prv_value_task_finished,
+				 task_context);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
 
+	return true;
+
 on_error:
 
-	if (err == PROVMAN_ERR_NONE)
-		g_dbus_method_invocation_return_value(task->invocation,
-						      g_variant_new("(s)",
-								     value));
-	else
-		g_dbus_method_invocation_return_dbus_error(
-			task->invocation, provman_err_to_dbus(err), "");
+	prv_task_failed(err, task_context);
 
-	g_free(value);
-
-	task->invocation = NULL;
+	return false;
 }
 
-void provman_task_get_multiple(plugin_manager_t *manager, provman_task *task)
+bool provman_task_get_multiple(plugin_manager_t *manager, provman_task *task,
+			       provman_task_sync_cb finished,
+			       void *finished_data)
 {
-	int err = PROVMAN_ERR_NONE;
-	GVariant *array;
+	int err;
+	provman_task_context_t *task_context;
 
 	PROVMAN_LOG("Processing Get Multiple task");
 
-	err = plugin_manager_get_multiple(manager, task->variant, &array);
+	prv_provman_task_context_new(task, finished, finished_data,
+				     &task_context);
+
+	task->invocation = NULL;
+
+	err = plugin_manager_get_multiple(manager, task->variant,
+					  prv_variant_ss_task_finished,
+					  task_context);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
 
-	g_dbus_method_invocation_return_value(task->invocation,
-					      g_variant_new("(@a{ss})",array));
-
-	task->invocation = NULL;
-	return;
+	return true;
 
 on_error:
 
-	g_dbus_method_invocation_return_dbus_error(
-		task->invocation, provman_err_to_dbus(err), "");
+	prv_task_failed(err, task_context);
 
-	task->invocation = NULL;
+	return false;
 }
 
-void provman_task_get_all(plugin_manager_t *manager, provman_task *task)
+bool provman_task_get_all(plugin_manager_t *manager, provman_task *task,
+			  provman_task_sync_cb finished, void *finished_data)
 {
-	int err = PROVMAN_ERR_NONE;
-	GVariant *array;
+	int err;
+	provman_task_context_t *task_context;
 
 	PROVMAN_LOGF("Processing Get All task on key %s", task->key);
 
-	err = plugin_manager_get_all(manager, task->key, &array);
+	prv_provman_task_context_new(task, finished, finished_data,
+				     &task_context);
+
+	task->invocation = NULL;
+	err = plugin_manager_get_all(manager, task->key,
+				     prv_variant_ss_task_finished,
+				     task_context);
+
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
 
-	g_dbus_method_invocation_return_value(task->invocation,
-					      g_variant_new("(@a{ss})",array));
-
-	task->invocation = NULL;
-	return;
+	return true;
 
 on_error:
 
-	g_dbus_method_invocation_return_dbus_error(
-		task->invocation, provman_err_to_dbus(err), "");
+	prv_task_failed(err, task_context);
 
-	task->invocation = NULL;
+	return false;
 }
 
-void provman_task_get_all_meta(plugin_manager_t *manager, provman_task *task)
+bool provman_task_get_all_meta(plugin_manager_t *manager, provman_task *task,
+			       provman_task_sync_cb finished,
+			       void *finished_data)
 {
-	int err = PROVMAN_ERR_NONE;
-	GVariant *array;
+	int err;
+	provman_task_context_t *task_context;
 
 	PROVMAN_LOGF("Processing Get All Meta task on key %s", task->key);
 
-	err = plugin_manager_get_all_meta(manager, task->key, &array);
+	prv_provman_task_context_new(task, finished, finished_data,
+				     &task_context);
+
+	task->invocation = NULL;
+
+	err = plugin_manager_get_all_meta(manager, task->key,
+					  prv_variant_sss_task_finished,
+					  task_context);
+
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
 
-	g_dbus_method_invocation_return_value(task->invocation,
-					      g_variant_new("(@a(sss))",array));
-
-	task->invocation = NULL;
-	return;
+	return true;
 
 on_error:
 
-	g_dbus_method_invocation_return_dbus_error(
-		task->invocation, provman_err_to_dbus(err), "");
+	prv_task_failed(err, task_context);
 
-	task->invocation = NULL;
+	return false;
 }
 
-void provman_task_remove(plugin_manager_t *manager, provman_task *task)
+
+bool provman_task_remove(plugin_manager_t *manager, provman_task *task,
+			 provman_task_sync_cb finished, void *finished_data)
 {
-	int err = PROVMAN_ERR_NONE;
+	int err;
+	provman_task_context_t *task_context;
 
 	PROVMAN_LOGF("Processing Delete task: %s", task->key);
 
-	err = plugin_manager_remove(manager, task->key);
+	prv_provman_task_context_new(task, finished, finished_data,
+				     &task_context);
+	task->invocation = NULL;
+
+	err = plugin_manager_remove(manager, task->key, prv_task_finished,
+				    task_context);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
 
+	return true;
+
 on_error:
 
-	if (err == PROVMAN_ERR_NONE)
-		g_dbus_method_invocation_return_value(task->invocation, NULL);
-	else
-		g_dbus_method_invocation_return_dbus_error(
-			task->invocation, provman_err_to_dbus(err), "");
+	prv_task_failed(err, task_context);
 
-	task->invocation = NULL;
+	return false;
 }
 
-void provman_task_remove_multiple(plugin_manager_t *manager,
-				  provman_task *task)
+bool provman_task_remove_multiple(plugin_manager_t *manager, provman_task *task,
+				  provman_task_sync_cb finished,
+				  void *finished_data)
 {
-	GVariant *array;
-	int err = PROVMAN_ERR_NONE;
+	int err;
+	provman_task_context_t *task_context;
 
 	PROVMAN_LOG("Processing Delete Multiple task:");
 
-	err = plugin_manager_remove_multiple(manager, task->variant, &array);
+	prv_provman_task_context_new(task, finished, finished_data,
+				     &task_context);
+
+	task->invocation = NULL;
+
+	err = plugin_manager_remove_multiple(manager, task->variant,
+					     prv_variant_s_task_finished,
+					     task_context);
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
 
-	g_dbus_method_invocation_return_value(task->invocation,
-					      g_variant_new("(@as)",array));
-	task->invocation = NULL;
-	return;
+	return true;
 
 on_error:
 
-	g_dbus_method_invocation_return_dbus_error(
-		task->invocation, provman_err_to_dbus(err), "");
+	prv_task_failed(err, task_context);
 
-	task->invocation = NULL;
+	return false;
 }
 
 void provman_task_abort(plugin_manager_t *plugin_manager, provman_task *task)
@@ -466,45 +548,60 @@ void provman_task_get_type_info(plugin_manager_t *manager,
 	task->invocation = NULL;
 }
 
-void provman_task_set_meta(plugin_manager_t *manager, provman_task *task)
+bool provman_task_set_meta(plugin_manager_t *manager, provman_task *task,
+			   provman_task_sync_cb finished, void *finished_data)
 {
-	int err = PROVMAN_ERR_NONE;
+	int err;
+	provman_task_context_t *task_context;
 
 	PROVMAN_LOGF("Processing Set Meta task: %s?%s=%s", task->key,
 		     task->prop, task->value);
 
-	err = plugin_manager_set_meta(manager, task->key, task->prop,
-				      task->value);
-
-	if (err == PROVMAN_ERR_NONE)
-		g_dbus_method_invocation_return_value(task->invocation, NULL);
-	else
-		g_dbus_method_invocation_return_dbus_error(
-			task->invocation, provman_err_to_dbus(err), "");
-
+	prv_provman_task_context_new(task, finished, finished_data,
+				     &task_context);
 	task->invocation = NULL;
+
+	err = plugin_manager_set_meta(manager, task->key, task->prop,
+				      task->value, prv_task_finished,
+				      task_context);
+
+	if (err != PROVMAN_ERR_NONE)
+		goto on_error;
+
+	return true;
+
+on_error:
+
+	prv_task_failed(err, task_context);
+
+	return false;
 }
 
-void provman_task_get_meta(plugin_manager_t *manager, provman_task *task)
+bool provman_task_get_meta(plugin_manager_t *manager, provman_task *task,
+			   provman_task_sync_cb finished, void *finished_data)
 {
-	int err = PROVMAN_ERR_NONE;
-	gchar *value = NULL;
+	int err;
+	provman_task_context_t *task_context;
 
 	PROVMAN_LOGF("Processing Get Meta task: %s?%s", task->key, task->prop);
 
-	err = plugin_manager_get_meta(manager, task->key, task->prop, &value);
-
-	if (err == PROVMAN_ERR_NONE)
-		g_dbus_method_invocation_return_value(task->invocation,
-						      g_variant_new("(s)",
-								     value));
-	else
-		g_dbus_method_invocation_return_dbus_error(
-			task->invocation, provman_err_to_dbus(err), "");
-
-	g_free(value);
-
+	prv_provman_task_context_new(task, finished, finished_data,
+				     &task_context);
 	task->invocation = NULL;
+
+	err = plugin_manager_get_meta(manager, task->key, task->prop,
+				      prv_value_task_finished,
+				      task_context);
+	if (err != PROVMAN_ERR_NONE)
+		goto on_error;
+
+	return true;
+
+on_error:
+
+	prv_task_failed(err, task_context);
+
+	return false;
 }
 
 void provman_task_get_version(plugin_manager_t *manager, provman_task *task)

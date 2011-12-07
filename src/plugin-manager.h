@@ -39,40 +39,56 @@
 typedef struct plugin_manager_t_ plugin_manager_t;
 
 typedef void (*plugin_manager_cb_t)(int result, void *user_data);
+typedef void (*plugin_manager_cb_value_t)(int result, gchar *value,
+					  void *user_data);
+typedef void (*plugin_manager_cb_variant_t)(int result, GVariant *variant,
+					    void *user_data);
 
 int plugin_manager_new(plugin_manager_t **manager, bool system);
-int plugin_manager_sync_in(plugin_manager_t *manager, const char *imsi,
-			   plugin_manager_cb_t callback, void *user_data);
+int plugin_manager_sync_in(plugin_manager_t *manager, const char *imsi);
 int plugin_manager_sync_out(plugin_manager_t *manager,
 			    plugin_manager_cb_t callback, void *user_data);
 bool plugin_manager_cancel(plugin_manager_t *manager);
-int plugin_manager_get(plugin_manager_t* manager, const gchar* key,
-		       gchar** value);
-int plugin_manager_get_multiple(plugin_manager_t* manager, GVariant* keys,
-				GVariant **settings);
-int plugin_manager_get_all(plugin_manager_t* manager, const gchar* key,
-			   GVariant** values);
-int plugin_manager_get_all_meta(plugin_manager_t* manager, const gchar* key,
-				GVariant** values);
-int plugin_manager_set(plugin_manager_t* manager, const gchar* key,
-		       const gchar* value);
-int plugin_manager_set_multiple(plugin_manager_t* manager, GVariant* settings,
-				GVariant** errors);
-int plugin_manager_set_multiple_meta(plugin_manager_t* manager,
-				     GVariant* settings, GVariant** errors);
-int plugin_manager_remove(plugin_manager_t* manager, const gchar* key);
-int plugin_manager_remove_multiple(plugin_manager_t* manager, GVariant* keys,
-				   GVariant **errors);
+int plugin_manager_get(plugin_manager_t *manager, const gchar *key,
+		       plugin_manager_cb_value_t callback, void *user_data);
+int plugin_manager_get_multiple(plugin_manager_t *manager, GVariant* keys,
+				plugin_manager_cb_variant_t callback,
+				void *user_data);
+int plugin_manager_get_all(plugin_manager_t *manager, const gchar *search_key,
+			   plugin_manager_cb_variant_t callback,
+			   void *user_data);
+int plugin_manager_get_all_meta(plugin_manager_t *manager,
+				const gchar *search_key,
+				plugin_manager_cb_variant_t callback,
+				void *user_data);
+int plugin_manager_set(plugin_manager_t *manager, const gchar *key,
+		       const gchar *value, plugin_manager_cb_t callback,
+		       void *user_data);
+int plugin_manager_set_multiple(plugin_manager_t *manager, GVariant *settings,
+				plugin_manager_cb_variant_t callback,
+				void *user_data);
+int plugin_manager_set_multiple_meta(plugin_manager_t *manager,
+				     GVariant *settings,
+				     plugin_manager_cb_variant_t callback,
+				     void *user_data);
+int plugin_manager_remove(plugin_manager_t *manager, const gchar *key,
+			  plugin_manager_cb_t callback, void *user_data);
+int plugin_manager_remove_multiple(plugin_manager_t *manager, GVariant *keys,
+				   plugin_manager_cb_variant_t callback,
+				   void *user_data);
 void plugin_manager_delete(plugin_manager_t *manager);
 int plugin_manager_abort(plugin_manager_t *manager);
-int plugin_manager_get_children_type_info(plugin_manager_t* manager,
-					  const gchar* search_key,
-					  GVariant** values);
-int plugin_manager_get_type_info(plugin_manager_t* manager,
-				 const gchar* search_key, gchar **type_info);
+int plugin_manager_get_children_type_info(plugin_manager_t *manager,
+					  const gchar *search_key,
+					  GVariant **values);
+int plugin_manager_get_type_info(plugin_manager_t *manager,
+				 const gchar *search_key, gchar **type_info);
 bool plugin_manager_busy(plugin_manager_t *manager);
-int plugin_manager_get_meta(plugin_manager_t* manager, const gchar* key,
-			    const gchar *prop, gchar** value);
-int plugin_manager_set_meta(plugin_manager_t* manager, const gchar* key,
-			    const gchar *prop, const gchar* value);
+int plugin_manager_get_meta(plugin_manager_t *manager, const gchar *key,
+			    const gchar *prop,
+			    plugin_manager_cb_value_t callback,
+			    void *user_data);
+int plugin_manager_set_meta(plugin_manager_t *manager, const gchar *key,
+			    const gchar *value, const gchar *prop,
+			    plugin_manager_cb_t callback, void *user_data);
 #endif

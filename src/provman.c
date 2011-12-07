@@ -207,7 +207,7 @@ static void prv_free_provman_task(gpointer data)
 	provman_task_delete(data);
 }
 
-static void prv_sync_in_task_finished(int result, void *user_data)
+static void prv_task_finished(int result, void *user_data)
 {
 	provman_context *context = user_data;
 
@@ -251,9 +251,7 @@ static gboolean prv_process_task(gpointer user_data)
 
 		switch (task->type) {
 		case PROVMAN_TASK_SYNC_IN:
-			async_task = provman_task_sync_in(
-				context->plugin_manager, task,
-				prv_sync_in_task_finished, user_data);
+			provman_task_sync_in(context->plugin_manager, task);
 			break;
 		case PROVMAN_TASK_SYNC_OUT:
 			async_task = provman_task_sync_out(
@@ -262,36 +260,51 @@ static gboolean prv_process_task(gpointer user_data)
 				user_data);
 			break;
 		case PROVMAN_TASK_SET:
-			provman_task_set(context->plugin_manager, task);
+			async_task = provman_task_set(
+				context->plugin_manager, task,
+				prv_task_finished, user_data);
 			break;
 		case PROVMAN_TASK_SET_MULTIPLE:
-			provman_task_set_multiple(context->plugin_manager,
-						  task);
+			async_task = provman_task_set_multiple(
+				context->plugin_manager, task,
+				prv_task_finished, user_data);
 			break;
 		case PROVMAN_TASK_SET_MULTIPLE_META:
-			provman_task_set_multiple_meta(context->plugin_manager,
-						       task);
+			async_task = provman_task_set_multiple_meta(
+				context->plugin_manager, task,
+				prv_task_finished, user_data);
 			break;
 		case PROVMAN_TASK_GET:
-			provman_task_get(context->plugin_manager, task);
+			async_task = provman_task_get(
+				context->plugin_manager, task,
+				prv_task_finished, user_data);
 			break;
 		case PROVMAN_TASK_GET_MULTIPLE:
-			provman_task_get_multiple(context->plugin_manager,
-						  task);
+			async_task = provman_task_get_multiple(
+				context->plugin_manager,
+				task,
+				prv_task_finished,
+				user_data);
 			break;
 		case PROVMAN_TASK_GET_ALL:
-			provman_task_get_all(context->plugin_manager, task);
+			async_task = provman_task_get_all(
+				context->plugin_manager, task,
+				prv_task_finished, user_data);
 			break;
 		case PROVMAN_TASK_GET_ALL_META:
-			provman_task_get_all_meta(context->plugin_manager,
-						  task);
+			async_task = provman_task_get_all_meta(
+				context->plugin_manager, task,
+				prv_task_finished, user_data);
 			break;
 		case PROVMAN_TASK_DELETE:
-			provman_task_remove(context->plugin_manager, task);
+			async_task = provman_task_remove(
+				context->plugin_manager, task,
+				prv_task_finished, user_data);
 			break;
 		case PROVMAN_TASK_DELETE_MULTIPLE:
-			provman_task_remove_multiple(context->plugin_manager,
-						     task);
+			async_task = provman_task_remove_multiple(
+				context->plugin_manager, task,
+				prv_task_finished, user_data);
 			break;
 		case PROVMAN_TASK_ABORT:
 			provman_task_abort(context->plugin_manager,task);
@@ -306,10 +319,14 @@ static gboolean prv_process_task(gpointer user_data)
 				context->plugin_manager, task);
 			break;
 		case PROVMAN_TASK_SET_META:
-			provman_task_set_meta(context->plugin_manager, task);
+			async_task = provman_task_set_meta(
+				context->plugin_manager, task,
+				prv_task_finished, user_data);
 			break;
 		case PROVMAN_TASK_GET_META:
-			provman_task_get_meta(context->plugin_manager, task);
+			async_task = provman_task_get_meta(
+				context->plugin_manager, task,
+				prv_task_finished, user_data);
 			break;
 		case PROVMAN_TASK_GET_VERSION:
 			provman_task_get_version(context->plugin_manager, task);

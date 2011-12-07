@@ -253,6 +253,29 @@ bool provman_plugin_uri_exists(const char *uri)
 	return i < g_provman_plugins_count;
 }
 
+/* Returns the indicies of all the plugins whose root nodes are descendents of
+   a given uri.  If the uri is owned by a plugin or is not the ancestor of any
+   plugins and empty array is returned */
 
+void provman_plugin_find_plugins(const char *uri, GArray *indicies)
+{
+	unsigned int uri_len = strlen(uri);
+	provman_plugin *plugin;
+	unsigned int plugin_uri_len;
+	unsigned int i;
+
+	for (i = 0; i < g_provman_plugins_count; ++i) {
+		plugin = &g_provman_plugins[i];
+		plugin_uri_len = strlen(plugin->root);
+
+		if (uri_len >  plugin_uri_len)
+			continue;
+
+		if (!strncmp(plugin->root, uri, uri_len) &&
+		    ((uri_len == plugin_uri_len) || (uri[uri_len - 1] == '/') ||
+		     (plugin->root[uri_len] == '/')))
+			g_array_append_val(indicies, i);
+	}
+}
 
 /*! \endcond */

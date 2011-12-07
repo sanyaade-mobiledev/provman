@@ -320,6 +320,7 @@ int provman_plugin_find_index(const char *uri, unsigned int *index);
 GPtrArray *provman_plugin_find_children(const char *uri);
 GPtrArray *provman_plugin_find_direct_children(const char *uri);
 bool provman_plugin_uri_exists(const char *uri);
+void provman_plugin_find_plugins(const char *uri, GArray *indicies);
 /*! \endcond */
 
 #endif

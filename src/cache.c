@@ -533,7 +533,7 @@ int provman_cache_get_all(provman_cache_t *cache, const gchar *root,
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
 
-	*variant = g_variant_builder_end(vb);
+	*variant = g_variant_ref_sink(g_variant_builder_end(vb));
 
 on_error:
 
@@ -553,7 +553,7 @@ int provman_cache_get_all_meta(provman_cache_t *cache, const gchar *root,
 	if (err != PROVMAN_ERR_NONE)
 		goto on_error;
 
-	*variant = g_variant_builder_end(vb);
+	*variant = g_variant_ref_sink(g_variant_builder_end(vb));
 
 on_error:
 

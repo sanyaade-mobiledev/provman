@@ -70,7 +70,7 @@ struct provman_task_ {
 	GVariant *variant;
 };
 
-typedef void (*provman_task_sync_in_cb)(
+typedef void (*provman_task_sync_cb)(
 	int result, void *user_data);
 
 typedef void (*provman_task_sync_out_cb)(
@@ -80,21 +80,31 @@ void provman_task_new(provman_task_type type, GDBusMethodInvocation *invocation,
 		      provman_task **task);
 void provman_task_delete(provman_task *task);
 
-bool provman_task_sync_in(plugin_manager_t *plugin_manager,
-			       provman_task *task,
-			       provman_task_sync_in_cb finished,
+void provman_task_sync_in(plugin_manager_t *plugin_manager, provman_task *task);
+bool provman_task_set(plugin_manager_t *manager, provman_task *task,
+		      provman_task_sync_cb finished, void *finished_data);
+bool provman_task_set_multiple(plugin_manager_t *manager, provman_task *task,
+			       provman_task_sync_cb finished,
 			       void *finished_data);
-void provman_task_set(plugin_manager_t *manager, provman_task *task);
-void provman_task_set_multiple(plugin_manager_t *manager, provman_task *task);
-void provman_task_set_multiple_meta(plugin_manager_t *manager,
-				    provman_task *task);
-void provman_task_get_all(plugin_manager_t *manager, provman_task *task);
-void provman_task_get_all_meta(plugin_manager_t *manager, provman_task *task);
-void provman_task_get(plugin_manager_t *manager, provman_task *task);
-void provman_task_get_multiple(plugin_manager_t *manager, provman_task *task);
-void provman_task_remove(plugin_manager_t *manager, provman_task *task);
-void provman_task_remove_multiple(plugin_manager_t *manager,
-				  provman_task *task);
+bool provman_task_set_multiple_meta(plugin_manager_t *manager,
+				    provman_task *task,
+				    provman_task_sync_cb finished,
+				    void *finished_data);
+bool provman_task_get_all(plugin_manager_t *manager, provman_task *task,
+			  provman_task_sync_cb finished, void *finished_data);
+bool provman_task_get_all_meta(plugin_manager_t *manager, provman_task *task,
+			       provman_task_sync_cb finished,
+			       void *finished_data);
+bool provman_task_get(plugin_manager_t *manager, provman_task *task,
+		      provman_task_sync_cb finished, void *finished_data);
+bool provman_task_get_multiple(plugin_manager_t *manager, provman_task *task,
+			       provman_task_sync_cb finished,
+			       void *finished_data);
+bool provman_task_remove(plugin_manager_t *manager, provman_task *task,
+			 provman_task_sync_cb finished, void *finished_data);
+bool provman_task_remove_multiple(plugin_manager_t *manager, provman_task *task,
+				  provman_task_sync_cb finished,
+				  void *finished_data);
 bool provman_task_sync_out(plugin_manager_t *plugin_manager,
 				provman_task *task,
 				provman_task_sync_out_cb finished,
@@ -105,8 +115,10 @@ void provman_task_get_children_type_info(plugin_manager_t *manager,
 					 provman_task *task);
 void provman_task_get_type_info(plugin_manager_t *manager,
 				provman_task *task);
-void provman_task_set_meta(plugin_manager_t *manager, provman_task *task);
-void provman_task_get_meta(plugin_manager_t *manager, provman_task *task);
+bool provman_task_set_meta(plugin_manager_t *manager, provman_task *task,
+			   provman_task_sync_cb finished, void *finished_data);
+bool provman_task_get_meta(plugin_manager_t *manager, provman_task *task,
+			   provman_task_sync_cb finished, void *finished_data);
 void provman_task_get_version(plugin_manager_t *manager, provman_task *task);
 
 
