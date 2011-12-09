@@ -706,7 +706,6 @@ static void prv_session_finished(provman_context *context)
 {
 	GDBusMethodInvocation *invocation;
 	GVariant *parameters;
-	gpointer value;
 
 	g_free(context->holder);
 	context->holder = NULL;
@@ -729,12 +728,9 @@ static void prv_session_finished(provman_context *context)
 		parameters =
 			g_dbus_method_invocation_get_parameters(invocation);
 
-		g_variant_get(parameters, "(&s)", &value);
+		PROVMAN_LOGF("start session with %s", context->holder);
 
-		PROVMAN_LOGF("start session with %s IMSI %s", context->holder,
-			     value);
-
-		prv_add_sync_in_task(context, value);
+		prv_add_sync_in_task(context, parameters);
 
 		g_dbus_method_invocation_return_value(invocation, NULL);
 
