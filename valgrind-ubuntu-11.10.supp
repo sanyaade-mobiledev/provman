@@ -1,0 +1,149 @@
+{
+   g_type_init
+   Memcheck:Leak
+   ...
+   fun:g_type_init
+   fun:provman_run
+}
+
+{
+   clone
+   Memcheck:Leak
+   ...
+   fun:start_thread
+   fun:clone
+}
+
+{
+   g_bus_own_name
+   Memcheck:Leak
+   ...
+   fun:g_bus_own_name
+   fun:provman_run
+}
+
+{
+   g_dbus_node_info_new_for_xml
+   Memcheck:Leak
+   ...
+   fun:g_dbus_node_info_new_for_xml
+   fun:provman_run
+}
+
+{
+   g_type_register_static
+   Memcheck:Leak
+   ...
+   fun:g_type_register_static
+   ...
+}
+
+{
+   g_type_add_interface_static
+   Memcheck:Leak
+   ...
+   fun:g_type_add_interface_static
+   ...
+}
+
+{
+   g_dbus_proxy_new_for_bus
+   Memcheck:Leak
+   ...
+   fun:g_dbus_proxy_new_for_bus
+   ...
+}
+
+{
+   g_simple_async_result_complete
+   Memcheck:Leak
+   ...
+   fun:g_simple_async_result_complete
+   ...
+   fun:provman_run
+}
+
+{
+   gconf_client_get_default
+   Memcheck:Leak
+   ...
+   fun:gconf_client_get_default
+   ...
+}
+
+{
+   g_get_home_dir
+   Memcheck:Leak
+   ...
+   fun:g_get_home_dir
+   ...
+}
+
+{
+    g_type_register_fundamental
+    Memcheck:Leak
+    ...
+    fun:g_type_register_fundamental
+    ...
+}
+
+{
+    __nss_database_lookup
+    Memcheck:Leak
+    ...
+    fun:__nss_database_lookup
+    ...
+}
+
+{
+    allocate_dtv
+    Memcheck:Leak
+    ...
+    fun:allocate_dtv
+    ...
+}
+
+{
+   on_name_owner_changed
+   Memcheck:Leak
+   fun:malloc
+   fun:standard_malloc
+   fun:g_malloc
+   fun:g_strdup
+   fun:on_name_owner_changed
+   fun:emit_signal_instance_in_idle_cb
+   fun:g_idle_dispatch
+   fun:g_main_context_dispatch
+   fun:g_main_context_iterate.isra.19
+   fun:g_main_loop_run
+   fun:provman_run
+   fun:main
+}
+
+{
+    standard_calloc
+    Memcheck:Leak
+    ...
+    fun:standard_calloc
+    ...
+}
+
+{
+    initable_init
+    Memcheck:Leak
+    ...
+    fun:initable_init
+    ...
+}
+
+{
+   g_object_new_valist
+   Memcheck:Leak
+   fun:malloc
+   fun:standard_malloc
+   fun:g_malloc
+   fun:g_memdup
+   fun:type_iface_vtable_base_init_Wm
+   fun:g_type_class_ref
+   fun:g_object_new_valist
+}
