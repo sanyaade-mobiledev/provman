@@ -32,7 +32,6 @@
 #include "config.h"
 
 #include <string.h>
-#include <stdlib.h>
 
 #include "log.h"
 #include "error.h"
@@ -549,8 +548,6 @@ int provman_schema_check_value(provman_schema_t *schema, const gchar *value)
 {
 	int err = PROVMAN_ERR_NONE;
 	provman_schema_value_type_t vt;
-	gchar *stripped_val = NULL;
-	char *endptr;
 
 	if (schema->type != PROVMAN_SCHEMA_TYPE_KEY) {
 		err = PROVMAN_ERR_BAD_KEY;
@@ -560,14 +557,7 @@ int provman_schema_check_value(provman_schema_t *schema, const gchar *value)
 	vt = schema->key.type;
 
 	if (vt == PROVMAN_SCHEMA_VALUE_TYPE_INT) {
-		stripped_val = g_strdup(value);
-		g_strstrip(stripped_val);
-		if (!*stripped_val) {
-			err = PROVMAN_ERR_BAD_ARGS;
-			goto on_error;
-		}
-		(void) strtol(stripped_val, &endptr, 10);
-		if (*endptr) {
+		if (!g_regex_match_simple("^[0-9]+$", value, 0, 0)) {
 			err = PROVMAN_ERR_BAD_ARGS;
 			goto on_error;
 		}
@@ -581,8 +571,6 @@ int provman_schema_check_value(provman_schema_t *schema, const gchar *value)
 	}
 
 on_error:
-
-	g_free(stripped_val);
 
 	return err;
 }
