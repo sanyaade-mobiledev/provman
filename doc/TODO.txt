@@ -11,6 +11,26 @@ Provman:
   as each binary plugin can be given the rights it needs, and only the rights it
   needs, to perform its various tasks.
 
+* Currently sync_out is called for each synced plugin even if no settings
+  managed by that plugin were modified during the session, i.e., the plugin's
+  settings were only read.  Provman is obliged to call sync_out or abort for
+  each synced plugin so that the plugins know when the session has come to an
+  end.  Currently, it calls sync_out for all synced plugins.  However, this
+  is a waste of resources, as the plugin needs to compare the old keys to the
+  new keys to determine the changes that need to be made to the underlying
+  middleware.  Since Provman knows that no changes need to be made it would
+  be more efficient to simply call abort, if defined.
+
+* Restrictions should be placed on Meta data property names.  Meta data is
+  stored in g_key_files and there are restrictions on the characters that can
+  be used in g_key_files keys.  Checks should thus be made in SetMeta and
+  SetMultipleMeta to ensure that property names are compatible with g_key_file.
+
+* Provman is very restrictive on the keys that can be used for settings.  To
+  be honest it is currently too strict and the set of allowable keys should be
+  increased.  In fact the only character we really need to disallow in a
+  directory or setting name is '/'.
+
 EDS Plugin:
 
 * Make sure internal cache is synchronised with evolution. We could do this by
@@ -26,6 +46,12 @@ SyncE Plugin:
   deleting the internal cache at the end of each session as the oFono plugin
   does.  We could also listen for notifications to changes in syncronisation
   accounts during a session.
+
+* We should check the status of SyncEvolution before provisioning values.
+  Currently, we do not do this, and I think this will cause problems if
+  a sync session is running when we try to provision sync settings.  See
+  http://lists.syncevolution.org/pipermail/syncevolution/2011-October/003032.html
+  for more details.
 
 oFono Plugin
 
@@ -52,7 +78,15 @@ oFono Plugin
   Instead the settings from the backup cache will be duplicated in the initial
   mms context.
 
+* Needs to support 3G (not MMS) proxies.  This can be done by using the Connman
+  APIs.
+
 MeeGo Login Plugin
 
 * Needs to be written.
+
+Browser Plugin
+
+* Needs to be written
+
 
