@@ -849,6 +849,22 @@ class TestProvmanTestCases(testprovman.TestProvman):
         self.get_all_auto(invalid_string, {}, PROVMAN_EXCEPT_BAD_ARGS)
         self.delete_auto(invalid_string, PROVMAN_EXCEPT_BAD_ARGS)
 
+    def test_keys_neg_get_root_dir(self):
+    
+        """test_keys_neg_get_root_dir"""
+        
+        #Get on root directory
+
+        self.set_bus_type(bus_type_any)
+        self.set_imsi(imsi_any)
+
+        self.reset()
+        self.get_auto(root0, "")
+
+        self.reset()
+        self.get_auto(root1, root2.rstrip("/"), PROVMAN_EXCEPT_NOT_FOUND)
+
+
     def test_keys_stress_set_get_many_implicit_dir_levels(self):
     
         """test_keys_stress_set_get_many_implicit_dir_levels"""
